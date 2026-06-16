@@ -1,50 +1,29 @@
-const { Client, GatewayIntentBits } = require("discord.js");
-require("dotenv").config();
-const token = process.env.TOKEN;
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { readdirSync } = require('fs');
+const { join } = require('path');
+require('dotenv').config();
 
-// im lazy, i threw all intents in cuz why not
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.MessageContent,
     ],
 });
 
-client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}`);
-});
+// Cache commands at startup instead of requiring on every interaction
+client.commands = new Collection();
 
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isCommand()) return; // Ignore if it's not a command
-
-    const { commandName } = interaction;
-
-    try {
-        const command = require(`./commands/${commandName}.js`);
-
-        if (command) {
-            await command.execute(interaction);
-        } else {
-            await interaction.reply(`Command "${commandName}" not found.`);
-        }
-    } catch (error) {
-        console.error('Error executing command:', error);
-        await interaction.reply('An error occurred while executing the command.');
+const commandFiles = readdirSync(join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+for (const file of commandFiles) {
+    const command = require(join(__dirname, 'commands', file));
+    if (command.data && command.execute) {
+        client.commands.set(command.data.name, command);
+    } else {
+        console.warn(`[WARNING] Command file ${file} is missing 'data' or 'execute'. Skipping.`);
     }
-});
-
-process.on('unhandledRejection', (error) => {
-    console.error('Unhandled Rejection Recieved:', error);
-});
+}
 
 // Load events dynamically
-const { readdirSync } = require('fs');
-const { join } = require('path');
-
 const eventFiles = readdirSync(join(__dirname, 'events')).filter(file => file.endsWith('.js'));
-
 for (const file of eventFiles) {
     const event = require(join(__dirname, 'events', file));
     if (event.once) {
@@ -54,10 +33,33 @@ for (const file of eventFiles) {
     }
 }
 
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
 
-client.login(token);
-console.log(
-  "\x1b[32m\x1b[1m\x1b[2m",
-  "                 Discord-Icon-Gen v1.0.0 Starting. . .\n",
-  "\x1b[0m"
-);
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command) {
+        console.error(`[ERROR] No command found for: ${interaction.commandName}`);
+        await interaction.reply({ content: 'Unknown command.', ephemeral: true });
+        return;
+    }
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(`[ERROR] Failed to execute command '${interaction.commandName}':`, error);
+        const reply = { content: 'Something went wrong while running that command.', ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(reply);
+        } else {
+            await interaction.reply(reply);
+        }
+    }
+});
+
+process.on('unhandledRejection', (error) => {
+    console.error('[ERROR] Unhandled Rejection:', error);
+});
+
+client.login(process.env.TOKEN);
+console.log('\x1b[32m\x1b[1m Discord-Icon-Gen v1.1.0 starting...\x1b[0m');
