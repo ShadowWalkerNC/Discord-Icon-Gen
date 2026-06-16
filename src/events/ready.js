@@ -1,43 +1,54 @@
-const { Events, REST, Routes } = require("discord.js");
-const { readdirSync } = require("fs");
-const { join } = require("path");
-require("dotenv").config();
-const clientId = process.env.CLIENT_ID;
+const { Events, REST, Routes } = require('discord.js');
+const { readdirSync } = require('fs');
+const { join } = require('path');
+require('dotenv').config();
+
 const token = process.env.TOKEN;
+const clientId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID;
+const deployMode = (process.env.DEPLOY_MODE || 'guild').toLowerCase();
 
 module.exports = {
-  name: Events.ClientReady,
-  once: true,
-  async execute(client) {
+    name: Events.ClientReady,
+    once: true,
+    async execute(client) {
+        console.log(`[CLIENT]  Logged in as ${client.user.tag}`);
+        console.log(`[DEPLOY]  Mode: ${deployMode === 'global' ? 'GLOBAL (all servers)' : 'GUILD (single server)'}`);
 
-    const commands = [];
-    const commandFiles = readdirSync(join(__dirname, '..', 'commands')).filter(file => file.endsWith('.js'));
+        // Build command list from cached collection
+        const commands = [];
+        for (const [, command] of client.commands) {
+            if (command.data) {
+                commands.push(command.data.toJSON());
+            }
+        }
 
-    for (const file of commandFiles) {
-      const command = require(join(__dirname, '..', 'commands', file));
-      // Check if command.data exists before calling toJSON
-      if (command.data) {
-        commands.push(command.data.toJSON());
-      } else {
-        console.log(`[WARNING] | Skipping ${file} because command.data is undefined.`);
-      }
-    }
+        const rest = new REST({ version: '10' }).setToken(token);
 
-    const rest = new REST({ version: '9' }).setToken(token);
+        try {
+            console.log(`[DEPLOY]  Registering ${commands.length} command(s)...`);
 
-    try {
-      console.log(`[CLIENT]  >>>  Started refreshing ${commands.length} application (/) commands. . .`);
-
-      const guildId = process.env.GUILD_ID;
-
-      await rest.put(
-        Routes.applicationGuildCommands(clientId, guildId),
-        { body: commands },
-      );
-
-      console.log(`Successfully reloaded ${commands.length} application (/) commands!`)
-    } catch (error) {
-      console.log("[ERROR]  >>>  An error occurred during command refreshing:", error)
-    }
-  }
+            if (deployMode === 'global') {
+                // Global: available in all servers — takes up to 1 hour to propagate
+                await rest.put(
+                    Routes.applicationCommands(clientId),
+                    { body: commands }
+                );
+                console.log(`[DEPLOY]  ${commands.length} command(s) registered globally. May take up to 1 hour to propagate.`);
+            } else {
+                // Guild: instant update, scoped to one server — best for development
+                if (!guildId) {
+                    console.error('[DEPLOY]  GUILD_ID is required for guild deploy mode. Check your .env file.');
+                    return;
+                }
+                await rest.put(
+                    Routes.applicationGuildCommands(clientId, guildId),
+                    { body: commands }
+                );
+                console.log(`[DEPLOY]  ${commands.length} command(s) registered to guild ${guildId}.`);
+            }
+        } catch (error) {
+            console.error('[DEPLOY]  Failed to register commands:', error);
+        }
+    },
 };
