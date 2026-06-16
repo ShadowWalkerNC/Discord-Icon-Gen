@@ -9,7 +9,6 @@ const MIN_FONT_SIZE = 10;
 const MAX_FONT_SIZE = 200;
 const CANVAS_SIZE = 512;
 
-// Fix #3: register all fonts at module load time, not per-interaction
 for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
@@ -69,7 +68,8 @@ module.exports = {
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         }
         if (!HEX_COLOR_REGEX.test(color)) {
-            return interaction.reply({ content: 'Color must be a valid hex code (e.g. `#FF4500`).`, ephemeral: true });
+            // Bug 1 fix: clean string, no mismatched quotes
+            return interaction.reply({ content: 'Color must be a valid hex code (e.g. #FF4500).', ephemeral: true });
         }
 
         const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('Generating your logo...');
@@ -78,10 +78,9 @@ module.exports = {
         try {
             const canvas = createCanvas(CANVAS_SIZE, CANVAS_SIZE);
             const ctx = canvas.getContext('2d');
-            // Transparent background \u2014 no fillRect
+            // Transparent background — no fillRect
 
             const font = getFont(fontKey);
-            // Fix #5: Number() instead of parseInt() without radix
             const shadowBlur = Number(glowIntensity);
 
             const centerX = CANVAS_SIZE / 2;
@@ -90,7 +89,7 @@ module.exports = {
             ctx.strokeStyle = color;
             ctx.fillStyle = color;
 
-            // Draw circle ring behind text
+            // Circle ring — drawn behind text
             if (shape === 'circle') {
                 const radius = CANVAS_SIZE * 0.42;
                 ctx.beginPath();
@@ -99,13 +98,11 @@ module.exports = {
                 ctx.shadowColor = color;
                 ctx.shadowBlur = shadowBlur;
                 ctx.stroke();
-                // Crisp pass
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
                 ctx.stroke();
             }
 
-            // Draw text
             ctx.font = `${size}px '${font.family}'`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -121,7 +118,7 @@ module.exports = {
             ctx.shadowBlur = 0;
             ctx.fillText(text, centerX, centerY);
 
-            // Draw underline after text
+            // Underline — drawn after text
             if (shape === 'underline') {
                 const metrics = ctx.measureText(text);
                 const lineWidth = metrics.width * 1.1;
@@ -130,11 +127,9 @@ module.exports = {
                 ctx.moveTo(centerX - lineWidth / 2, lineY);
                 ctx.lineTo(centerX + lineWidth / 2, lineY);
                 ctx.lineWidth = Math.max(2, size * 0.04);
-                // Glow pass
                 ctx.shadowColor = color;
                 ctx.shadowBlur = shadowBlur;
                 ctx.stroke();
-                // Fix #2: only two strokes (glow + crisp), not three
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
                 ctx.stroke();

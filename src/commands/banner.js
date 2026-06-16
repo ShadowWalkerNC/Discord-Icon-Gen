@@ -12,15 +12,15 @@ const MAX_FONT_SIZE = 150;
 const CANVAS_WIDTH = 1024;
 const CANVAS_HEIGHT = 320;
 
-// Fix #3: register all fonts at module load time, not per-interaction
 for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
 
+// Bug 2 fix: corrected paths to match actual files in src/images/
 const BACKGROUNDS = {
     'Plain (Black)': null,
-    'Custom Background 1': path.resolve(__dirname, '..', 'backgrounds', 'bg1.png'),
-    'Custom Background 2': path.resolve(__dirname, '..', 'backgrounds', 'bg2.png'),
+    'Custom Background 1': path.resolve(__dirname, '..', 'images', 'background1.jpg'),
+    'Custom Background 2': path.resolve(__dirname, '..', 'images', 'background2.jpg'),
 };
 
 module.exports = {
@@ -86,7 +86,7 @@ module.exports = {
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         }
         if (!HEX_COLOR_REGEX.test(color)) {
-            return interaction.reply({ content: 'Color must be a valid hex code (e.g. `#00FFFF`).', ephemeral: true });
+            return interaction.reply({ content: 'Color must be a valid hex code (e.g. #00FFFF).', ephemeral: true });
         }
 
         const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('Generating your banner...');
@@ -110,7 +110,6 @@ module.exports = {
             }
 
             const font = getFont(fontKey);
-            // Fix #5: Number() instead of parseInt() without radix
             const shadowBlur = Number(glowIntensity);
 
             const centerX = CANVAS_WIDTH / 2;
@@ -131,7 +130,6 @@ module.exports = {
             ctx.shadowBlur = 0;
             ctx.fillText(text, centerX, textY);
 
-            // Subtitle
             if (subtitle) {
                 const subtitleSize = Math.round(size * 0.4);
                 const subtitleY = textY + size * 0.75;

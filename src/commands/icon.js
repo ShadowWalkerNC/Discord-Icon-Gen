@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+// Bug 3 fix: removed unused AttachmentBuilder import
+const { EmbedBuilder } = require('discord.js');
 const { createCanvas, registerFont, loadImage } = require('canvas');
 const path = require('path');
 const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
@@ -10,15 +11,15 @@ const MIN_FONT_SIZE = 10;
 const MAX_FONT_SIZE = 200;
 const CANVAS_SIZE = 400;
 
-// Fix #3: register all fonts at module load time, not per-interaction
 for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
 
+// Bug 2 fix: corrected paths to match actual files in src/images/
 const BACKGROUNDS = {
     'Plain (Black)': null,
-    'Custom Background 1': path.resolve(__dirname, '..', 'backgrounds', 'bg1.png'),
-    'Custom Background 2': path.resolve(__dirname, '..', 'backgrounds', 'bg2.png'),
+    'Custom Background 1': path.resolve(__dirname, '..', 'images', 'background1.jpg'),
+    'Custom Background 2': path.resolve(__dirname, '..', 'images', 'background2.jpg'),
 };
 
 module.exports = {
@@ -76,7 +77,7 @@ module.exports = {
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         }
         if (!HEX_COLOR_REGEX.test(color)) {
-            return interaction.reply({ content: 'Color must be a valid hex code (e.g. `#FF0000`).', ephemeral: true });
+            return interaction.reply({ content: 'Color must be a valid hex code (e.g. #FF0000).', ephemeral: true });
         }
 
         const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('Generating your icon...');
@@ -86,7 +87,6 @@ module.exports = {
             const canvas = createCanvas(CANVAS_SIZE, CANVAS_SIZE);
             const ctx = canvas.getContext('2d');
 
-            // Background
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
@@ -101,7 +101,6 @@ module.exports = {
             }
 
             const font = getFont(fontKey);
-            // Fix #5: Number() instead of parseInt() without radix
             const shadowBlur = Number(glowIntensity);
 
             ctx.font = `${size}px '${font.family}'`;

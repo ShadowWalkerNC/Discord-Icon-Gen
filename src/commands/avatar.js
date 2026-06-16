@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas, registerFont, loadImage } = require('canvas');
-const { getFont, getFontChoices } = require('../utils/fonts');
+// Bug 4 fix: single consolidated import — getAllFonts was previously double-imported
+const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
@@ -15,8 +16,6 @@ const TEXT_POSITIONS = {
     bottom: 0.85,
 };
 
-// Fix #3: register all fonts at module load time, not per-interaction
-const { getAllFonts } = require('../utils/fonts');
 for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
@@ -81,7 +80,7 @@ module.exports = {
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         }
         if (!HEX_COLOR_REGEX.test(color)) {
-            return interaction.reply({ content: 'Color must be a valid hex code (e.g. `#FFFFFF`).', ephemeral: true });
+            return interaction.reply({ content: 'Color must be a valid hex code (e.g. #FFFFFF).', ephemeral: true });
         }
 
         const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('Generating your avatar overlay...');
@@ -92,7 +91,6 @@ module.exports = {
             const ctx = canvas.getContext('2d');
 
             const font = getFont(fontKey);
-            // Fix #5: Number() instead of parseInt() without radix
             const shadowBlur = Number(glowIntensity);
 
             const avatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 256 });
@@ -101,7 +99,6 @@ module.exports = {
                 const avatarImage = await loadImage(avatarURL);
 
                 if (circular) {
-                    // Fix #1: ctx.save() before clip so state can be fully restored after
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2, 0, Math.PI * 2);
@@ -112,16 +109,13 @@ module.exports = {
                 ctx.drawImage(avatarImage, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
                 if (circular) {
-                    // Fix #1: restore clip state so text and any future layers are unclipped
                     ctx.restore();
                 }
             } catch {
-                // Fallback: solid dark background if avatar fails to load
                 ctx.fillStyle = '#2b2d31';
                 ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             }
 
-            // Overlay text
             const textY = CANVAS_SIZE * (TEXT_POSITIONS[position] ?? 0.85);
 
             ctx.font = `${size}px '${font.family}'`;
