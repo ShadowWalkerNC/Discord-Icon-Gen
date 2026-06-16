@@ -3,36 +3,26 @@
 > **Forked from [NoVa-Gh0ul/Discord-Icon-Gen](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen)**
 > Original author: [@NoVa-Gh0ul](https://github.com/NoVa-Gh0ul) — all credit for the original concept and implementation.
 
-A Discord bot that generates fully customizable profile icons on demand. Drop it into your server, run `/icon`, and get a styled image in seconds.
+A Discord bot that generates fully customizable profile icons and server banners on demand.
 
 ---
 
 ## What's New in This Fork
 
-- **Font registry** — centralized font management in `src/utils/fonts.js`; adding new fonts requires one file drop and one line of code
-- **`/help` command** — full command reference available directly inside Discord via `/help`
-- **Global command deployment** — supports both guild (dev) and global (production) command registration via `DEPLOY_MODE`
-- **Input validation** — hex color format checking, text length cap, font size bounds
-- **Command caching** — commands loaded at startup, not re-required on every interaction
-- **Scoped intents** — only requests what is actually needed
-- **Improved error handling** — structured logs and user-facing error messages
-- **Cleaner project structure** — `.gitignore`, `.env.example`, fixed dependencies
-
----
-
-## Features
-
-- Generate a 400×400 icon with custom text, color, glow, and background
-- Font system designed for easy expansion
-- `/help` command for in-Discord reference
-- Guild mode for fast development, global mode for production
+- **`/banner` command** — generates a 1024×320 server banner with optional subtitle
+- **Font registry** — centralized font management in `src/utils/fonts.js`
+- **`/help` command** — full command reference inside Discord
+- **Global command deployment** — `DEPLOY_MODE=guild` for dev, `DEPLOY_MODE=global` for production
+- **Input validation** — hex color checking, text length caps, font size bounds
+- **Command caching** — commands loaded at startup
+- **Scoped intents** — only requests what is needed
+- **Improved error handling** — structured logs and user-facing messages
 
 ---
 
 ## Setup
 
 ### Prerequisites
-
 - [Node.js](https://nodejs.org/) v18 or higher
 - A Discord bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
 
@@ -43,11 +33,10 @@ git clone https://github.com/ShadowWalkerNC/Discord-Icon-Gen.git
 cd Discord-Icon-Gen
 npm install
 cp .env.example .env
-# Fill in your TOKEN, CLIENT_ID, GUILD_ID, and DEPLOY_MODE
+# Fill in TOKEN, CLIENT_ID, GUILD_ID, DEPLOY_MODE
 ```
 
 ### Running
-
 ```bash
 npm start
 ```
@@ -60,59 +49,75 @@ npm start
 |---|---|---|
 | `TOKEN` | Yes | Your Discord bot token |
 | `CLIENT_ID` | Yes | Your Discord application client ID |
-| `GUILD_ID` | Guild mode only | Server ID for guild-scoped command registration |
+| `GUILD_ID` | Guild mode only | Server ID for guild-scoped registration |
 | `DEPLOY_MODE` | No (default: `guild`) | `guild` for dev, `global` for production |
 
-> **Tip:** Use `DEPLOY_MODE=guild` while developing — instant registration. Switch to `DEPLOY_MODE=global` when going public. Global can take up to 1 hour to propagate.
+> Use `DEPLOY_MODE=guild` during development (instant). Switch to `DEPLOY_MODE=global` for public release (up to 1hr propagation).
 
 ---
 
 ## Commands
 
 ### `/icon`
-Generates a custom 400×400 profile icon.
+Generates a **400×400** profile icon.
 
 | Option | Required | Description |
 |---|---|---|
 | `text` | Yes | Text to display (max 20 characters) |
 | `size` | Yes | Font size in pixels (10–200) |
-| `color` | Yes | Text color in hex format (e.g. `#FF0000`) |
-| `glow` | Yes | Glow intensity: `Low`, `Medium`, `High` |
+| `color` | Yes | Hex color (e.g. `#FF0000`) |
+| `glow` | Yes | `Low`, `Medium`, or `High` |
 | `background` | Yes | `Plain (Black)`, `Custom Background 1`, `Custom Background 2` |
 | `font` | No | Font style. Default: `Another Danger` |
 
 **Example:** `/icon text:Nova size:80 color:#FF4500 glow:High background:Plain (Black)`
 
-### `/help`
-Displays this command reference inside Discord. Only visible to you.
+---
 
-**Example:** `/help`
+### `/banner`
+Generates a **1024×320** server banner.
+
+| Option | Required | Description |
+|---|---|---|
+| `text` | Yes | Primary text (max 30 characters) |
+| `size` | Yes | Font size in pixels (10–150) |
+| `color` | Yes | Hex color (e.g. `#00FFFF`) |
+| `glow` | Yes | `Low`, `Medium`, or `High` |
+| `background` | Yes | `Plain (Black)`, `Custom Background 1`, `Custom Background 2` |
+| `subtitle` | No | Smaller text beneath the main text (max 50 chars) |
+| `font` | No | Font style. Default: `Another Danger` |
+
+**Example:** `/banner text:MyServer size:90 color:#00FFFF glow:Medium background:Plain (Black) subtitle:Est. 2024`
+
+---
+
+### `/help`
+Displays the full command reference inside Discord. Only visible to you.
 
 ---
 
 ## Adding New Fonts
 
-1. Drop your `.otf` or `.ttf` font file into `src/fonts/`
+1. Drop your `.otf` or `.ttf` file into `src/fonts/`
 2. Add an entry to `src/utils/fonts.js`:
-   ```js
-   'my-font': {
-       label: 'My Font',
-       file: path.resolve(__dirname, '..', 'fonts', 'my-font.otf'),
-       family: 'My Font',
-   }
-   ```
-3. It will automatically appear as a choice in `/icon`
+```js
+'my-font': {
+    label: 'My Font',
+    file: path.resolve(__dirname, '..', 'fonts', 'my-font.otf'),
+    family: 'My Font',
+}
+```
+3. It automatically appears as a choice in `/icon` and `/banner`
 
 ---
 
 ## Deployment
 
-For production hosting, [Railway](https://railway.app) or [Fly.io](https://fly.io) work well. Set your environment variables in the platform dashboard and set `DEPLOY_MODE=global`.
+[Railway](https://railway.app) or [Fly.io](https://fly.io) work well for hosting. Set env vars in the platform dashboard and use `DEPLOY_MODE=global`.
 
 ---
 
 ## License
-
 MIT — see [LICENSE](LICENSE) for details.
 
 ---
