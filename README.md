@@ -86,6 +86,7 @@ npm start
 | `background` | ✅ | See backgrounds table below |
 | `color2` | — | Second colour for a gradient e.g. `#0000FF` |
 | `opacity` | — | Background brightness 10–100 (default: 100) |
+| `border` | — | `None` / `Solid` / `Glow Ring` / `Gradient Ring` |
 | `font` | — | Font style (default: Another Danger) |
 
 **Example:** `/icon text:Nova size:80 color:#FF4500 glow:High background:starfield color2:#FFAA00 opacity:70`
@@ -141,6 +142,22 @@ npm start
 | `font` | — | Font style |
 
 **Example:** `/logo text:Nova size:120 color:#FF4500 glow:High shape:Circle Ring`
+
+---
+
+### `/compare` — Side-by-side icon comparison
+
+Renders two 400×400 icons next to each other so you can compare colours, backgrounds, or styles before committing to one. Each side (A and B) accepts its own `color`, `color2`, `glow`, `background`, `opacity`, and `border`. The `text`, `size`, and `font` are shared.
+
+**Example:** `/compare text:Nova size:80 color_a:#FF4500 glow_a:High background_a:starfield color_b:#00FFFF glow_b:Medium background_b:midnight-gradient`
+
+---
+
+### `/random` — Randomised icon
+
+Picks a background, font, colours, glow level, and border automatically. Pass an optional `seed` number to recreate the exact same result later.
+
+**Example:** `/random text:Nova` or `/random text:Nova seed:42`
 
 ---
 
@@ -303,15 +320,156 @@ All fonts are free and open-source under the [SIL Open Font License](https://scr
 
 ## ☁️ Deployment
 
-[Railway](https://railway.app) and [Render](https://render.com) both have free tiers. Set your env vars in the platform dashboard and use `DEPLOY_MODE=global`.
+Choose the option that fits your situation. All three work fine for a personal bot.
 
-For GitHub Codespaces (run in browser, no install):
+---
+
+### Option 1 — Railway (Recommended, free tier available)
+
+Railway is the easiest cloud option. It runs 24/7, restarts automatically if it crashes, and you never need to touch a server.
+
+1. **Create a free account** at [railway.app](https://railway.app) and connect your GitHub account
+2. Click **New Project → Deploy from GitHub repo** and select `Discord-Icon-Gen`
+3. Railway will detect Node.js automatically. Before the first deploy, go to **Variables** and add:
+
+   | Variable | Value |
+   |---|---|
+   | `TOKEN` | Your bot token |
+   | `CLIENT_ID` | Your application client ID |
+   | `DEPLOY_MODE` | `global` |
+
+4. Under **Settings → Deploy**, set the **Start Command** to:
+   ```
+   node src/index.js
+   ```
+5. Click **Deploy**. Railway builds and starts the bot. Check the **Logs** tab — you should see `✅ Logged in as YourBot#1234` within a minute.
+6. **Fonts on Railway** — Railway's filesystem resets on each deploy, so add the font `curl` commands as a build step. Create a file called `railway.toml` in the repo root:
+   ```toml
+   [build]
+   builder = "NIXPACKS"
+   buildCommand = "npm install && cd src/fonts && curl -fsSL https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf -o BebasNeue-Regular.ttf && curl -fsSL https://github.com/googlefonts/OswaldFont/raw/main/fonts/ttf/Oswald-Bold.ttf -o Oswald-Bold.ttf && curl -fsSL 'https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf' -o PlayfairDisplay-Bold.ttf && curl -fsSL https://github.com/adobe-fonts/source-code-pro/raw/release/TTF/SourceCodePro-Bold.ttf -o SourceCodePro-Bold.ttf && curl -fsSL 'https://github.com/google/fonts/raw/main/ofl/dancingscript/DancingScript%5Bwght%5D.ttf' -o DancingScript-Bold.ttf"
+
+   [deploy]
+   startCommand = "node src/index.js"
+   restartPolicyType = "ON_FAILURE"
+   restartPolicyMaxRetries = 5
+   ```
+   Commit this file and Railway will download the fonts automatically on every deploy.
+
+> 💡 **Free tier note:** Railway's free tier gives you $5 of credit per month. A lightweight Discord bot uses roughly $0.50–$1.00/month, so it stays free for most users.
+
+---
+
+### Option 2 — Render (Free tier, sleeps after inactivity)
+
+Render's free tier works but the process sleeps after 15 minutes of inactivity and takes ~30 seconds to wake up on the next command. Fine for testing, less ideal for 24/7 use.
+
+1. Create a free account at [render.com](https://render.com)
+2. Click **New → Background Worker** (not Web Service — the bot has no HTTP server)
+3. Connect your GitHub repo and set:
+   - **Runtime:** Node
+   - **Build Command:** `npm install`
+   - **Start Command:** `node src/index.js`
+4. Under **Environment**, add `TOKEN`, `CLIENT_ID`, and `DEPLOY_MODE=global`
+5. Add a **Build Command** that also fetches the fonts (same curl block as the Railway `buildCommand` above)
+6. Click **Create Background Worker** and watch the logs
+
+---
+
+### Option 3 — VPS / Home Server (Linux, runs 24/7)
+
+Use this if you already have a Linux server (DigitalOcean, Linode, your own machine, a Raspberry Pi, etc.).
+
+#### First-time setup
+
 ```bash
+# Install Node.js v18+ via nvm (recommended)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 18
+nvm use 18
+
+# Clone the repo
+git clone https://github.com/ShadowWalkerNC/Discord-Icon-Gen.git
+cd Discord-Icon-Gen
 npm install
 cp .env.example .env
-# Fill in your values, then:
-npm start
+nano .env   # fill in TOKEN, CLIENT_ID, DEPLOY_MODE=global
+
+# Download fonts
+cd src/fonts
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf" -o BebasNeue-Regular.ttf
+curl -fsSL "https://github.com/googlefonts/OswaldFont/raw/main/fonts/ttf/Oswald-Bold.ttf" -o Oswald-Bold.ttf
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf" -o PlayfairDisplay-Bold.ttf
+curl -fsSL "https://github.com/adobe-fonts/source-code-pro/raw/release/TTF/SourceCodePro-Bold.ttf" -o SourceCodePro-Bold.ttf
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/dancingscript/DancingScript%5Bwght%5D.ttf" -o DancingScript-Bold.ttf
+cd ../..
 ```
+
+#### Keep the bot running with pm2
+
+[pm2](https://pm2.keymetrics.io) keeps the bot alive after you close your SSH session and restarts it automatically if it crashes.
+
+```bash
+# Install pm2 globally
+npm install -g pm2
+
+# Start the bot
+pm2 start src/index.js --name discord-icon-gen
+
+# Make it survive a server reboot
+pm2 save
+pm2 startup   # run the command it prints out
+
+# Useful pm2 commands
+pm2 status                    # see if the bot is running
+pm2 logs discord-icon-gen     # live log output
+pm2 restart discord-icon-gen  # restart after a code change
+pm2 stop discord-icon-gen     # stop the bot
+```
+
+#### Updating the bot
+
+```bash
+cd ~/Discord-Icon-Gen
+git pull
+npm install          # only needed if package.json changed
+pm2 restart discord-icon-gen
+```
+
+---
+
+### Option 4 — GitHub Codespaces (browser, no install needed)
+
+Good for a quick test or if you want to try the bot without installing anything locally.
+
+1. On the repo page, click **Code → Codespaces → Create codespace on main**
+2. In the Codespace terminal:
+   ```bash
+   npm install
+   cp .env.example .env
+   # Edit .env with your values using the built-in editor
+   ```
+3. Download fonts using the Linux curl block from the [Font Installation](#-font-installation) section above
+4. Run:
+   ```bash
+   node src/index.js
+   ```
+
+> ⚠️ Codespaces stop automatically after inactivity and are not suitable for permanent hosting. Use Railway or a VPS for 24/7 uptime.
+
+---
+
+### Slash Command Registration
+
+Commands register automatically when the bot starts. The `DEPLOY_MODE` variable controls scope:
+
+| `DEPLOY_MODE` | Scope | Speed | When to use |
+|---|---|---|---|
+| `guild` (default) | One server only (`GUILD_ID`) | Instant | Development and testing |
+| `global` | Every server the bot is in | Up to 1 hour | Production |
+
+> 💡 Always use `guild` mode while testing — it's instant and changes don't affect other servers. Switch to `global` only when you're ready to go live.
 
 ---
 
