@@ -19,11 +19,12 @@ A Discord bot that generates fully customisable profile icons, server banners, a
    ```
 4. **Open `setup.html`** in your browser — it walks you through creating your `.env` file step by step with no jargon
 5. Move the downloaded `.env` file into the `Discord-Icon-Gen` folder
-6. Run the bot:
+6. **Install the extra fonts** — see the [Font Installation](#-font-installation) section below (takes about 1 minute)
+7. Run the bot:
    ```bash
    node src/index.js
    ```
-7. In Discord, type `/help` to see all commands or `/preview` to browse backgrounds
+8. In Discord, type `/help` to see all commands or `/preview` to browse backgrounds
 
 ---
 
@@ -208,13 +209,41 @@ It appears automatically in `/icon`, `/banner`, and `/preview`.
 ```
 3. It appears automatically in all commands.
 
-> ⚠️ **Note:** The 5 bundled fonts (Bebas Neue, Oswald Bold, Playfair Display, Source Code Pro, Dancing Script) need to be downloaded separately due to file size constraints. Run the curl commands in the [font installation note](#font-installation) below.
-
 ---
 
 ## 📦 Font Installation
 
-After cloning, download the 5 bundled fonts by running these commands from the repo root:
+The bot comes with one built-in font (Another Danger). The other 5 fonts are free and open-source but need to be downloaded separately because they are too large to store on GitHub. This only takes about a minute.
+
+> 💡 **What is a terminal?** It's a text window where you type commands. Don't worry — you only need to copy and paste the lines below, then press Enter. You won't break anything.
+
+---
+
+### 🪟 Windows
+
+1. Press **Windows key + R**, type `cmd`, press **Enter** — a black window opens. That's the terminal.
+2. Copy and paste this entire block, then press **Enter**:
+
+```cmd
+cd %USERPROFILE%\Discord-Icon-Gen\src\fonts
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf" -o BebasNeue-Regular.ttf
+curl -fsSL "https://github.com/googlefonts/OswaldFont/raw/main/fonts/ttf/Oswald-Bold.ttf" -o Oswald-Bold.ttf
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay%%5Bwght%%5D.ttf" -o PlayfairDisplay-Bold.ttf
+curl -fsSL "https://github.com/adobe-fonts/source-code-pro/raw/release/TTF/SourceCodePro-Bold.ttf" -o SourceCodePro-Bold.ttf
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/dancingscript/DancingScript%%5Bwght%%5D.ttf" -o DancingScript-Bold.ttf
+```
+
+> ⚠️ If the first line gives an error saying the folder wasn't found, adjust the path to wherever you cloned the repo. For example if it's on your Desktop: `cd %USERPROFILE%\Desktop\Discord-Icon-Gen\src\fonts`
+
+3. When it finishes (no red errors), close the terminal. You're done.
+
+---
+
+### 🍎 Mac
+
+1. Open **Finder** → go to your `Discord-Icon-Gen` folder → right-click it → **New Terminal at Folder**  
+   *(If you don't see that option: go to **System Settings → Privacy & Security → Developer Tools** and enable Terminal)*
+2. Copy and paste this entire block into the terminal window, then press **Enter**:
 
 ```bash
 cd src/fonts
@@ -223,10 +252,52 @@ curl -fsSL "https://github.com/googlefonts/OswaldFont/raw/main/fonts/ttf/Oswald-
 curl -fsSL "https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf" -o PlayfairDisplay-Bold.ttf
 curl -fsSL "https://github.com/adobe-fonts/source-code-pro/raw/release/TTF/SourceCodePro-Bold.ttf" -o SourceCodePro-Bold.ttf
 curl -fsSL "https://github.com/google/fonts/raw/main/ofl/dancingscript/DancingScript%5Bwght%5D.ttf" -o DancingScript-Bold.ttf
-cd ../..
 ```
 
-All fonts are open-source (OFL / Apache 2.0).
+3. When it finishes (no red errors), close the terminal. You're done.
+
+---
+
+### 🐧 Linux
+
+```bash
+cd ~/Discord-Icon-Gen/src/fonts
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf" -o BebasNeue-Regular.ttf
+curl -fsSL "https://github.com/googlefonts/OswaldFont/raw/main/fonts/ttf/Oswald-Bold.ttf" -o Oswald-Bold.ttf
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf" -o PlayfairDisplay-Bold.ttf
+curl -fsSL "https://github.com/adobe-fonts/source-code-pro/raw/release/TTF/SourceCodePro-Bold.ttf" -o SourceCodePro-Bold.ttf
+curl -fsSL "https://github.com/google/fonts/raw/main/ofl/dancingscript/DancingScript%5Bwght%5D.ttf" -o DancingScript-Bold.ttf
+```
+
+---
+
+### ✅ How to check it worked
+
+Open the `Discord-Icon-Gen/src/fonts/` folder on your computer. You should see these 5 files, each larger than 50 KB:
+
+```
+BebasNeue-Regular.ttf      (~60 KB)
+Oswald-Bold.ttf            (~106 KB)
+PlayfairDisplay-Bold.ttf   (~294 KB)
+SourceCodePro-Bold.ttf     (~202 KB)
+DancingScript-Bold.ttf     (~131 KB)
+```
+
+If any file is tiny (under 5 KB) the download didn't work — delete it and run just that one `curl` line again.
+
+---
+
+### ❓ Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `curl: command not found` | On Windows: update to Windows 10 build 1803+ or [download curl](https://curl.se/windows/). On Mac: install Xcode Command Line Tools with `xcode-select --install` |
+| `No such file or directory` | You're in the wrong folder. Run `cd` followed by the full path to `Discord-Icon-Gen/src/fonts` |
+| Font file is 0 KB or tiny | Download failed. Check your internet connection and try just that one `curl` line again |
+| Bot starts but font looks wrong | Restart the bot after downloading fonts — it only loads them at startup |
+| Still using the wrong font | Type `/preview` in Discord — it shows which fonts loaded correctly |
+
+All fonts are free and open-source under the [SIL Open Font License](https://scripts.sil.org/OFL) or Apache 2.0.
 
 ---
 
