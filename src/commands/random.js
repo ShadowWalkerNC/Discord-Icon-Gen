@@ -45,7 +45,9 @@ function randomHexColor(rng) {
 const BG_KEYS     = ['plain-black','plain-white','midnight-gradient','sunset','forest','cyberpunk-grid','starfield','carbon-fiber','bg-image-1','bg-image-2'];
 const GLOW_VALUES = ['5', '10', '15'];
 const GLOW_LABELS = { '5': 'Low', '10': 'Medium', '15': 'High' };
-const BORDER_KEYS = ['none', 'none', 'solid', 'glow', 'gradient'];
+// 'none' appears twice (~22%) so most randoms are border-free;
+// the 8 named styles each appear once (~11% each combined for borders).
+const BORDER_KEYS = ['none', 'none', 'solid', 'glow', 'gradient', 'double', 'dashed', 'corner', 'neon'];
 
 module.exports = {
     cooldown: 5,

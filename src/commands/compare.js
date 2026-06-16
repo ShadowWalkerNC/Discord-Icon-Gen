@@ -51,6 +51,17 @@ async function renderIcon(params) {
     return canvas;
 }
 
+const BORDER_CHOICES = [
+    { name: 'None',          value: 'none'     },
+    { name: 'Solid',         value: 'solid'    },
+    { name: 'Glow Ring',     value: 'glow'     },
+    { name: 'Gradient Ring', value: 'gradient' },
+    { name: 'Double',        value: 'double'   },
+    { name: 'Dashed',        value: 'dashed'   },
+    { name: 'Corner Marks',  value: 'corner'   },
+    { name: 'Neon',          value: 'neon'     },
+];
+
 module.exports = {
     cooldown: 8,
     data: new SlashCommandBuilder()
@@ -73,11 +84,11 @@ module.exports = {
         .addStringOption(o  => o.setName('color2_a')    .setDescription('Side A \u2014 gradient second colour (hex)').setRequired(false))
         .addIntegerOption(o => o.setName('opacity_a')   .setDescription('Side A \u2014 background opacity 10\u2013100').setRequired(false).setMinValue(10).setMaxValue(100))
         .addStringOption(o  => o.setName('border_a')    .setDescription('Side A \u2014 border style').setRequired(false)
-            .addChoices({ name:'None',value:'none'},{ name:'Solid',value:'solid'},{ name:'Glow Ring',value:'glow'},{ name:'Gradient Ring',value:'gradient'}))
+            .addChoices(...BORDER_CHOICES))
         .addStringOption(o  => o.setName('color2_b')    .setDescription('Side B \u2014 gradient second colour (hex)').setRequired(false))
         .addIntegerOption(o => o.setName('opacity_b')   .setDescription('Side B \u2014 background opacity 10\u2013100').setRequired(false).setMinValue(10).setMaxValue(100))
         .addStringOption(o  => o.setName('border_b')    .setDescription('Side B \u2014 border style').setRequired(false)
-            .addChoices({ name:'None',value:'none'},{ name:'Solid',value:'solid'},{ name:'Glow Ring',value:'glow'},{ name:'Gradient Ring',value:'gradient'})),
+            .addChoices(...BORDER_CHOICES)),
 
     async execute(interaction) {
         const text    = interaction.options.getString('text');
