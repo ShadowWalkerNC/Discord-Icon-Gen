@@ -3,18 +3,20 @@
 > **Forked from [NoVa-Gh0ul/Discord-Icon-Gen](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen)**
 > Original author: [@NoVa-Gh0ul](https://github.com/NoVa-Gh0ul) — all credit for the original concept and implementation.
 
-A Discord bot that generates fully customizable profile icons and server banners on demand.
+A Discord bot that generates fully customizable profile icons, server banners, avatar overlays, and transparent logos — all without leaving Discord.
 
 ---
 
 ## What's New in This Fork
 
-- **`/banner` command** — generates a 1024×320 server banner with optional subtitle
+- **`/banner` command** — 1024×320 server banner with optional subtitle
+- **`/avatar` command** — overlays text and glow on your Discord avatar
+- **`/logo` command** — 512×512 transparent PNG with optional circle ring or underline decoration
 - **Font registry** — centralized font management in `src/utils/fonts.js`
 - **`/help` command** — full command reference inside Discord
 - **Global command deployment** — `DEPLOY_MODE=guild` for dev, `DEPLOY_MODE=global` for production
 - **Input validation** — hex color checking, text length caps, font size bounds
-- **Command caching** — commands loaded at startup
+- **Command caching** — commands loaded at startup, not re-required on every interaction
 - **Scoped intents** — only requests what is needed
 - **Improved error handling** — structured logs and user-facing messages
 
@@ -84,10 +86,43 @@ Generates a **1024×320** server banner.
 | `color` | Yes | Hex color (e.g. `#00FFFF`) |
 | `glow` | Yes | `Low`, `Medium`, or `High` |
 | `background` | Yes | `Plain (Black)`, `Custom Background 1`, `Custom Background 2` |
-| `subtitle` | No | Smaller text beneath the main text (max 50 chars) |
+| `subtitle` | No | Smaller text beneath main text (max 50 chars) |
 | `font` | No | Font style. Default: `Another Danger` |
 
 **Example:** `/banner text:MyServer size:90 color:#00FFFF glow:Medium background:Plain (Black) subtitle:Est. 2024`
+
+---
+
+### `/avatar`
+Overlays custom text on your **Discord avatar**.
+
+| Option | Required | Description |
+|---|---|---|
+| `text` | Yes | Text to overlay (max 20 characters) |
+| `size` | Yes | Font size in pixels (10–150) |
+| `color` | Yes | Hex color (e.g. `#FFFFFF`) |
+| `glow` | Yes | `Low`, `Medium`, or `High` |
+| `position` | Yes | Text placement: `Top`, `Center`, or `Bottom` |
+| `circular` | No | Crop avatar to circle. Default: `False` |
+| `font` | No | Font style. Default: `Another Danger` |
+
+**Example:** `/avatar text:Nova size:60 color:#FFFFFF glow:High position:Bottom circular:True`
+
+---
+
+### `/logo`
+Generates a **512×512 transparent PNG** logo — no background, ready to use as an overlay or server icon.
+
+| Option | Required | Description |
+|---|---|---|
+| `text` | Yes | Logo text (max 20 characters) |
+| `size` | Yes | Font size in pixels (10–200) |
+| `color` | Yes | Text and shape color in hex (e.g. `#FF4500`) |
+| `glow` | Yes | `Low`, `Medium`, or `High` |
+| `shape` | No | `None`, `Circle Ring`, or `Underline` |
+| `font` | No | Font style. Default: `Another Danger` |
+
+**Example:** `/logo text:Nova size:120 color:#FF4500 glow:High shape:Circle Ring`
 
 ---
 
@@ -107,13 +142,27 @@ Displays the full command reference inside Discord. Only visible to you.
     family: 'My Font',
 }
 ```
-3. It automatically appears as a choice in `/icon` and `/banner`
+3. It automatically appears as a choice in all commands that use the `font` option
 
 ---
 
 ## Deployment
 
 [Railway](https://railway.app) or [Fly.io](https://fly.io) work well for hosting. Set env vars in the platform dashboard and use `DEPLOY_MODE=global`.
+
+---
+
+## Running in the Browser (No Install)
+
+Click the green **Code** button on this repo → **Codespaces** → **Create codespace on main**.
+A full VS Code environment launches in your browser with Node.js pre-installed.
+
+```bash
+npm install
+cp .env.example .env
+# Fill in your values, then:
+npm start
+```
 
 ---
 

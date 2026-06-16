@@ -10,52 +10,27 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor('#808080')
             .setTitle('Discord Icon Gen — Command Reference')
-            .setDescription('Generate custom profile icons, server banners, and avatar overlays directly in Discord.')
+            .setDescription('Generate custom profile icons, server banners, avatar overlays, and transparent logos.')
             .addFields(
                 {
-                    name: '`/icon` — Generate a 400×400 profile icon',
-                    value: [
-                        '**`text`** *(required)* — Text to display. Max 20 characters.',
-                        '**`size`** *(required)* — Font size in pixels. Range: 10–200.',
-                        '**`color`** *(required)* — Hex color (e.g. `#FF0000`).',
-                        '**`glow`** *(required)* — `Low`, `Medium`, or `High`.',
-                        '**`background`** *(required)* — `Plain (Black)`, `Custom Background 1`, or `Custom Background 2`.',
-                        '**`font`** *(optional)* — Font style. Default: `Another Danger`.',
-                        '',
-                        '**Example:** `/icon text:Nova size:80 color:#FF4500 glow:High background:Plain (Black)`',
-                    ].join('\n'),
+                    name: '`/icon` — 400×400 profile icon',
+                    value: '`text` `size` `color` `glow` `background` `font(opt)`\n**Example:** `/icon text:Nova size:80 color:#FF4500 glow:High background:Plain (Black)`',
                 },
                 {
-                    name: '`/banner` — Generate a 1024×320 server banner',
-                    value: [
-                        '**`text`** *(required)* — Primary text. Max 30 characters.',
-                        '**`size`** *(required)* — Font size in pixels. Range: 10–150.',
-                        '**`color`** *(required)* — Hex color (e.g. `#00FFFF`).',
-                        '**`glow`** *(required)* — `Low`, `Medium`, or `High`.',
-                        '**`background`** *(required)* — `Plain (Black)`, `Custom Background 1`, or `Custom Background 2`.',
-                        '**`subtitle`** *(optional)* — Smaller text beneath the main text. Max 50 chars.',
-                        '**`font`** *(optional)* — Font style. Default: `Another Danger`.',
-                        '',
-                        '**Example:** `/banner text:MyServer size:90 color:#00FFFF glow:Medium background:Plain (Black) subtitle:Est. 2024`',
-                    ].join('\n'),
+                    name: '`/banner` — 1024×320 server banner',
+                    value: '`text` `size` `color` `glow` `background` `subtitle(opt)` `font(opt)`\n**Example:** `/banner text:MyServer size:90 color:#00FFFF glow:Medium background:Plain (Black) subtitle:Est. 2024`',
                 },
                 {
-                    name: '`/avatar` — Overlay text on your Discord avatar',
-                    value: [
-                        '**`text`** *(required)* — Text to overlay. Max 20 characters.',
-                        '**`size`** *(required)* — Font size in pixels. Range: 10–150.',
-                        '**`color`** *(required)* — Hex color (e.g. `#FFFFFF`).',
-                        '**`glow`** *(required)* — `Low`, `Medium`, or `High`.',
-                        '**`position`** *(required)* — Text placement: `Top`, `Center`, or `Bottom`.',
-                        '**`circular`** *(optional)* — Crop avatar into a circle. Default: `False`.',
-                        '**`font`** *(optional)* — Font style. Default: `Another Danger`.',
-                        '',
-                        '**Example:** `/avatar text:Nova size:60 color:#FFFFFF glow:High position:Bottom circular:True`',
-                    ].join('\n'),
+                    name: '`/avatar` — Text overlay on your Discord avatar',
+                    value: '`text` `size` `color` `glow` `position` `circular(opt)` `font(opt)`\n**Example:** `/avatar text:Nova size:60 color:#FFFFFF glow:High position:Bottom circular:True`',
+                },
+                {
+                    name: '`/logo` — 512×512 transparent PNG logo',
+                    value: '`text` `size` `color` `glow` `shape(opt)` `font(opt)`\nShapes: `None`, `Circle Ring`, `Underline`\n**Example:** `/logo text:Nova size:120 color:#FF4500 glow:High shape:Circle Ring`',
                 },
                 {
                     name: '`/help` — Show this reference',
-                    value: 'Displays all commands and options. Only visible to you.',
+                    value: 'Only visible to you.',
                 }
             )
             .setFooter({ text: 'Discord Icon Gen • forked from NoVa-Gh0ul' });
