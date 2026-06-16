@@ -25,10 +25,11 @@ module.exports = {
                     name: '`/icon` \u2014 400\u00d7400 profile icon',
                     value:
                         '**Required:** `text` `size` `color` `glow` `background`\n' +
-                        '**Optional:** `color2` `opacity` `font`\n' +
+                        '**Optional:** `color2` `opacity` `border` `font`\n' +
                         '\u2022 `opacity` 10\u2013100 dims the background toward black\n' +
                         '\u2022 `color2` adds a left\u2192right text gradient\n' +
-                        '**Example:** `/icon text:Nova size:80 color:#FF4500 glow:High background:starfield color2:#FFAA00 opacity:70`',
+                        '\u2022 `border` \u2014 None / Solid / Glow Ring / Gradient Ring\n' +
+                        '**Example:** `/icon text:Nova size:80 color:#FF4500 glow:High background:starfield border:Glow Ring`',
                 },
                 {
                     name: '`/banner` \u2014 1024\u00d7320 server banner',
@@ -36,7 +37,7 @@ module.exports = {
                         '**Required:** `text` `size` `color` `glow` `background`\n' +
                         '**Optional:** `color2` `opacity` `subtitle` `align` `font`\n' +
                         '\u2022 `subtitle` renders smaller text below the main heading\n' +
-                        '\u2022 `align` — Left / Center / Right (default: Center)\n' +
+                        '\u2022 `align` \u2014 Left / Center / Right (default: Center)\n' +
                         '**Example:** `/banner text:MyServer size:90 color:#00FFFF glow:Medium background:midnight-gradient subtitle:Est. 2024 align:Left`',
                 },
                 {
@@ -57,17 +58,26 @@ module.exports = {
                         '**Example:** `/logo text:Nova size:120 color:#FF4500 glow:High shape:Circle Ring`',
                 },
                 {
+                    name: '`/random` \u2014 Surprise icon generator',
+                    value:
+                        '**Optional:** `text` `seed`\n' +
+                        '\u2022 Picks a random background, font, colours, glow, and border for you\n' +
+                        '\u2022 `text` defaults to your Discord username if not provided\n' +
+                        '\u2022 `seed` \u2014 any number; share it with friends to recreate the exact same icon\n' +
+                        '**Example:** `/random` \u2022 `/random text:Nova seed:42`',
+                },
+                {
                     name: '`/preview` \u2014 Background mosaic sheet',
                     value:
                         'Generates a single image showing every available background with its name.\n' +
                         'Use this to pick a background before running `/icon` or `/banner`.',
                 },
                 {
-                    name: '\ud83c\udfa8 Available Fonts',
+                    name: '\uD83C\uDFA8 Available Fonts',
                     value: fontList || 'None registered',
                 },
                 {
-                    name: '\ud83d\uddbc\ufe0f Available Backgrounds',
+                    name: '\uD83D\uDDBC\uFE0F Available Backgrounds',
                     value: bgList || 'None registered',
                 },
                 {
