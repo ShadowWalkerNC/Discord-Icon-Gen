@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-// Bug 3 fix: removed unused AttachmentBuilder import
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas, registerFont, loadImage } = require('canvas');
 const path = require('path');
@@ -8,14 +7,14 @@ const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
 const MIN_FONT_SIZE = 10;
-const MAX_FONT_SIZE = 200;
+// Fix 1: aligned to 150 to match avatar.js — both use a 400x400 canvas
+const MAX_FONT_SIZE = 150;
 const CANVAS_SIZE = 400;
 
 for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
 
-// Bug 2 fix: corrected paths to match actual files in src/images/
 const BACKGROUNDS = {
     'Plain (Black)': null,
     'Custom Background 1': path.resolve(__dirname, '..', 'images', 'background1.jpg'),
@@ -107,13 +106,11 @@ module.exports = {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Glow pass
             ctx.shadowColor = color;
             ctx.shadowBlur = shadowBlur;
             ctx.fillStyle = color;
             ctx.fillText(text, CANVAS_SIZE / 2, CANVAS_SIZE / 2);
 
-            // Crisp pass
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.fillText(text, CANVAS_SIZE / 2, CANVAS_SIZE / 2);

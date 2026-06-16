@@ -6,6 +6,7 @@ const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
 const MIN_FONT_SIZE = 10;
+// logo.js uses 512x512 — 200 is appropriate here
 const MAX_FONT_SIZE = 200;
 const CANVAS_SIZE = 512;
 
@@ -68,7 +69,6 @@ module.exports = {
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         }
         if (!HEX_COLOR_REGEX.test(color)) {
-            // Bug 1 fix: clean string, no mismatched quotes
             return interaction.reply({ content: 'Color must be a valid hex code (e.g. #FF4500).', ephemeral: true });
         }
 
@@ -78,7 +78,6 @@ module.exports = {
         try {
             const canvas = createCanvas(CANVAS_SIZE, CANVAS_SIZE);
             const ctx = canvas.getContext('2d');
-            // Transparent background — no fillRect
 
             const font = getFont(fontKey);
             const shadowBlur = Number(glowIntensity);
@@ -89,7 +88,6 @@ module.exports = {
             ctx.strokeStyle = color;
             ctx.fillStyle = color;
 
-            // Circle ring — drawn behind text
             if (shape === 'circle') {
                 const radius = CANVAS_SIZE * 0.42;
                 ctx.beginPath();
@@ -107,18 +105,15 @@ module.exports = {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Glow pass
             ctx.shadowColor = color;
             ctx.shadowBlur = shadowBlur;
             ctx.fillStyle = color;
             ctx.fillText(text, centerX, centerY);
 
-            // Crisp pass
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.fillText(text, centerX, centerY);
 
-            // Underline — drawn after text
             if (shape === 'underline') {
                 const metrics = ctx.measureText(text);
                 const lineWidth = metrics.width * 1.1;
@@ -135,7 +130,8 @@ module.exports = {
                 ctx.stroke();
             }
 
-            const attachment = canvas.toBuffer('image/png');
+            // Fix 3: toBuffer() without explicit format arg — consistent with all other commands
+            const attachment = canvas.toBuffer();
 
             await initialReply.edit({
                 embeds: [

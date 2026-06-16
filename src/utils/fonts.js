@@ -1,11 +1,12 @@
 const path = require('path');
+const fs = require('fs');
 
 /**
  * Central font registry.
  * To add a new font:
  *   1. Drop the .otf or .ttf file into src/fonts/
- *   2. Add an entry below using the same pattern.
- *   3. Done — it appears automatically in all commands that use getFontChoices().
+ *   2. Add an entry below.
+ *   3. It appears automatically in all commands.
  */
 const FONTS = {
     'another-danger': {
@@ -13,7 +14,6 @@ const FONTS = {
         file: path.resolve(__dirname, '..', 'fonts', 'AnotherDanger.otf'),
         family: 'Another Danger',
     },
-    // Add more fonts here:
     // 'my-font': {
     //     label: 'My Font',
     //     file: path.resolve(__dirname, '..', 'fonts', 'my-font.otf'),
@@ -22,25 +22,36 @@ const FONTS = {
 };
 
 /**
- * Get a single font config by key. Falls back to 'another-danger' if key not found.
+ * Returns all font configs. Also validates font files exist on disk.
+ * Called at module load time by each command to register fonts once.
+ * Fix 4: warns on missing font files at startup instead of silently failing.
+ * @returns {Array<{ label: string, file: string, family: string }>}
+ */
+function getAllFonts() {
+    return Object.values(FONTS).filter(font => {
+        if (!fs.existsSync(font.file)) {
+            console.warn(`[WARNING] Font file not found, skipping: ${font.file}`);
+            return false;
+        }
+        return true;
+    });
+}
+
+/**
+ * Get a single font config by key.
+ * Falls back to 'another-danger' with a warning if the key is not registered.
  * @param {string} key
  * @returns {{ label: string, file: string, family: string }}
  */
 function getFont(key) {
+    if (!FONTS[key]) {
+        console.warn(`[WARNING] Font key '${key}' not found in registry. Falling back to 'another-danger'.`);
+    }
     return FONTS[key] || FONTS['another-danger'];
 }
 
 /**
- * Returns all font configs as an array.
- * Used by commands to register all fonts at module load time (Fix #3).
- * @returns {Array<{ label: string, file: string, family: string }>}
- */
-function getAllFonts() {
-    return Object.values(FONTS);
-}
-
-/**
- * Returns font choice objects formatted for Discord SlashCommandBuilder.addChoices().
+ * Returns font choice objects for Discord SlashCommandBuilder.addChoices().
  * @returns {Array<{ name: string, value: string }>}
  */
 function getFontChoices() {
