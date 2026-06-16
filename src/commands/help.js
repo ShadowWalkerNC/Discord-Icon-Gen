@@ -67,6 +67,15 @@ module.exports = {
                         '**Example:** `/random` \u2022 `/random text:Nova seed:42`',
                 },
                 {
+                    name: '`/compare` \u2014 Side-by-side icon comparison',
+                    value:
+                        '**Required:** `text` `size` `color_a` `glow_a` `background_a` `color_b` `glow_b` `background_b`\n' +
+                        '**Optional:** `font` `color2_a/b` `opacity_a/b` `border_a/b`\n' +
+                        '\u2022 Renders both icons in one 820\u00d7440 image with A / B labels\n' +
+                        '\u2022 Text and font are shared; everything else is independent per side\n' +
+                        '**Example:** `/compare text:Nova size:80 color_a:#FF4500 glow_a:High background_a:starfield color_b:#00FFFF glow_b:Medium background_b:midnight-gradient`',
+                },
+                {
                     name: '`/saveme` \u2014 Save icon params to history',
                     value:
                         '**Required:** `command` `text` `size` `color` `glow`\n' +
