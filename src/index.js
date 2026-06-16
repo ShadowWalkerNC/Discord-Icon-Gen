@@ -3,7 +3,6 @@ const { readdirSync } = require('fs');
 const { join } = require('path');
 require('dotenv').config();
 
-// Fix 2: validate required env vars before doing anything else
 const { TOKEN, CLIENT_ID } = process.env;
 if (!TOKEN || !CLIENT_ID) {
     console.error('\x1b[31m\x1b[1m[FATAL] TOKEN and CLIENT_ID must be set in your .env file. Exiting.\x1b[0m');
@@ -17,6 +16,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+client.cooldowns = new Collection();
 
 const commandFiles = readdirSync(join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
@@ -48,6 +48,32 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply({ content: 'Unknown command.', ephemeral: true });
         return;
     }
+
+    // --- Cooldown check ---
+    const { cooldowns } = client;
+    if (!cooldowns.has(command.data.name)) {
+        cooldowns.set(command.data.name, new Collection());
+    }
+
+    const now = Date.now();
+    const timestamps = cooldowns.get(command.data.name);
+    const cooldownMs = (command.cooldown ?? 3) * 1000;
+
+    if (timestamps.has(interaction.user.id)) {
+        const expiresAt = timestamps.get(interaction.user.id) + cooldownMs;
+        if (now < expiresAt) {
+            const remaining = ((expiresAt - now) / 1000).toFixed(1);
+            return interaction.reply({
+                content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
+                ephemeral: true,
+            });
+        }
+    }
+
+    // Set timestamp now, auto-delete after cooldown window to prevent memory growth
+    timestamps.set(interaction.user.id, now);
+    setTimeout(() => timestamps.delete(interaction.user.id), cooldownMs);
+    // --- End cooldown check ---
 
     try {
         await command.execute(interaction);

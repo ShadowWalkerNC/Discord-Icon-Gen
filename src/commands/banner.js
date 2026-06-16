@@ -16,7 +16,6 @@ for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
 
-// Bug 2 fix: corrected paths to match actual files in src/images/
 const BACKGROUNDS = {
     'Plain (Black)': null,
     'Custom Background 1': path.resolve(__dirname, '..', 'images', 'background1.jpg'),
@@ -24,6 +23,7 @@ const BACKGROUNDS = {
 };
 
 module.exports = {
+    cooldown: 4,
     data: new SlashCommandBuilder()
         .setName('banner')
         .setDescription('Generate a 1024x320 server banner.')
@@ -119,13 +119,11 @@ module.exports = {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Main text — glow pass
             ctx.shadowColor = color;
             ctx.shadowBlur = shadowBlur;
             ctx.fillStyle = color;
             ctx.fillText(text, centerX, textY);
 
-            // Main text — crisp pass
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.fillText(text, centerX, textY);

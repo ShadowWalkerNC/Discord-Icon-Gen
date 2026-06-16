@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
 const { createCanvas, registerFont, loadImage } = require('canvas');
-// Bug 4 fix: single consolidated import — getAllFonts was previously double-imported
 const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
@@ -21,6 +20,7 @@ for (const font of getAllFonts()) {
 }
 
 module.exports = {
+    cooldown: 4,
     data: new SlashCommandBuilder()
         .setName('avatar')
         .setDescription('Overlay custom text on your Discord avatar.')
@@ -122,13 +122,11 @@ module.exports = {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Glow pass
             ctx.shadowColor = color;
             ctx.shadowBlur = shadowBlur;
             ctx.fillStyle = color;
             ctx.fillText(text, CANVAS_SIZE / 2, textY);
 
-            // Crisp pass
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.fillText(text, CANVAS_SIZE / 2, textY);

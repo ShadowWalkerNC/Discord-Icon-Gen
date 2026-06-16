@@ -7,7 +7,6 @@ const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
 const MIN_FONT_SIZE = 10;
-// Fix 1: aligned to 150 to match avatar.js — both use a 400x400 canvas
 const MAX_FONT_SIZE = 150;
 const CANVAS_SIZE = 400;
 
@@ -22,6 +21,7 @@ const BACKGROUNDS = {
 };
 
 module.exports = {
+    cooldown: 4,
     data: new SlashCommandBuilder()
         .setName('icon')
         .setDescription('Generate a 400x400 profile icon.')

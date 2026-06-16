@@ -6,7 +6,6 @@ const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
 const MIN_FONT_SIZE = 10;
-// logo.js uses 512x512 — 200 is appropriate here
 const MAX_FONT_SIZE = 200;
 const CANVAS_SIZE = 512;
 
@@ -15,6 +14,7 @@ for (const font of getAllFonts()) {
 }
 
 module.exports = {
+    cooldown: 4,
     data: new SlashCommandBuilder()
         .setName('logo')
         .setDescription('Generate a 512x512 transparent PNG logo.')
@@ -130,7 +130,6 @@ module.exports = {
                 ctx.stroke();
             }
 
-            // Fix 3: toBuffer() without explicit format arg — consistent with all other commands
             const attachment = canvas.toBuffer();
 
             await initialReply.edit({
