@@ -1,51 +1,91 @@
-# Discord-Icon-Gen
-A simple Discord Bot that allows users to generate a customized icon! Follow the instructions below to setup, configurate, and use this application :D
+# Discord Icon Gen
 
-oh no! how did i find their secret font 😧
-<p align="left">
-  <a href="https://www.dafont.com/another-danger.font">
-  <img alt="Font Source / Download" title="profile icon font source"
-    src="https://custom-icon-badges.demolab.com/just%20the%20message-8A2BE2"/></a>
-</p>
-oops.
+> **Forked from [NoVa-Gh0ul/Discord-Icon-Gen](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen)**
+> Original author: [@NoVa-Gh0ul](https://github.com/NoVa-Gh0ul) — all credit for the original concept and implementation.
 
+A Discord bot that generates fully customizable profile icons on demand. Drop it into your server, run `/icon`, and get a styled image in seconds.
 
-# INSTALLATION 
+---
 
-- clone this repository at https://github.com/NoVa-Gh0ul/Discord-Icon-Gen
-- run `npm install`
-- create an application on the discord developer portal and fill the .env file with the required values (Bot Token, Client ID, and the Guild ID)
+## What's New in This Fork
 
-Now your application is ready to use! For those who don't know how to start the bot, follow the steps below:
+- **Input validation** — hex color format checking, text length cap, font size bounds
+- **Command caching** — commands are loaded at startup instead of re-required on every interaction
+- **Scoped intents** — only requests the `Guilds` intent instead of enabling everything by default
+- **Improved error handling** — structured error logs and user-facing error messages instead of silent failures
+- **Cleaner project structure** — `.gitignore`, `.env.example`, fixed `package.json` dependencies
 
-# STARTUP / USAGE
+---
 
-- In the terminal, run `node .` yeah thats pretty much it lol
+## Features
 
-If for some reason you're getting a "Token Invalid" error but you know your token is valid, move the .env file into the src folder. Im not sure why but sometimes it returns this error and thats a quick fix for it.
+- Generate a 400x400 icon with custom text
+- Choose your font size, text color (hex), and glow intensity
+- Select from multiple background styles
+- Delivered directly as an image attachment in Discord
 
-- To generate an icon, run the `/icon` command.
+---
 
+## Setup
 
-# DISCLAIMER
+### Prerequisites
 
-This is my own creation and not directly stolen from any third party sources. There is **NOT** a license on this code, do whatever you want! No credit needed. Why make this? Because gatekeeping a profile picture is childish, and it's also crazy to charge people $1 for something that took 30 minutes to make. And best of all no water mark!!
+- [Node.js](https://nodejs.org/) v18 or higher
+- A Discord bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
 
+### Installation
 
-# CONFIGURATION ASSISTANCE
+```bash
+# Clone the repo
+git clone https://github.com/ShadowWalkerNC/Discord-Icon-Gen.git
+cd Discord-Icon-Gen
 
-- If you wish to add / change the custom background images, just delete or add the appropriate files under the images folder.
+# Install dependencies
+npm install
 
-- To change how much the text is slanted, go to *line 93* of `icon.js`, there you'll see `ctx.rotate(-Math.PI / 20);`. To increase the slant, decrease the number (i.e: `ctx.rotate(-Math.PI / 12);`). To decrease the slant, increase the number (i.e: `ctx.rotate(-Math.PI / 26);`)
+# Set up your environment variables
+cp .env.example .env
+# Then open .env and fill in your TOKEN, CLIENT_ID, and GUILD_ID
+```
 
-- To change the font, replace the `.otf` file under fonts with the desired font. **NOTE:** Some fonts will not work and return the following error (`(process:18700): Pango-WARNING **: 21:32:57.339: couldn't load font "NAME_OF_FONT FONT_ROTATION", falling back to "Sans FONT_ROTATION", expect ugly output.`)
+### Running the Bot
 
+```bash
+npm start
+```
 
-# EXAMPLES / TOOLS
+---
 
-Check the examples folder to see some examples of the generated product, its quite cool :D
+## Environment Variables
 
-Also I added a hexStrings.txt file under the tools folder with some really cool colors, for a longer list of hex string values follow the link below: 
+| Variable | Description |
+|---|---|
+| `TOKEN` | Your Discord bot token |
+| `CLIENT_ID` | Your Discord application client ID |
+| `GUILD_ID` | The server ID to register slash commands to |
 
-- https://htmlcolorcodes.com/
-  
+Copy `.env.example` to `.env` and fill in your values. **Never commit your `.env` file.**
+
+---
+
+## Usage
+
+Once the bot is running and invited to your server, use the `/icon` slash command:
+
+| Option | Required | Description |
+|---|---|---|
+| `text` | Yes | Text to display (max 20 characters) |
+| `size` | Yes | Font size in pixels (10–200) |
+| `color` | Yes | Text color in hex format (e.g. `#FF0000`) |
+| `glow` | Yes | Glow intensity: Low, Medium, or High |
+| `background` | Yes | Background style: Plain, Custom 1, or Custom 2 |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
+
+---
+
+*This is a fork maintained by [@ShadowWalkerNC](https://github.com/ShadowWalkerNC). Please visit the [original repository](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen) to support the original author.*
