@@ -65,7 +65,11 @@ module.exports = {
                     { name: 'None',          value: 'none'     },
                     { name: 'Solid',         value: 'solid'    },
                     { name: 'Glow Ring',     value: 'glow'     },
-                    { name: 'Gradient Ring', value: 'gradient' }
+                    { name: 'Gradient Ring', value: 'gradient' },
+                    { name: 'Double',        value: 'double'   },
+                    { name: 'Dashed',        value: 'dashed'   },
+                    { name: 'Corner Marks',  value: 'corner'   },
+                    { name: 'Neon',          value: 'neon'     }
                 ))
         .addStringOption(option =>
             option.setName('font')
