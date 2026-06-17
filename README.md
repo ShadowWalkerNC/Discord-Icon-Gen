@@ -12,10 +12,11 @@ Sigil is a Discord bot for AI-powered server branding — generate icons, banner
 
 - 🎨 **Icon & Banner generation** — text, colors, fonts, glow, borders
 - 🖼️ **Brand kit** — icon + banner + badge + palette in one command
-- 🤖 **AI-powered design** — describe your server, get a full brand kit (Genkit + Claude)
+- 🤖 **AI-powered design** — describe your server, get a full brand kit (Gemini)
 - 🏅 **Badges & Cards** — role badges, profile cards, rank cards, welcome images
 - 🎭 **Mood-based themes** — one word in, full color palette out
 - 📦 **Brand export** — ZIP of all your server's assets
+- 🖥️ **Visual GUI** — browser-based brand builder with live preview
 
 ---
 
@@ -24,8 +25,8 @@ Sigil is a Discord bot for AI-powered server branding — generate icons, banner
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/ShadowWalkerNC/Discord-Icon-Gen.git
-cd Discord-Icon-Gen
+git clone https://github.com/ShadowWalkerNC/Sigil.git
+cd Sigil
 npm install
 ```
 
@@ -42,6 +43,7 @@ TOKEN=your_bot_token
 CLIENT_ID=your_application_id
 GUILD_ID=your_server_id
 DEPLOY_MODE=guild
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### 3. Run
@@ -75,62 +77,63 @@ npm start
 | `/random` | Fully randomised icon |
 | `/preview` | All available backgrounds |
 
-### `/icon` Options
+### 🖥️ GUI
 
-| Option | Required | Description |
-|---|---|---|
-| `text` | ✅ | Text to render (1–6 chars recommended) |
-| `size` | ✅ | Font size (20–200) |
-| `color` | ✅ | Primary hex color e.g. `#FF4500` |
-| `background` | ✅ | Background style (see list below) |
-| `color2` | ❌ | Secondary color for gradient text |
-| `glow` | ❌ | Glow intensity: None / Low / Medium / High / Ultra |
-| `font` | ❌ | Font choice |
-| `opacity` | ❌ | Text opacity (0.1–1.0) |
-| `border` | ❌ | Border style (see list below) |
+| Command | Description |
+|---|---|
+| `/gui open` | Get a clickable link to the visual brand builder (ephemeral by default) |
+| `/gui open public:true` | Post the GUI link publicly in the channel |
+| `/gui status` | Check if the GUI server is running |
 
-### Border Styles
+**Starting the GUI server:**
+```bash
+node gui/gui-server.js
+# Custom port:
+GUI_PORT=4000 node gui/gui-server.js
+```
 
-| Value | Display Name | Description |
-|---|---|---|
-| `none` | None | No border |
-| `solid` | Solid | Plain solid ring in `color` |
-| `glow-ring` | Glow Ring | Soft glowing halo in `color` |
-| `gradient-ring` | Gradient Ring | Gradient arc from `color` → `color2` |
-| `neon` | Neon | Bright neon tube outline |
-| `double` | Double Ring | Two concentric rings |
-| `dashed` | Dashed | Dashed/dotted ring |
-| `shadow-ring` | Shadow Ring | Deep shadow border for depth |
-| `pulse` | Pulse Ring | Multi-layer pulse glow |
+The GUI opens at `http://localhost:3420` (or your `GUI_PUBLIC_URL` env var). Features:
+- 54-color swatch library — click for primary, Shift+click for secondary
+- 12 background presets + gradient blend toggle
+- 6 border modes, glow strength slider, 6 font options
+- Live preview panel — icon, banner, palette, Discord embed mockup
+- **Generate** — runs full Gemini brand pipeline and posts assets back to the originating Discord channel via webhook
+- **Fast Preview** — instant canvas-only render with no Gemini call (~1–2 s)
+- Download tray — PNG export for icon, banner, palette, and AI image
 
-> `color2` is used by **Gradient Ring** and **Neon** styles.
+### 🤖 AI Brand
 
----
+| Command | Description |
+|---|---|
+| `/brand ai` | Describe your server → full AI-generated brand kit |
+| `/brand kit` | Manual brand kit with your own colors and text |
+| `/brand export` | ZIP download of all saved brand assets |
+| `/mood` | One word → AI color palette + preview icon |
 
-## Roadmap
+### 🛠️ Utility
 
-### ✅ v1.x (Complete)
-- Icon, banner, avatar, logo, compare, random, preview commands
-- 8 border styles, multiple backgrounds, glow effects
-
-### 🔨 v2.x (In Progress)
-- Brand kit generator (`/brand kit`)
-- AI background generation (Genkit + Gemini Imagen)
-- Claude-powered design critique and mood theming
-- Badge, card, poster, sticker commands
-- Profile rank cards and welcome images
-- Brand save/apply/export per server
-- Tier system for SaaS readiness
+| Command | Description |
+|---|---|
+| `/help` | Full command reference |
+| `/history` | Your recent generations |
+| `/saveme` | DM yourself your latest assets |
 
 ---
 
-## Credits
+## Environment Variables
 
-- Original project: [NoVa-Gh0ul/Discord-Icon-Gen](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen)
-- Maintainer: [ShadowWalkerNC](https://github.com/ShadowWalkerNC)
+| Variable | Required | Description |
+|---|---|---|
+| `TOKEN` | ✓ | Discord bot token |
+| `CLIENT_ID` | ✓ | Discord application ID |
+| `GUILD_ID` | ✓ (guild mode) | Server ID for guild-scoped commands |
+| `GEMINI_API_KEY` | ✓ (AI features) | Google Gemini API key |
+| `DEPLOY_MODE` | — | `guild` (fast) or `global`. Default: `guild` |
+| `GUI_PORT` | — | GUI server port. Default: `3420` |
+| `GUI_PUBLIC_URL` | — | Public URL for the GUI (e.g. via ngrok or Railway) |
 
 ---
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
