@@ -1,19 +1,5 @@
 /**
  * Sigil GUI Bridge Server
- * =======================
- * Lightweight Node HTTP server. Receives config JSON from the HTML GUI
- * (gui/sigil-gui-builder.html) and routes it into Sigil's pipeline.
- *
- * Endpoints:
- *   GET  /              — serve sigil-gui-builder.html
- *   GET  /health        — uptime + version ping
- *   POST /generate      — full brand kit: Gemini text + canvas PNG renders
- *   POST /preview       — fast canvas-only render (no Gemini call)
- *   POST /webhook-register — save a Discord webhook URL for asset callbacks
- *
- * Usage:
- *   node gui/gui-server.js
- *   GUI_PORT=4000 node gui/gui-server.js
  */
 
 'use strict';
@@ -25,7 +11,7 @@ const fs   = require('fs');
 const { geminiRequest, geminiImageRequest, extractJson } = require('../src/utils/gemini');
 const { renderKit }                                       = require('../src/utils/canvas');
 
-const PORT    = Number(process.env.GUI_PORT) || 3420;
+const PORT    = Number(process.env.PORT) || Number(process.env.GUI_PORT) || 3420;
 const VERSION = '1.2.1';
 const START   = Date.now();
 
@@ -182,10 +168,6 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // POST /generate — full Gemini + canvas pipeline
-    // FIX: previously declared `opts` with const inside the try block then
-    // referenced it in a nested spread — variable was scoped incorrectly.
-    // Now uses `baseOpts` + `finalOpts` to avoid the shadowing bug.
     if (req.method === 'POST' && url === '/generate') {
         try {
             const cfg    = await readBody(req);
@@ -237,7 +219,7 @@ const server = http.createServer(async (req, res) => {
     json(res, 404, { error: `No route for ${req.method} ${url}` });
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`\n  ✦ Sigil GUI Server v${VERSION}`);
-    console.log(`  → http://127.0.0.1:${PORT}\n`);
+    console.log(`  → http://0.0.0.0:${PORT}\n`);
 });
