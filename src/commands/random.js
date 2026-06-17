@@ -3,7 +3,7 @@ const { createCanvas, registerFont, loadImage } = require('canvas');
 const { getFont, getAllFonts } = require('../utils/fonts');
 const { createTextGradient } = require('../utils/gradient');
 const { drawBackground } = require('../utils/backgrounds');
-const { drawBorder } = require('../utils/borders');
+const { drawBorder, BORDER_LABELS } = require('../utils/borders');
 
 const CANVAS_SIZE = 400;
 
@@ -43,6 +43,7 @@ function randomHexColor(rng) {
 const BG_KEYS     = ['plain-black','plain-white','midnight-gradient','sunset','forest','cyberpunk-grid','starfield','carbon-fiber','bg-image-1','bg-image-2'];
 const GLOW_VALUES = ['5', '10', '15'];
 const GLOW_LABELS = { '5': 'Low', '10': 'Medium', '15': 'High' };
+// 'none' appears twice to reduce border frequency (~22% chance of no border)
 const BORDER_KEYS = ['none', 'none', 'solid', 'glow', 'gradient', 'double', 'dashed', 'corner', 'neon'];
 
 module.exports = {
@@ -103,18 +104,18 @@ module.exports = {
 
             const attachment  = canvas.toBuffer();
             const colorLabel  = color2 ? `${color1} \u2192 ${color2}` : color1;
-            const borderLabel = borderKey !== 'none' ? borderKey : 'none';
+            const borderLabel = BORDER_LABELS[borderKey] ?? borderKey;
 
             const resultEmbed = new EmbedBuilder()
                 .setColor('#808080')
                 .setImage('attachment://random-icon.png')
                 .setTitle('\uD83C\uDFB2 Random Icon')
                 .addFields(
-                    { name: 'Background', value: `\`${bgKey}\``,                inline: true },
-                    { name: 'Font',       value: `\`${fontEntry.label}\``,      inline: true },
-                    { name: 'Glow',       value: `\`${GLOW_LABELS[glowVal]}\``, inline: true },
-                    { name: 'Colour',     value: `\`${colorLabel}\``,            inline: true },
-                    { name: 'Border',     value: `\`${borderLabel}\``,           inline: true },
+                    { name: 'Background', value: `\`${bgKey}\``,                 inline: true },
+                    { name: 'Font',       value: `\`${fontEntry.label}\``,       inline: true },
+                    { name: 'Glow',       value: `\`${GLOW_LABELS[glowVal]}\``,  inline: true },
+                    { name: 'Colour',     value: `\`${colorLabel}\``,             inline: true },
+                    { name: 'Border',     value: `\`${borderLabel}\``,            inline: true },
                     { name: 'Seed',       value: `\`${seed}\` \u2014 share this to recreate the same icon`, inline: false },
                 )
                 .setFooter({ text: 'Discord Icon Gen \u2022 /random \u2022 use the seed to recreate this exact result' });

@@ -1,37 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { createCanvas, registerFont, loadImage } = require('canvas');
 const { getFont, getAllFonts } = require('../utils/fonts');
-const { drawBackground } = require('../utils/backgrounds');
+const { getBackgroundChoices, drawBackground } = require('../utils/backgrounds');
 
 for (const font of getAllFonts()) {
     registerFont(font.file, { family: font.family });
 }
-
-const BG_KEYS = [
-    'plain-black',
-    'plain-white',
-    'midnight-gradient',
-    'sunset',
-    'forest',
-    'cyberpunk-grid',
-    'starfield',
-    'carbon-fiber',
-    'bg-image-1',
-    'bg-image-2',
-];
-
-const BG_LABELS = {
-    'plain-black':       'Plain (Black)',
-    'plain-white':       'Plain (White)',
-    'midnight-gradient': 'Midnight Gradient',
-    'sunset':            'Sunset',
-    'forest':            'Forest',
-    'cyberpunk-grid':    'Cyberpunk Grid',
-    'starfield':         'Starfield',
-    'carbon-fiber':      'Carbon Fiber',
-    'bg-image-1':        'BG Image 1',
-    'bg-image-2':        'BG Image 2',
-};
 
 const COLS     = 3;
 const CELL_W   = 280;
@@ -53,7 +27,10 @@ module.exports = {
         const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
 
         try {
-            const rows   = Math.ceil(BG_KEYS.length / COLS);
+            // Derive BG list from the single source of truth in backgrounds.js
+            const bgChoices = getBackgroundChoices(); // [{ name, value }]
+
+            const rows   = Math.ceil(bgChoices.length / COLS);
             const sheetW = COLS * CELL_W + (COLS + 1) * PAD;
             const sheetH = HEADER_H + rows * (CELL_H + LABEL_H + PAD) + PAD;
 
@@ -63,14 +40,23 @@ module.exports = {
             ctx.fillStyle = '#111111';
             ctx.fillRect(0, 0, sheetW, sheetH);
 
-            ctx.font             = "bold 22px 'Another Danger'";
+            // Use a registered font if available, fall back to Arial
+            const registeredFonts = getAllFonts();
+            const headerFont = registeredFonts.length > 0
+                ? `bold 22px '${registeredFonts[0].family}'`
+                : "bold 22px 'Arial'";
+            const labelFont = registeredFonts.length > 0
+                ? `bold 13px '${registeredFonts[0].family}'`
+                : "bold 13px 'Arial'";
+
+            ctx.font             = headerFont;
             ctx.fillStyle        = '#ffffff';
             ctx.textAlign        = 'center';
             ctx.textBaseline     = 'middle';
             ctx.fillText('Background Preview \u2014 Discord Icon Gen', sheetW / 2, HEADER_H / 2);
 
-            for (let i = 0; i < BG_KEYS.length; i++) {
-                const key = BG_KEYS[i];
+            for (let i = 0; i < bgChoices.length; i++) {
+                const { name: label, value: key } = bgChoices[i];
                 const col = i % COLS;
                 const row = Math.floor(i / COLS);
                 const x   = PAD + col * (CELL_W + PAD);
@@ -89,11 +75,11 @@ module.exports = {
                 ctx.fillStyle = '#1c1c1c';
                 ctx.fillRect(x, y + CELL_H, CELL_W, LABEL_H);
 
-                ctx.font         = "bold 13px 'Another Danger'";
+                ctx.font         = labelFont;
                 ctx.fillStyle    = '#dddddd';
                 ctx.textAlign    = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(BG_LABELS[key] || key, x + CELL_W / 2, y + CELL_H + LABEL_H / 2);
+                ctx.fillText(label, x + CELL_W / 2, y + CELL_H + LABEL_H / 2);
             }
 
             const attachment = canvas.toBuffer();

@@ -3,18 +3,8 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { saveEntry, MAX_ITEMS } = require('../utils/history');
-
-function buildCopyCommand(cmd, params) {
-    const parts = [`/${cmd}`];
-    const order = ['text','size','color','glow','background','color2','opacity','border','font','position','circular','subtitle','align','shape','seed'];
-    for (const key of order) {
-        if (params[key] !== undefined && params[key] !== null) {
-            parts.push(`${key}:${params[key]}`);
-        }
-    }
-    return parts.join(' ');
-}
+const { saveEntry, buildCopyCommand, MAX_ITEMS } = require('../utils/history');
+const { getBorderChoices } = require('../utils/borders');
 
 module.exports = {
     cooldown: 2,
@@ -32,22 +22,14 @@ module.exports = {
         .addStringOption(o => o.setName('text')      .setDescription('Text you used')                          .setRequired(true))
         .addIntegerOption(o => o.setName('size')      .setDescription('Font size you used')                    .setRequired(true))
         .addStringOption(o => o.setName('color')      .setDescription('Primary colour (hex)')                  .setRequired(true))
-        .addStringOption(o => o.setName('glow')       .setDescription('Glow level (Low/Medium/High)').setRequired(true)
-            .addChoices({ name:'Low',value:'Low'},{ name:'Medium',value:'Medium'},{ name:'High',value:'High' }))
+        // Glow stored as numeric value (5/10/15) to match what rendering commands expect
+        .addStringOption(o => o.setName('glow')       .setDescription('Glow level').setRequired(true)
+            .addChoices({ name:'Low',value:'5'},{ name:'Medium',value:'10'},{ name:'High',value:'15' }))
         .addStringOption(o => o.setName('background') .setDescription('Background key (e.g. starfield)')       .setRequired(false))
         .addStringOption(o => o.setName('color2')     .setDescription('Second colour if gradient')             .setRequired(false))
         .addIntegerOption(o => o.setName('opacity')   .setDescription('Opacity 10-100')                        .setRequired(false).setMinValue(10).setMaxValue(100))
         .addStringOption(o => o.setName('border')     .setDescription('Border style')                         .setRequired(false)
-            .addChoices(
-                { name: 'None',          value: 'none'     },
-                { name: 'Solid',         value: 'solid'    },
-                { name: 'Glow Ring',     value: 'glow'     },
-                { name: 'Gradient Ring', value: 'gradient' },
-                { name: 'Double',        value: 'double'   },
-                { name: 'Dashed',        value: 'dashed'   },
-                { name: 'Corner Marks',  value: 'corner'   },
-                { name: 'Neon',          value: 'neon'     }
-            ))
+            .addChoices(...getBorderChoices()))
         .addStringOption(o => o.setName('font')       .setDescription('Font key')                              .setRequired(false))
         .addStringOption(o => o.setName('label')      .setDescription('Friendly name for this save (e.g. \'red fire icon\')')  .setRequired(false)),
 
@@ -59,7 +41,7 @@ module.exports = {
             text:       interaction.options.getString('text'),
             size:       interaction.options.getInteger('size'),
             color:      interaction.options.getString('color'),
-            glow:       interaction.options.getString('glow'),
+            glow:       interaction.options.getString('glow'),   // now stores '5'/'10'/'15'
             background: interaction.options.getString('background') || undefined,
             color2:     interaction.options.getString('color2')     || undefined,
             opacity:    interaction.options.getInteger('opacity')   || undefined,

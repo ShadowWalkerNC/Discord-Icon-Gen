@@ -3,18 +3,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { loadHistory, clearHistory, MAX_ITEMS } = require('../utils/history');
-
-function buildCopyCommand(cmd, params) {
-    const parts = [`/${cmd}`];
-    const order = ['text','size','color','glow','background','color2','opacity','border','font','position','circular','subtitle','align','shape','seed'];
-    for (const key of order) {
-        if (params[key] !== undefined && params[key] !== null) {
-            parts.push(`${key}:${params[key]}`);
-        }
-    }
-    return parts.join(' ');
-}
+const { loadHistory, clearHistory, buildCopyCommand, MAX_ITEMS } = require('../utils/history');
 
 module.exports = {
     cooldown: 3,

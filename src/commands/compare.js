@@ -3,7 +3,7 @@ const { createCanvas, registerFont, loadImage } = require('canvas');
 const { getFont, getFontChoices, getAllFonts }   = require('../utils/fonts');
 const { createTextGradient }                     = require('../utils/gradient');
 const { getBackgroundChoices, drawBackground }   = require('../utils/backgrounds');
-const { drawBorder }                             = require('../utils/borders');
+const { drawBorder, getBorderChoices, BORDER_LABELS } = require('../utils/borders');
 
 const HEX_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const ICON_SIZE = 400;
@@ -50,17 +50,6 @@ async function renderIcon(params) {
     return canvas;
 }
 
-const BORDER_CHOICES = [
-    { name: 'None',          value: 'none'     },
-    { name: 'Solid',         value: 'solid'    },
-    { name: 'Glow Ring',     value: 'glow'     },
-    { name: 'Gradient Ring', value: 'gradient' },
-    { name: 'Double',        value: 'double'   },
-    { name: 'Dashed',        value: 'dashed'   },
-    { name: 'Corner Marks',  value: 'corner'   },
-    { name: 'Neon',          value: 'neon'     },
-];
-
 module.exports = {
     cooldown: 8,
     data: new SlashCommandBuilder()
@@ -83,11 +72,11 @@ module.exports = {
         .addStringOption(o  => o.setName('color2_a')    .setDescription('Side A \u2014 gradient second colour (hex)').setRequired(false))
         .addIntegerOption(o => o.setName('opacity_a')   .setDescription('Side A \u2014 background opacity 10\u2013100').setRequired(false).setMinValue(10).setMaxValue(100))
         .addStringOption(o  => o.setName('border_a')    .setDescription('Side A \u2014 border style').setRequired(false)
-            .addChoices(...BORDER_CHOICES))
+            .addChoices(...getBorderChoices()))
         .addStringOption(o  => o.setName('color2_b')    .setDescription('Side B \u2014 gradient second colour (hex)').setRequired(false))
         .addIntegerOption(o => o.setName('opacity_b')   .setDescription('Side B \u2014 background opacity 10\u2013100').setRequired(false).setMinValue(10).setMaxValue(100))
         .addStringOption(o  => o.setName('border_b')    .setDescription('Side B \u2014 border style').setRequired(false)
-            .addChoices(...BORDER_CHOICES)),
+            .addChoices(...getBorderChoices())),
 
     async execute(interaction) {
         const text    = interaction.options.getString('text');
@@ -151,16 +140,20 @@ module.exports = {
             const attachment = out.toBuffer();
             const fontObj    = getFont(fontKey);
 
+            const GLOW_LABELS = { '5': 'Low', '10': 'Medium', '15': 'High' };
+
             const resultEmbed = new EmbedBuilder()
                 .setColor('#808080')
                 .setImage('attachment://compare.png')
                 .addFields(
-                    { name: 'A \u2014 colour',     value: A.color2 ? `${A.color} \u2192 ${A.color2}` : A.color, inline: true },
-                    { name: 'A \u2014 background', value: `\`${A.background}\``,                                 inline: true },
-                    { name: 'A \u2014 glow',       value: `\`${{ '5':'Low','10':'Medium','15':'High' }[A.glow]}\``, inline: true },
-                    { name: 'B \u2014 colour',     value: B.color2 ? `${B.color} \u2192 ${B.color2}` : B.color, inline: true },
-                    { name: 'B \u2014 background', value: `\`${B.background}\``,                                 inline: true },
-                    { name: 'B \u2014 glow',       value: `\`${{ '5':'Low','10':'Medium','15':'High' }[B.glow]}\``, inline: true },
+                    { name: 'A \u2014 colour',     value: A.color2 ? `${A.color} \u2192 ${A.color2}` : A.color,    inline: true },
+                    { name: 'A \u2014 background', value: `\`${A.background}\``,                                    inline: true },
+                    { name: 'A \u2014 glow',       value: `\`${GLOW_LABELS[A.glow]}\``,                             inline: true },
+                    { name: 'A \u2014 border',     value: `\`${BORDER_LABELS[A.border] ?? A.border}\``,             inline: true },
+                    { name: 'B \u2014 colour',     value: B.color2 ? `${B.color} \u2192 ${B.color2}` : B.color,    inline: true },
+                    { name: 'B \u2014 background', value: `\`${B.background}\``,                                    inline: true },
+                    { name: 'B \u2014 glow',       value: `\`${GLOW_LABELS[B.glow]}\``,                             inline: true },
+                    { name: 'B \u2014 border',     value: `\`${BORDER_LABELS[B.border] ?? B.border}\``,             inline: true },
                 )
                 .setFooter({ text: `Discord Icon Gen \u2022 /compare \u2022 font: ${fontObj.label} \u2022 text: ${text}` });
 

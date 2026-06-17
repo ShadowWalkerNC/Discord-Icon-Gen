@@ -3,7 +3,7 @@ const { createCanvas, registerFont, loadImage } = require('canvas');
 const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const { createTextGradient } = require('../utils/gradient');
 const { getBackgroundChoices, drawBackground } = require('../utils/backgrounds');
-const { drawBorder } = require('../utils/borders');
+const { drawBorder, getBorderChoices } = require('../utils/borders');
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
@@ -60,16 +60,7 @@ module.exports = {
             option.setName('border')
                 .setDescription('Frame style around the edge of the icon (default: None)')
                 .setRequired(false)
-                .addChoices(
-                    { name: 'None',          value: 'none'     },
-                    { name: 'Solid',         value: 'solid'    },
-                    { name: 'Glow Ring',     value: 'glow'     },
-                    { name: 'Gradient Ring', value: 'gradient' },
-                    { name: 'Double',        value: 'double'   },
-                    { name: 'Dashed',        value: 'dashed'   },
-                    { name: 'Corner Marks',  value: 'corner'   },
-                    { name: 'Neon',          value: 'neon'     }
-                ))
+                .addChoices(...getBorderChoices()))
         .addStringOption(option =>
             option.setName('font')
                 .setDescription('Font style for the text')

@@ -66,4 +66,22 @@ function clearHistory(userId) {
     if (fs.existsSync(fp)) fs.unlinkSync(fp);
 }
 
-module.exports = { loadHistory, saveEntry, clearHistory, MAX_ITEMS };
+/**
+ * Builds a copy-paste Discord slash command string from saved params.
+ * Shared by /saveme and /history to avoid duplication.
+ * @param {string} cmd
+ * @param {object} params
+ * @returns {string}
+ */
+function buildCopyCommand(cmd, params) {
+    const parts = [`/${cmd}`];
+    const order = ['text','size','color','glow','background','color2','opacity','border','font','position','circular','subtitle','align','shape','seed'];
+    for (const key of order) {
+        if (params[key] !== undefined && params[key] !== null) {
+            parts.push(`${key}:${params[key]}`);
+        }
+    }
+    return parts.join(' ');
+}
+
+module.exports = { loadHistory, saveEntry, clearHistory, buildCopyCommand, MAX_ITEMS };

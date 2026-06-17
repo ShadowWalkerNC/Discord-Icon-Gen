@@ -113,14 +113,11 @@ function drawBorder(ctx, style, color, color2, size) {
         ctx.lineCap     = 'square';
 
         const corners = [
-            // [startX, startY, hEndX, vEndY]  — top-left
-            [pad, pad, pad + arm, pad + arm],
-            // top-right
-            [size - pad, pad, size - pad - arm, pad + arm],
-            // bottom-left
-            [pad, size - pad, pad + arm, size - pad - arm],
-            // bottom-right
-            [size - pad, size - pad, size - pad - arm, size - pad - arm],
+            // [x, y, hEndX, vEndY]
+            [pad,          pad,          pad + arm,          pad + arm         ], // top-left
+            [size - pad,   pad,          size - pad - arm,   pad + arm         ], // top-right
+            [pad,          size - pad,   pad + arm,          size - pad - arm  ], // bottom-left
+            [size - pad,   size - pad,   size - pad - arm,   size - pad - arm  ], // bottom-right
         ];
 
         corners.forEach(([x, y, hx, vy]) => {
@@ -155,4 +152,30 @@ function drawBorder(ctx, style, color, color2, size) {
     }
 }
 
-module.exports = { drawBorder };
+/**
+ * Returns choice objects for Discord SlashCommandBuilder.addChoices().
+ * Single source of truth — import this instead of hardcoding the list.
+ * @returns {Array<{ name: string, value: string }>}
+ */
+function getBorderChoices() {
+    return [
+        { name: 'None',          value: 'none'     },
+        { name: 'Solid',         value: 'solid'    },
+        { name: 'Glow Ring',     value: 'glow'     },
+        { name: 'Gradient Ring', value: 'gradient' },
+        { name: 'Double',        value: 'double'   },
+        { name: 'Dashed',        value: 'dashed'   },
+        { name: 'Corner Marks',  value: 'corner'   },
+        { name: 'Neon',          value: 'neon'     },
+    ];
+}
+
+/**
+ * Maps raw border value → display name.
+ * @type {Object<string,string>}
+ */
+const BORDER_LABELS = Object.fromEntries(
+    getBorderChoices().map(({ name, value }) => [value, name])
+);
+
+module.exports = { drawBorder, getBorderChoices, BORDER_LABELS };

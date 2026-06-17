@@ -142,19 +142,23 @@ module.exports = {
             if (subtitle) {
                 const subSize = Math.round(size * 0.4);
                 const subY    = textY + size * 0.75;
-                ctx.font        = `${subSize}px '${font.family}'`;
-                ctx.textAlign   = align;
-                ctx.globalAlpha = 0.75;
+                ctx.font      = `${subSize}px '${font.family}'`;
+                ctx.textAlign = align;
 
                 const subFill = createTextGradient(ctx, color, color2, subtitle, textX, CANVAS_WIDTH);
+
+                // Glow pass at 75% opacity
+                ctx.globalAlpha = 0.75;
                 ctx.shadowColor = color;
                 ctx.shadowBlur  = shadowBlur * 0.6;
                 ctx.fillStyle   = subFill;
                 ctx.fillText(subtitle, textX, subY);
+
+                // Crisp re-draw at full opacity to sharpen the subtitle
+                ctx.globalAlpha = 1.0;
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur  = 0;
                 ctx.fillText(subtitle, textX, subY);
-                ctx.globalAlpha = 1.0;
             }
 
             const attachment   = canvas.toBuffer();
