@@ -13,7 +13,7 @@
  *
  * Usage:
  *   node gui/gui-server.js
- *   PORT=4000 node gui/gui-server.js
+ *   GUI_PORT=4000 node gui/gui-server.js
  */
 
 'use strict';
@@ -26,13 +26,10 @@ const { geminiRequest, geminiImageRequest, extractJson } = require('../src/utils
 const { renderKit }                                       = require('../src/utils/canvas');
 
 const PORT    = Number(process.env.GUI_PORT) || 3420;
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
 const START   = Date.now();
 
-// In-memory webhook store (keyed by Discord channel ID)
 const webhooks = {};
-
-// ── Helpers ────────────────────────────────────────────────────────────────
 
 function cors(res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -56,15 +53,10 @@ function readBody(req) {
     });
 }
 
-/** Map GUI config visuals → renderKit() options */
 function configToRenderKitOpts(cfg) {
     const b = cfg.brand   || {};
     const v = cfg.visuals || {};
-    // GUI preset name → backgrounds.js key
-    // All 10 real keys pass through directly; GUI-only presets map to the
-    // closest real background (no more plain-black catch-alls).
     const BG_MAP = {
-        // GUI preset names
         'midnight-gradient': 'midnight-gradient',
         'deep-space':        'starfield',
         'inferno':           'sunset',
@@ -77,7 +69,6 @@ function configToRenderKitOpts(cfg) {
         'void':              'plain-black',
         'neon-city':         'cyberpunk-grid',
         'polar':             'bg-image-2',
-        // Pass-through: raw backgrounds.js keys sent directly from GUI
         'plain-black':       'plain-black',
         'plain-white':       'plain-white',
         'sunset':            'sunset',
@@ -101,7 +92,6 @@ function configToRenderKitOpts(cfg) {
     };
 }
 
-/** Build Gemini brand prompt from GUI config */
 function buildBrandPrompt(cfg) {
     const v = cfg.visuals || {};
     const b = cfg.brand   || {};
@@ -115,7 +105,6 @@ function buildBrandPrompt(cfg) {
     ].join(' ');
 }
 
-/** Post generated assets back to a registered Discord webhook */
 async function notifyWebhook(channelId, payload) {
     const url = webhooks[channelId];
     if (!url) return;
@@ -146,15 +135,12 @@ async function notifyWebhook(channelId, payload) {
     } catch (e) { console.warn('[webhook] Failed to notify:', e.message); }
 }
 
-// ── Request router ─────────────────────────────────────────────────────────
-
 const server = http.createServer(async (req, res) => {
     cors(res);
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
     const url = req.url.split('?')[0];
 
-    // GET / — serve the HTML GUI
     if (req.method === 'GET' && url === '/') {
         const htmlPath = path.join(__dirname, 'sigil-gui-builder.html');
         try {
@@ -166,12 +152,10 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // GET /health — uptime ping
     if (req.method === 'GET' && url === '/health') {
         return json(res, 200, { ok: true, version: VERSION, uptime: Math.floor((Date.now() - START) / 1000) });
     }
 
-    // POST /webhook-register
     if (req.method === 'POST' && url === '/webhook-register') {
         try {
             const { channelId, webhookUrl } = await readBody(req);
@@ -182,7 +166,6 @@ const server = http.createServer(async (req, res) => {
         } catch (e) { return json(res, 400, { error: e.message }); }
     }
 
-    // POST /preview — fast canvas-only render
     if (req.method === 'POST' && url === '/preview') {
         try {
             const cfg  = await readBody(req);
@@ -200,40 +183,40 @@ const server = http.createServer(async (req, res) => {
     }
 
     // POST /generate — full Gemini + canvas pipeline
+    // FIX: previously declared `opts` with const inside the try block then
+    // referenced it in a nested spread — variable was scoped incorrectly.
+    // Now uses `baseOpts` + `finalOpts` to avoid the shadowing bug.
     if (req.method === 'POST' && url === '/generate') {
         try {
-            const cfg        = await readBody(req);
-            const apiKey     = cfg.gemini_api_key || process.env.GEMINI_API_KEY;
+            const cfg    = await readBody(req);
+            const apiKey = cfg.gemini_api_key || process.env.GEMINI_API_KEY;
             if (!apiKey) return json(res, 400, { error: 'Gemini API key required — add it in the GUI or set GEMINI_API_KEY env var.' });
 
             process.env.GEMINI_API_KEY = apiKey;
 
-            // 1. Gemini brand text
             const prompt  = buildBrandPrompt(cfg);
             const rawText = await geminiRequest(prompt, { temperature: 0.9, maxOutputTokens: 400 });
             const brand   = extractJson(rawText);
 
-            // 2. Canvas renders
-            const opts = {
-                ...configToRenderKitOpts(cfg),
-                name:    brand.name    || opts?.name,
-                tagline: brand.tagline || opts?.tagline,
+            const baseOpts  = configToRenderKitOpts(cfg);
+            const finalOpts = {
+                ...baseOpts,
+                name:    brand.name    || baseOpts.name,
+                tagline: brand.tagline || baseOpts.tagline,
             };
-            const kit = await renderKit(opts);
+            const kit = await renderKit(finalOpts);
 
-            // 3. Optional AI image
             let ai_image_b64 = null;
-            const imgPrompt = brand.icon_prompt || cfg.brand?.ai_prompt;
+            const imgPrompt  = brand.icon_prompt || cfg.brand?.ai_prompt;
             if (imgPrompt) {
                 try {
-                    const imgBuf   = await geminiImageRequest(imgPrompt);
-                    ai_image_b64   = imgBuf?.toString('base64') || null;
+                    const imgBuf = await geminiImageRequest(imgPrompt);
+                    ai_image_b64 = imgBuf?.toString('base64') || null;
                 } catch (imgErr) {
                     console.warn('[/generate] AI image skipped:', imgErr.message);
                 }
             }
 
-            // 4. Notify webhook if registered
             const channelId = cfg.discord?.channel_id;
             if (channelId) notifyWebhook(channelId, { ...brand, palette: brand.palette }).catch(() => {});
 

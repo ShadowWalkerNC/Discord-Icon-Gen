@@ -6,6 +6,7 @@
  *
  * Exports:
  *   registerAllFonts()                         — call once at startup
+ *   getAllFontFamilies()                        — list registered font family names
  *   autoFontSize(text, max, min, divisor)       — responsive font sizing
  *   renderIcon(ctx, opts)                       — 400×400 icon canvas
  *   renderBanner(ctx, opts)                     — 1024×320 banner canvas
@@ -32,34 +33,20 @@ function registerAllFonts() {
     }
 }
 
-// ── Font sizing helper ───────────────────────────────────────────────────────────
 /**
- * Responsive font size that scales down for longer text.
- * @param {string} text
- * @param {number} max      - largest allowed size
- * @param {number} min      - smallest allowed size
- * @param {number} divisor  - controls how quickly it shrinks with text length
+ * Returns an array of all registered font family name strings.
+ * Used by gui/sigil-gui-builder.html to populate the font picker.
  */
+function getAllFontFamilies() {
+    return getAllFonts().map(font => font.family);
+}
+
+// ── Font sizing helper ───────────────────────────────────────────────────────────
 function autoFontSize(text, max = 150, min = 32, divisor = 220) {
     return Math.min(max, Math.max(min, Math.floor(divisor / Math.max(text.length, 1))));
 }
 
 // ── renderIcon ───────────────────────────────────────────────────────────────────
-/**
- * Draw a 400×400 icon onto an existing canvas context.
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {object} opts
- * @param {string}  opts.text        - text to render (initials or short label)
- * @param {number}  opts.size        - font size in px
- * @param {string}  opts.color       - primary hex colour
- * @param {string}  [opts.color2]    - secondary hex colour for gradient
- * @param {string}  [opts.glow]      - shadow blur ('0','5','10','15','25')
- * @param {string}  [opts.background]- background key (see backgrounds.js)
- * @param {string}  [opts.border]    - border key (see borders.js)
- * @param {object}  [opts.font]      - font object from fonts.js
- * @param {number}  [opts.opacity]   - background opacity 10–100
- */
 async function renderIcon(ctx, opts = {}) {
     const {
         text, size, color, color2 = null,
@@ -97,20 +84,6 @@ async function renderIcon(ctx, opts = {}) {
 }
 
 // ── renderBanner ───────────────────────────────────────────────────────────────
-/**
- * Draw a 1024×320 banner onto an existing canvas context.
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {object} opts
- * @param {string}  opts.text        - main banner text
- * @param {number}  opts.size        - font size in px
- * @param {string}  opts.color       - primary hex colour
- * @param {string}  [opts.color2]    - secondary hex colour
- * @param {string}  [opts.glow]      - shadow blur value string
- * @param {string}  [opts.background]- background key
- * @param {string}  [opts.subtitle]  - optional tagline below main text
- * @param {object}  [opts.font]      - font object from fonts.js
- */
 async function renderBanner(ctx, opts = {}) {
     const {
         text, size, color, color2 = null,
@@ -156,12 +129,6 @@ async function renderBanner(ctx, opts = {}) {
 }
 
 // ── renderPalette ───────────────────────────────────────────────────────────────
-/**
- * Generate an 800×200 palette strip PNG.
- * @param {string} color   - primary hex
- * @param {string} [color2]- secondary hex (optional)
- * @returns {Buffer} PNG buffer
- */
 function renderPalette(color, color2 = null) {
     const W = 800, H = 200;
     const canvas = createCanvas(W, H);
@@ -212,21 +179,6 @@ function renderPalette(color, color2 = null) {
 }
 
 // ── renderKit (convenience wrapper) ──────────────────────────────────────────────
-/**
- * Generate a full brand kit (icon + banner + palette) in one call.
- *
- * @param {object} opts
- * @param {string}  opts.name        - brand/server name (banner text)
- * @param {string}  opts.initials    - 1–4 chars for the icon
- * @param {string}  opts.color       - primary hex
- * @param {string}  [opts.color2]    - secondary hex
- * @param {string}  [opts.background]- background key
- * @param {string}  [opts.border]    - border key
- * @param {string}  [opts.glow]      - glow value string
- * @param {string}  [opts.tagline]   - banner subtitle
- * @param {string}  [opts.fontKey]   - font key (default: 'another-danger')
- * @returns {Promise<{icon: Buffer, banner: Buffer, palette: Buffer}>}
- */
 async function renderKit(opts = {}) {
     registerAllFonts();
 
@@ -270,4 +222,12 @@ async function renderKit(opts = {}) {
     };
 }
 
-module.exports = { registerAllFonts, autoFontSize, renderIcon, renderBanner, renderPalette, renderKit };
+module.exports = {
+    registerAllFonts,
+    getAllFontFamilies,
+    autoFontSize,
+    renderIcon,
+    renderBanner,
+    renderPalette,
+    renderKit,
+};

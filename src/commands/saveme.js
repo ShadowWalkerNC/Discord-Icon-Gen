@@ -17,7 +17,9 @@ module.exports = {
                 { name: '/banner', value: 'banner' },
                 { name: '/logo',   value: 'logo'   },
                 { name: '/avatar', value: 'avatar' },
-                { name: '/random', value: 'random' }
+                { name: '/random', value: 'random' },
+                { name: '/brand',  value: 'brand'  },
+                { name: '/mood',   value: 'mood'   }
             ))
         .addStringOption(o => o.setName('text')      .setDescription('Text you used')                          .setRequired(true))
         .addIntegerOption(o => o.setName('size')      .setDescription('Font size you used')                    .setRequired(true))
@@ -33,7 +35,7 @@ module.exports = {
         .addStringOption(o => o.setName('background') .setDescription('Background key (e.g. starfield)')       .setRequired(false))
         .addStringOption(o => o.setName('color2')     .setDescription('Second colour if gradient')             .setRequired(false))
         .addIntegerOption(o => o.setName('opacity')   .setDescription('Opacity 10-100')                        .setRequired(false).setMinValue(10).setMaxValue(100))
-        .addStringOption(o => o.setName('border')     .setDescription('Border style')                         .setRequired(false)
+        .addStringOption(o => o.setName('border')     .setDescription('Border style')                          .setRequired(false)
             .addChoices(...getBorderChoices()))
         .addStringOption(o => o.setName('font')       .setDescription('Font key')                              .setRequired(false))
         .addStringOption(o => o.setName('label')      .setDescription("Friendly name for this save (e.g. 'red fire icon')")  .setRequired(false)),
@@ -62,14 +64,14 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor('#808080')
-            .setTitle('\u2705 Saved to your history')
+            .setTitle('✅ Saved to your history')
             .setDescription('Use `/history` to view and replay all your saved icons.')
             .addFields(
                 { name: 'Label',   value: label || '*(auto-timestamped)*', inline: true  },
-                { name: 'Command', value: `\`/${command}\``,                inline: true  },
-                { name: 'Replay',  value: `\`\`\`\n${copyCmd}\n\`\`\``,   inline: false },
+                { name: 'Command', value: `\`/${command}\``,               inline: true  },
+                { name: 'Replay',  value: `\`\`\`\n${copyCmd}\n\`\`\``,  inline: false },
             )
-            .setFooter({ text: `Sigil \u2022 /saveme \u2022 history capped at ${MAX_ITEMS} entries per user` });
+            .setFooter({ text: `Sigil • /saveme • history capped at ${MAX_ITEMS} entries per user` });
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     },
