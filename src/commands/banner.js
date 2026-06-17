@@ -19,7 +19,8 @@ const ALIGN_X = {
 };
 
 for (const font of getAllFonts()) {
-    registerFont(font.file, { family: font.family });
+    try { registerFont(font.file, { family: font.family }); }
+    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
 }
 
 module.exports = {
@@ -147,14 +148,12 @@ module.exports = {
 
                 const subFill = createTextGradient(ctx, color, color2, subtitle, textX, CANVAS_WIDTH);
 
-                // Glow pass at 75% opacity
                 ctx.globalAlpha = 0.75;
                 ctx.shadowColor = color;
                 ctx.shadowBlur  = shadowBlur * 0.6;
                 ctx.fillStyle   = subFill;
                 ctx.fillText(subtitle, textX, subY);
 
-                // Crisp re-draw at full opacity to sharpen the subtitle
                 ctx.globalAlpha = 1.0;
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur  = 0;

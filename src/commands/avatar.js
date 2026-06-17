@@ -16,7 +16,8 @@ const TEXT_POSITIONS = {
 };
 
 for (const font of getAllFonts()) {
-    registerFont(font.file, { family: font.family });
+    try { registerFont(font.file, { family: font.family }); }
+    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
 }
 
 module.exports = {
@@ -111,12 +112,13 @@ module.exports = {
                 }
                 ctx.drawImage(avatarImage, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
                 if (circular) ctx.restore();
-            } catch {
-                ctx.fillStyle = '#2b2d31';
+            } catch (avatarError) {
+                console.warn('[WARN] Could not load avatar, using blank canvas:', avatarError.message);
+                ctx.fillStyle = '#36393f';
                 ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             }
 
-            const textY = CANVAS_SIZE * (TEXT_POSITIONS[position] ?? 0.85);
+            const drawY = CANVAS_SIZE * (TEXT_POSITIONS[position] ?? TEXT_POSITIONS.bottom);
 
             ctx.font         = `${size}px '${font.family}'`;
             ctx.textAlign    = 'center';
@@ -127,10 +129,10 @@ module.exports = {
             ctx.shadowColor = color;
             ctx.shadowBlur  = shadowBlur;
             ctx.fillStyle   = fill;
-            ctx.fillText(text, drawX, textY);
+            ctx.fillText(text, drawX, drawY);
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur  = 0;
-            ctx.fillText(text, drawX, textY);
+            ctx.fillText(text, drawX, drawY);
 
             const attachment = canvas.toBuffer();
             const colorLabel = color2 ? `gradient ${color}\u2192${color2}` : color;
@@ -139,13 +141,13 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor('#808080')
-                        .setImage('attachment://avatar_overlay.png')
-                        .setFooter({ text: `Discord Icon Gen \u2022 /avatar \u2022 ${circular ? 'circular' : 'square'} \u2022 position: ${position} \u2022 ${colorLabel}` }),
+                        .setImage('attachment://avatar.png')
+                        .setFooter({ text: `Discord Icon Gen \u2022 /avatar \u2022 ${colorLabel} \u2022 font: ${font.label}` }),
                 ],
-                files: [{ attachment, name: 'avatar_overlay.png' }],
+                files: [{ attachment, name: 'avatar.png' }],
             });
         } catch (error) {
-            console.error('[ERROR] Avatar overlay failed:', error);
+            console.error('[ERROR] Avatar generation failed:', error);
             await initialReply.edit({
                 embeds: [new EmbedBuilder().setColor('#FF0000').setDescription('Failed to generate your avatar overlay. Please try again.')],
             });

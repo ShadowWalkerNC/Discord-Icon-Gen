@@ -1,5 +1,5 @@
 const path = require('path');
-const fs = require('fs');
+const fs   = require('fs');
 
 /**
  * Central font registry.
@@ -10,40 +10,14 @@ const fs = require('fs');
  */
 const FONTS = {
     'another-danger': {
-        label: 'Another Danger',
-        file: path.resolve(__dirname, '..', 'fonts', 'AnotherDanger.otf'),
+        label:  'Another Danger',
+        file:   path.resolve(__dirname, '..', 'fonts', 'font.otf'),
         family: 'Another Danger',
-    },
-    'bebas-neue': {
-        label: 'Bebas Neue',
-        file: path.resolve(__dirname, '..', 'fonts', 'BebasNeue-Regular.ttf'),
-        family: 'Bebas Neue',
-    },
-    'oswald-bold': {
-        label: 'Oswald Bold',
-        file: path.resolve(__dirname, '..', 'fonts', 'Oswald-Bold.ttf'),
-        family: 'Oswald',
-    },
-    'playfair-display': {
-        label: 'Playfair Display',
-        file: path.resolve(__dirname, '..', 'fonts', 'PlayfairDisplay-Bold.ttf'),
-        family: 'Playfair Display',
-    },
-    'source-code-pro': {
-        label: 'Source Code Pro',
-        file: path.resolve(__dirname, '..', 'fonts', 'SourceCodePro-Bold.ttf'),
-        family: 'Source Code Pro',
-    },
-    'dancing-script': {
-        label: 'Dancing Script',
-        file: path.resolve(__dirname, '..', 'fonts', 'DancingScript-Bold.ttf'),
-        family: 'Dancing Script',
     },
 };
 
 /**
- * Returns all font configs. Also validates font files exist on disk.
- * Called at module load time by each command to register fonts once.
+ * Returns all font configs whose files exist on disk.
  * @returns {Array<{ label: string, file: string, family: string }>}
  */
 function getAllFonts() {
@@ -58,13 +32,13 @@ function getAllFonts() {
 
 /**
  * Get a single font config by key.
- * Falls back to 'another-danger' with a warning if the key is not registered.
+ * Falls back to 'another-danger' with a warning if the key is not found.
  * @param {string} key
  * @returns {{ label: string, file: string, family: string }}
  */
 function getFont(key) {
     if (!FONTS[key]) {
-        console.warn(`[WARNING] Font key '${key}' not found in registry. Falling back to 'another-danger'.`);
+        console.warn(`[WARNING] Font key '${key}' not found. Falling back to 'another-danger'.`);
     }
     return FONTS[key] || FONTS['another-danger'];
 }

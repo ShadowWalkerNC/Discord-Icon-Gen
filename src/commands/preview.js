@@ -4,7 +4,8 @@ const { getFont, getAllFonts } = require('../utils/fonts');
 const { getBackgroundChoices, drawBackground } = require('../utils/backgrounds');
 
 for (const font of getAllFonts()) {
-    registerFont(font.file, { family: font.family });
+    try { registerFont(font.file, { family: font.family }); }
+    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
 }
 
 const COLS     = 3;
@@ -27,8 +28,7 @@ module.exports = {
         const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
 
         try {
-            // Derive BG list from the single source of truth in backgrounds.js
-            const bgChoices = getBackgroundChoices(); // [{ name, value }]
+            const bgChoices = getBackgroundChoices();
 
             const rows   = Math.ceil(bgChoices.length / COLS);
             const sheetW = COLS * CELL_W + (COLS + 1) * PAD;
@@ -40,7 +40,6 @@ module.exports = {
             ctx.fillStyle = '#111111';
             ctx.fillRect(0, 0, sheetW, sheetH);
 
-            // Use a registered font if available, fall back to Arial
             const registeredFonts = getAllFonts();
             const headerFont = registeredFonts.length > 0
                 ? `bold 22px '${registeredFonts[0].family}'`

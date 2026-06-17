@@ -12,7 +12,8 @@ const MAX_FONT_SIZE   = 150;
 const CANVAS_SIZE     = 400;
 
 for (const font of getAllFonts()) {
-    registerFont(font.file, { family: font.family });
+    try { registerFont(font.file, { family: font.family }); }
+    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
 }
 
 module.exports = {

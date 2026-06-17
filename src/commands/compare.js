@@ -14,7 +14,8 @@ const OUT_W     = PAD + ICON_SIZE + GAP + ICON_SIZE + PAD;
 const OUT_H     = PAD + ICON_SIZE + LABEL_H + PAD;
 
 for (const font of getAllFonts()) {
-    registerFont(font.file, { family: font.family });
+    try { registerFont(font.file, { family: font.family }); }
+    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
 }
 
 async function renderIcon(params) {
