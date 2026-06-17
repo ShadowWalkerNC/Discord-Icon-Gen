@@ -65,6 +65,7 @@
     .title-wrap p { color: var(--color-text-muted); margin-top: 6px; }
     .actions { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn { border-radius: 14px; padding: .9rem 1.1rem; border: 1px solid var(--color-border); background: var(--color-surface); font-weight: 700; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
     .btn-primary { background: linear-gradient(135deg, #8b0000, #4b0082); border: 0; box-shadow: 0 10px 28px rgba(139,0,0,.28); }
     .workspace { display: grid; grid-template-columns: 1.1fr .9fr; gap: var(--space-6); align-items: start; }
     .panel { background: rgba(19,19,27,.86); border: 1px solid var(--color-border); border-radius: 24px; box-shadow: var(--shadow-md); overflow: hidden; }
@@ -114,46 +115,54 @@
         <div class="field"><label for="tagline">Tagline</label><input id="tagline" class="input" value="Unleash the Darkness. Fight the Demons." /></div>
         <div class="field"><label for="description">Prompt / description</label><textarea id="description" class="textarea">dark fantasy fighting guild with infernal magic and supernatural atmosphere</textarea></div>
         <div class="grid-2">
-          <div class="field"><label for="iconText">Icon text</label><input id="iconText" class="input" value="DF" maxlength="4" /></div>
+          <div class="field"><label for="iconText">Icon text</label><input id="iconText" class="input" value="DF" /></div>
           <div class="field"><label for="bannerText">Banner text</label><input id="bannerText" class="input" value="Demonfall" /></div>
         </div>
       </div>
       <div class="section">
-        <div class="section-title">Colors <small style="font-weight:400;opacity:.6">(shift+click = secondary)</small></div>
-        <div class="grid-2" style="margin-bottom:14px">
-          <div class="field"><label for="primaryHex">Primary</label><input id="primaryHex" class="input" value="#8B0000" /></div>
-          <div class="field"><label for="secondaryHex">Secondary</label><input id="secondaryHex" class="input" value="#4B0082" /></div>
+        <div class="section-title">Colors</div>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="field"><label for="primaryHex">Primary hex</label><input id="primaryHex" class="input" value="#8B0000" /></div>
+          <div class="field"><label for="secondaryHex">Secondary hex</label><input id="secondaryHex" class="input" value="#4B0082" /></div>
         </div>
         <div id="colorGroups"></div>
       </div>
       <div class="section">
-        <div class="section-title">Style</div>
-        <div class="field"><label>Background</label><div class="chip-row" id="backgroundChips"></div></div>
-        <div class="field"><label>Border</label><div class="chip-row" id="borderChips"></div></div>
-        <div class="field"><label>Font</label><div class="chip-row" id="fontChips"></div></div>
-        <div class="field">
-          <label for="glowRange">Glow strength</label>
-          <div class="range-wrap"><input id="glowRange" type="range" min="0" max="25" step="1" value="15" /><div class="range-output" id="glowOutput">15</div></div>
-        </div>
-        <label class="toggle"><input type="checkbox" id="gradientToggle" checked /> Enable gradient blend</label>
+        <div class="section-title">Background</div>
+        <div id="backgroundChips" class="chip-row"></div>
       </div>
       <div class="section">
-        <div class="section-title">Integration</div>
-        <div class="field"><label for="apiKey">Gemini API key</label><input id="apiKey" class="input" type="password" placeholder="Paste GEMINI_API_KEY for live gen" /></div>
+        <div class="section-title">Border style</div>
+        <div id="borderChips" class="chip-row"></div>
+        <div class="range-wrap" style="margin-top:16px">
+          <input type="range" id="glowRange" min="0" max="25" value="15" />
+          <span class="range-output" id="glowOutput">15</span>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Font</div>
+        <div id="fontChips" class="chip-row"></div>
+      </div>
+      <div class="section">
+        <label class="toggle"><input type="checkbox" id="gradientToggle" checked /> Gradient overlay</label>
+      </div>
+      <div class="section">
+        <div class="section-title">Integration settings</div>
+        <div class="field"><label for="apiKey">Gemini API key</label><input id="apiKey" class="input" type="password" placeholder="AIza…" /></div>
         <div class="field"><label for="imagePrompt">Image prompt</label><textarea id="imagePrompt" class="textarea">ancient demon sigil hovering over a ruined crimson fortress in a violet storm</textarea></div>
-        <p class="footer-note">Preview works offline. Wire live AI generation through your existing Sigil gemini.js or a local proxy.</p>
       </div>
     </aside>
     <main class="main">
       <div class="topbar">
         <div class="title-wrap">
           <h2>Sigil GUI Builder</h2>
-          <p>Front-end control panel &mdash; live preview, export JSON, integrated AI-branding workflow.</p>
+          <p><span id="serverPill" style="font-size:.82rem;color:var(--color-text-faint);margin-right:8px;">&#9675; Server offline</span> Front-end control panel &mdash; live preview, export JSON, integrated AI-branding workflow.</p>
         </div>
         <div class="actions">
           <button class="btn" id="themeBtn">Toggle theme</button>
-          <button class="btn" id="copyJsonBtn">Copy config JSON</button>
-          <button class="btn btn-primary" id="generateBtn">Generate config</button>
+          <button class="btn" id="copyJsonBtn">Copy JSON</button>
+          <button class="btn" id="previewBtn">&#9889; Fast Preview</button>
+          <button class="btn btn-primary" id="generateBtn">&#10022; Generate</button>
         </div>
       </div>
       <div class="workspace">
@@ -161,9 +170,15 @@
           <div class="panel-head"><h3>Live preview</h3><span class="pill"><span style="width:10px;height:10px;border-radius:50%;background:var(--color-success);display:inline-block"></span>Synced</span></div>
           <div class="panel-body preview-stage">
             <div class="kit-preview">
-              <div class="mock-card inner-pad" id="iconCard"><div class="logo-mark" id="logoMark">DF</div></div>
+              <div class="mock-card inner-pad" id="iconCard">
+                <div class="logo-mark" id="logoMark">DF</div>
+                <img id="iconImg" alt="Generated icon" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:22px;opacity:0;transition:opacity .4s ease;" />
+              </div>
               <div class="side-stack">
-                <div class="mini-card inner-pad" id="bannerCard" style="display:flex;align-items:end;font-size:2rem;font-weight:900;padding:24px;">Demonfall</div>
+                <div class="mini-card inner-pad" id="bannerCard" style="display:flex;align-items:end;font-size:2rem;font-weight:900;padding:24px;position:relative;overflow:hidden;">
+                  Demonfall
+                  <img id="bannerImg" alt="Generated banner" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:18px;opacity:0;transition:opacity .4s ease;" />
+                </div>
                 <div class="mini-card palette" id="paletteCard">
                   <div class="palette-box" id="palettePrimary"><strong>#8B0000</strong><span>Primary</span></div>
                   <div class="palette-box" id="paletteSecondary"><strong>#4B0082</strong><span>Secondary</span></div>
@@ -187,6 +202,20 @@
                 <div class="status-item" id="promptStatus"><strong>Current prompt:</strong> dark fantasy fighting guild...</div>
               </div>
             </div>
+            <!-- AI image tray: shown when /generate returns ai_image_b64 -->
+            <div id="aiImageTray" style="display:none;border-radius:18px;overflow:hidden;border:1px solid var(--color-border);position:relative;">
+              <img id="aiImageEl" alt="AI generated image" style="width:100%;display:block;border-radius:18px;" />
+              <div id="aiImageLabel" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding:14px 16px;font-size:.82rem;font-weight:700;color:#fff;">AI Image</div>
+            </div>
+            <!-- Download tray: shown after any successful render -->
+            <div id="downloadTray" style="display:none;gap:10px;flex-wrap:wrap;">
+              <button class="btn" id="dlIcon">&#8595; Icon PNG</button>
+              <button class="btn" id="dlBanner">&#8595; Banner PNG</button>
+              <button class="btn" id="dlPalette">&#8595; Palette PNG</button>
+              <button class="btn" id="dlAiImage" style="display:none;">&#8595; AI Image</button>
+            </div>
+            <!-- Status bar -->
+            <div id="genStatus" style="display:none;font-size:.82rem;padding:10px 14px;border-radius:12px;background:var(--color-surface-2);border-left:4px solid var(--color-primary);"></div>
           </div>
         </section>
         <section class="panel">
@@ -239,7 +268,7 @@
     }
     function applyBorder(card){card.style.outline='none';card.style.boxShadow='var(--shadow-lg)';const p=state.primaryHex;if(state.border==='solid')card.style.outline=`3px solid ${p}`;else if(state.border==='glow')card.style.boxShadow=`0 0 ${10+state.glow*1.6}px ${hexToRgba(p,.65)}, 0 16px 48px rgba(0,0,0,.45)`;else if(state.border==='double')card.style.outline=`4px double ${p}`;else if(state.border==='dashed')card.style.outline=`3px dashed ${p}`;else if(state.border==='none')card.style.outline='1px solid rgba(255,255,255,.08)';}
     function buildBg(){const bg=byName(BACKGROUNDS,state.background);return state.gradient?`linear-gradient(135deg,${state.primaryHex}22,${state.secondaryHex}18),${bg.css}`:bg.css;}
-    function getConfig(){return {app:'Sigil GUI Builder',mode:'integrated-brand-builder',brand:{name:state.brandName,tagline:state.tagline,description:state.description,image_prompt:state.imagePrompt},visuals:{icon_text:state.iconText,banner_text:state.bannerText,primary_color:state.primaryHex,secondary_color:state.secondaryHex,background:state.background,border:state.border,glow:state.glow,font:state.font,gradient_enabled:state.gradient},integration:{gemini_ready:true,has_api_key:Boolean(state.apiKey),recommended_backend:'proxy Sigil gemini.js or Electron/Express wrapper',payload_shape:'compatible with /brand ai + custom frontend presets'},ui:{live_preview:true,color_library:Object.values(COLORS).flat().length,backgrounds:BACKGROUNDS.length,borders:BORDERS.length,fonts:FONTS.length}};}
+    function getConfig(){return {app:'Sigil GUI Builder',mode:'integrated-brand-builder',brand:{name:state.brandName,tagline:state.tagline,description:state.description,image_prompt:state.imagePrompt,icon_text:state.iconText,banner_text:state.bannerText},visuals:{icon_text:state.iconText,banner_text:state.bannerText,primary_color:state.primaryHex,secondary_color:state.secondaryHex,background:state.background,border:state.border,glow:state.glow,font:state.font,gradient_enabled:state.gradient},integration:{gemini_ready:true,has_api_key:Boolean(state.apiKey),api_key:state.apiKey,recommended_backend:'proxy Sigil gemini.js or Electron/Express wrapper',payload_shape:'compatible with /brand ai + custom frontend presets'},ui:{live_preview:true,color_library:Object.values(COLORS).flat().length,backgrounds:BACKGROUNDS.length,borders:BORDERS.length,fonts:FONTS.length}};}
     function update(){
       state.brandName=els.brandName.value.trim()||'Untitled';state.tagline=els.tagline.value.trim();state.description=els.description.value.trim();
       state.iconText=(els.iconText.value.trim()||'SG').slice(0,4).toUpperCase();state.bannerText=els.bannerText.value.trim()||state.brandName;
@@ -249,25 +278,189 @@
       document.documentElement.style.setProperty('--color-primary',state.primaryHex);document.documentElement.style.setProperty('--color-primary-2',state.secondaryHex);
       const bg=buildBg();
       els.iconCard.style.background=bg;applyBorder(els.iconCard);
-      els.logoMark.textContent=state.iconText;els.logoMark.style.cssText=`color:${state.primaryHex};font-family:'${state.font}',sans-serif`;
-      els.bannerCard.textContent=state.bannerText;els.bannerCard.style.cssText=`display:flex;align-items:end;font-size:2rem;font-family:'${state.font}',sans-serif;font-weight:900;padding:24px;color:${state.primaryHex};background:${bg}`;applyBorder(els.bannerCard);
-      els.palettePrimary.style.background=state.primaryHex;els.paletteSecondary.style.background=state.secondaryHex;
-      els.palettePrimary.querySelector('strong').textContent=state.primaryHex;els.paletteSecondary.querySelector('strong').textContent=state.secondaryHex;
-      els.palettePrimary.style.color='#fff';els.paletteSecondary.style.color='#fff';
+      els.logoMark.textContent=state.iconText;els.logoMark.style.cssText=`color:${state.primaryHex};font-family:'${state.font}',sans-serif;position:absolute;inset:0;display:grid;place-items:center;font-size:5rem;font-weight:900;text-shadow:0 0 35px ${hexToRgba(state.primaryHex,.45)};`;
+      els.bannerCard.style.background=bg;applyBorder(els.bannerCard);
+      els.bannerCard.childNodes[0].textContent=state.bannerText;
+      els.bannerCard.style.fontFamily=`'${state.font}',sans-serif`;
+      els.palettePrimary.style.background=state.primaryHex;els.palettePrimary.querySelector('strong').textContent=state.primaryHex;
+      els.paletteSecondary.style.background=state.secondaryHex;els.paletteSecondary.querySelector('strong').textContent=state.secondaryHex;
       els.embedCard.style.borderLeftColor=state.primaryHex;
-      els.embedTitle.textContent=`\u2726 AI Brand Kit \u2014 ${state.brandName}`;els.embedTagline.textContent=`"${state.tagline}"`;
-      els.specIcon.textContent=state.iconText;els.specBanner.textContent=state.bannerText;els.specPalette.textContent=`${state.primaryHex} \u2192 ${state.secondaryHex}`;
-      els.specBackground.textContent=state.background;els.specBorder.textContent=state.border;els.specGlow.textContent=String(state.glow);els.specFont.textContent=state.font;
+      els.embedTitle.textContent=`\u2726 AI Brand Kit \u2014 ${state.brandName}`;
+      els.embedTagline.textContent=`"${state.tagline}"`;
+      els.specIcon.textContent=state.iconText;els.specBanner.textContent=state.bannerText;
+      els.specPalette.textContent=`${state.primaryHex} \u2192 ${state.secondaryHex}`;
+      els.specBackground.textContent=state.background;els.specBorder.textContent=state.border;
+      els.specGlow.textContent=state.glow;els.specFont.textContent=state.font;
       els.promptStatus.innerHTML=`<strong>Current prompt:</strong> ${state.description}`;
       els.integrationStatus.innerHTML=`<strong>Integrated mode:</strong> GUI, exported config, and backend payload stay in sync${state.apiKey?' \u2014 API key attached.':' \u2014 no API key yet.'}`;
       els.jsonOutput.value=JSON.stringify(getConfig(),null,2);
+      renderColorGroups();
     }
     ['brandName','tagline','description','iconText','bannerText','primaryHex','secondaryHex','apiKey','imagePrompt'].forEach(id=>els[id].addEventListener('input',update));
     els.glowRange.addEventListener('input',update);els.gradientToggle.addEventListener('change',update);
-    els.copyJsonBtn.addEventListener('click',async()=>{await navigator.clipboard.writeText(els.jsonOutput.value);els.copyJsonBtn.textContent='Copied!';setTimeout(()=>els.copyJsonBtn.textContent='Copy config JSON',1400);});
-    els.generateBtn.addEventListener('click',()=>{update();els.generateBtn.textContent='Config refreshed \u2713';setTimeout(()=>els.generateBtn.textContent='Generate config',1400);});
+    els.copyJsonBtn.addEventListener('click',async()=>{await navigator.clipboard.writeText(els.jsonOutput.value);els.copyJsonBtn.textContent='Copied!';setTimeout(()=>els.copyJsonBtn.textContent='Copy JSON',1400);});
     els.themeBtn.addEventListener('click',()=>{const root=document.documentElement;const isDark=root.getAttribute('data-theme')==='dark';root.setAttribute('data-theme',isDark?'light':'dark');if(isDark){root.style.setProperty('--color-bg','#f5f5f8');root.style.setProperty('--color-surface','#ffffff');root.style.setProperty('--color-surface-2','#ececf3');root.style.setProperty('--color-text','#13131b');root.style.setProperty('--color-text-muted','#4f5568');root.style.setProperty('--color-text-faint','#7b8198');}else{root.style.setProperty('--color-bg','#0a0a0f');root.style.setProperty('--color-surface','#13131b');root.style.setProperty('--color-surface-2','#1b1b25');root.style.setProperty('--color-text','#f5f7fb');root.style.setProperty('--color-text-muted','#a9b1c7');root.style.setProperty('--color-text-faint','#68708b');}});
-    renderColorGroups();update();
+
+    // ── Server health ping ──────────────────────────────────────────────────
+    const SERVER = 'http://localhost:3420';
+    let serverAlive = false;
+    async function pingServer() {
+      try {
+        const r = await fetch(`${SERVER}/health`, { signal: AbortSignal.timeout(1800) });
+        serverAlive = r.ok;
+      } catch { serverAlive = false; }
+      const pill = $('serverPill');
+      if (pill) {
+        pill.textContent = serverAlive ? '\u25cf Server online' : '\u25cb Server offline';
+        pill.style.color = serverAlive ? 'var(--color-success)' : 'var(--color-text-faint)';
+      }
+    }
+    pingServer();
+    setInterval(pingServer, 8000);
+
+    // ── Image helpers ───────────────────────────────────────────────────────
+    function showImg(imgEl, b64, mime='image/png') {
+      imgEl.src = `data:${mime};base64,${b64}`;
+      imgEl.style.display = 'block';
+      requestAnimationFrame(() => { imgEl.style.opacity = '1'; });
+    }
+    function hideImg(imgEl) {
+      imgEl.style.opacity = '0';
+      setTimeout(() => { imgEl.style.display = 'none'; imgEl.src = ''; }, 420);
+    }
+    function dlBlob(b64, filename, mime='image/png') {
+      const a = document.createElement('a');
+      a.href = `data:${mime};base64,${b64}`;
+      a.download = filename;
+      a.click();
+    }
+
+    // ── Download tray ───────────────────────────────────────────────────────
+    let lastResult = null;
+    function wireDownloads(data) {
+      lastResult = data;
+      const tray = $('downloadTray');
+      if (tray) tray.style.display = 'flex';
+      const dlIcon    = $('dlIcon');
+      const dlBanner  = $('dlBanner');
+      const dlPalette = $('dlPalette');
+      const dlAiImage = $('dlAiImage');
+      if (dlIcon)    dlIcon.onclick    = () => dlBlob(data.icon_b64,    `${state.brandName}-icon.png`);
+      if (dlBanner)  dlBanner.onclick  = () => dlBlob(data.banner_b64,  `${state.brandName}-banner.png`);
+      if (dlPalette) dlPalette.onclick = () => dlBlob(data.palette_b64, `${state.brandName}-palette.png`);
+      if (dlAiImage && data.ai_image_b64) {
+        dlAiImage.style.display = 'inline-flex';
+        dlAiImage.onclick = () => dlBlob(data.ai_image_b64, `${state.brandName}-ai.png`);
+      }
+    }
+
+    // ── Status bar ──────────────────────────────────────────────────────────
+    function setStatus(msg, type='info') {
+      const el = $('genStatus');
+      if (!el) return;
+      el.style.display = 'block';
+      const colours = { error: 'var(--color-warning,#ffbf00)', ok: 'var(--color-success,#39ff14)', info: 'var(--color-primary,#8b0000)' };
+      el.style.borderLeftColor = colours[type] || colours.info;
+      el.textContent = msg;
+    }
+    function setBtnLoading(btn, loading, defaultText) {
+      btn.disabled = loading;
+      btn.textContent = loading ? '\u27f3 Running\u2026' : defaultText;
+    }
+
+    // ── POST /preview ───────────────────────────────────────────────────────
+    async function runPreview() {
+      const btn = $('previewBtn');
+      if (!serverAlive) { setStatus('\u26a0 Server offline \u2014 run: node gui/gui-server.js', 'error'); return; }
+      update();
+      setBtnLoading(btn, true, '\u26a1 Fast Preview');
+      setStatus('Rendering canvas\u2026', 'info');
+      try {
+        const res = await fetch(`${SERVER}/preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(getConfig()),
+          signal: AbortSignal.timeout(15000),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Preview failed');
+        const iconImg   = $('iconImg');
+        const bannerImg = $('bannerImg');
+        if (iconImg)   showImg(iconImg,   data.icon_b64);
+        if (bannerImg) showImg(bannerImg, data.banner_b64);
+        wireDownloads(data);
+        setStatus('\u2713 Canvas preview rendered', 'ok');
+      } catch (e) {
+        setStatus(`\u2717 ${e.message}`, 'error');
+      } finally {
+        setBtnLoading(btn, false, '\u26a1 Fast Preview');
+      }
+    }
+
+    // ── POST /generate ──────────────────────────────────────────────────────
+    async function runGenerate() {
+      const btn = $('generateBtn');
+      if (!serverAlive) { setStatus('\u26a0 Server offline \u2014 run: node gui/gui-server.js', 'error'); return; }
+      if (!state.apiKey) { setStatus('\u26a0 Enter your Gemini API key in Integration Settings first', 'error'); return; }
+      update();
+      setBtnLoading(btn, true, '\u2726 Generate');
+      setStatus('Calling Gemini + rendering canvas\u2026', 'info');
+      try {
+        const res = await fetch(`${SERVER}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(getConfig()),
+          signal: AbortSignal.timeout(60000),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Generate failed');
+
+        // Inject canvas renders
+        const iconImg   = $('iconImg');
+        const bannerImg = $('bannerImg');
+        if (iconImg)   showImg(iconImg,   data.icon_b64);
+        if (bannerImg) showImg(bannerImg, data.banner_b64);
+
+        // Inject AI image if returned
+        const aiTray = $('aiImageTray');
+        const aiImg  = $('aiImageEl');
+        const aiLbl  = $('aiImageLabel');
+        if (data.ai_image_b64 && aiImg) {
+          if (aiTray) aiTray.style.display = 'block';
+          showImg(aiImg, data.ai_image_b64);
+          if (aiLbl) aiLbl.textContent = `AI Image \u2014 ${data.brand?.name || state.brandName}`;
+        }
+
+        // Write brand data back into form
+        if (data.brand) {
+          const b = data.brand;
+          if (b.tagline) { els.tagline.value = b.tagline; state.tagline = b.tagline; }
+          if (b.palette?.length) {
+            state.primaryHex = b.palette[0];
+            els.primaryHex.value = b.palette[0];
+            if (b.palette[1]) { state.secondaryHex = b.palette[1]; els.secondaryHex.value = b.palette[1]; }
+          }
+          update();
+        }
+
+        // Update JSON output with server response merged in
+        els.jsonOutput.value = JSON.stringify({ ...getConfig(), _brand_response: data.brand || null }, null, 2);
+        wireDownloads(data);
+        setStatus(`\u2713 Brand kit generated${data.ai_image_b64 ? ' + AI image' : ' (canvas only \u2014 AI image skipped)'}`, 'ok');
+      } catch (e) {
+        setStatus(`\u2717 ${e.message}`, 'error');
+      } finally {
+        setBtnLoading(btn, false, '\u2726 Generate');
+      }
+    }
+
+    $('previewBtn').addEventListener('click', runPreview);
+    $('generateBtn').addEventListener('click', runGenerate);
+
+    // ── Boot ────────────────────────────────────────────────────────────────
+    renderColorGroups();
+    renderChips();
+    update();
   </script>
 </body>
 </html>
