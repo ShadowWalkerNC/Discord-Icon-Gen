@@ -1,24 +1,37 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+'use strict';
+
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-export async function generateBrandProfile(prompt) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-  const sys = `You are a Discord server branding expert. Given a description, return ONLY valid JSON with these fields:
-{
-  "brand_name": string,
-  "tagline": string,
-  "primary_color": "#RRGGBB",
-  "secondary_color": "#RRGGBB",
-  "font_key": "oswald" | "bebas-neue" | "another-danger" | "dancing-script",
-  "background_key": "plain-black" | "plain-white" | "cyberpunk-grid" | "carbon-fiber" | "starfield" | "midnight-gradient" | "sunset",
-  "glow_level": 0-25,
-  "border_style": "none" | "neon" | "sharp" | "flame" | "katana" | "spirit"
+// ── Text generation ────────────────────────────────────────────────────────────
+async function geminiRequest(prompt, { temperature = 0.9, maxOutputTokens = 512 } = {}) {
+    const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        generationConfig: { temperature, maxOutputTokens },
+    });
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
 }
-No markdown. No explanation. Just JSON.`;
 
-  const result = await model.generateContent(`${sys}\n\nDescription: ${prompt}`);
-  const text   = result.response.text().trim();
-  const clean  = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+// ── Image generation ───────────────────────────────────────────────────────────
+async function geminiImageRequest(prompt) {
+    const model = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-002' });
+    const result = await model.generateImages({
+        prompt,
+        numberOfImages: 1,
+        aspectRatio: '1:1',
+    });
+    const b64 = result.generatedImages?.[0]?.image?.imageBytes;
+    if (!b64) throw new Error('No image returned from Imagen');
+    return Buffer.from(b64, 'base64');
 }
+
+// ── JSON extractor ─────────────────────────────────────────────────────────────
+function extractJson(raw) {
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON found in Gemini response');
+    return JSON.parse(match[0]);
+}
+
+module.exports = { geminiRequest, geminiImageRequest, extractJson };
