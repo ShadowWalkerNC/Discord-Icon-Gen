@@ -1,11 +1,26 @@
+/**
+ * /brand — manual kit + AI-designed brand kit
+ * Refactored to use src/utils/canvas.js shared render functions.
+ */
+'use strict';
+
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { createCanvas, registerFont, loadImage } = require('canvas');
-const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
-const { createTextGradient } = require('../utils/gradient');
-const { getBackgroundChoices, drawBackground } = require('../utils/backgrounds');
-const { drawBorder, getBorderChoices } = require('../utils/borders');
-const { geminiRequest, geminiImageRequest, extractJson } = require('../utils/gemini');
-const { getColorAutocomplete } = require('../utils/colors');
+const { createCanvas }                                          = require('canvas');
+const { getFont, getFontChoices }                               = require('../utils/fonts');
+const { getBackgroundChoices }                                  = require('../utils/backgrounds');
+const { getBorderChoices }                                      = require('../utils/borders');
+const { geminiRequest, geminiImageRequest, extractJson }        = require('../utils/gemini');
+const { getColorAutocomplete }                                  = require('../utils/colors');
+const {
+    registerAllFonts,
+    autoFontSize,
+    renderIcon,
+    renderBanner,
+    renderPalette,
+    renderKit,
+} = require('../utils/canvas');
+
+registerAllFonts();
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
@@ -13,118 +28,28 @@ const VALID_BACKGROUNDS = [
     'plain-black', 'plain-white', 'midnight-gradient',
     'sunset', 'forest', 'cyberpunk-grid', 'starfield', 'carbon-fiber',
 ];
-
-// Keys MUST match drawBorder() / getBorderChoices() exactly
 const VALID_BORDERS = [
     'none', 'solid', 'glow', 'gradient', 'double', 'dashed', 'corner', 'neon',
 ];
 
-for (const font of getAllFonts()) {
-    try { registerFont(font.file, { family: font.family }); }
-    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
-}
-
-// ── Parse AI kit response ──────────────────────────────────────────────────
-
+// ── AI response parser ─────────────────────────────────────────────────────────────
 function parseAiKitResponse(raw) {
     const p   = extractJson(raw);
     const hex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
     return {
-        name:       typeof p.name       === 'string' ? p.name.slice(0, 30).trim()                        : 'My Server',
-        initials:   typeof p.initials   === 'string' ? p.initials.slice(0, 4).toUpperCase().trim()        : 'SRV',
-        color:      hex.test(p.color)                ? p.color                                             : '#FFFFFF',
-        color2:     p.color2 && hex.test(p.color2)   ? p.color2                                            : null,
-        background: VALID_BACKGROUNDS.includes(p.background) ? p.background                               : 'plain-black',
+        name:       typeof p.name       === 'string' ? p.name.slice(0, 30).trim()                         : 'My Server',
+        initials:   typeof p.initials   === 'string' ? p.initials.slice(0, 4).toUpperCase().trim()         : 'SRV',
+        color:      hex.test(p.color)                ? p.color                                              : '#FFFFFF',
+        color2:     p.color2 && hex.test(p.color2)   ? p.color2                                             : null,
+        background: VALID_BACKGROUNDS.includes(p.background) ? p.background                                : 'plain-black',
         border:     VALID_BORDERS.includes(p.border)          ? p.border                                   : 'none',
-        glow:       ['0','5','10','15','25'].includes(String(p.glow)) ? String(p.glow)                     : '10',
-        tagline:    typeof p.tagline    === 'string' ? p.tagline.slice(0, 60).trim()                       : '',
-        rationale:  typeof p.rationale  === 'string' ? p.rationale.slice(0, 300).trim()                   : '',
+        glow:       ['0','5','10','15','25'].includes(String(p.glow)) ? String(p.glow)                      : '10',
+        tagline:    typeof p.tagline    === 'string' ? p.tagline.slice(0, 60).trim()                        : '',
+        rationale:  typeof p.rationale  === 'string' ? p.rationale.slice(0, 300).trim()                    : '',
     };
 }
 
-// ── Canvas helpers ─────────────────────────────────────────────────────────
-
-async function renderIcon(ctx, { text, size, color, color2, glow, background, border, font }) {
-    const W = 400, H = 400;
-    await drawBackground(ctx, background, W, H, loadImage);
-    if (border && border !== 'none') drawBorder(ctx, border, color, color2, W);
-    ctx.font = `${size}px '${font.family}'`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const fill = createTextGradient(ctx, color, color2, text, W / 2, W);
-    ctx.shadowColor = color; ctx.shadowBlur = Number(glow);
-    ctx.fillStyle = fill;
-    ctx.fillText(text, W / 2, H / 2);
-    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
-    ctx.fillText(text, W / 2, H / 2);
-}
-
-async function renderBanner(ctx, { text, subtitle, size, color, color2, glow, background, font }) {
-    const W = 1024, H = 320;
-    await drawBackground(ctx, background, W, H, loadImage);
-    const textX = W / 2;
-    const textY = subtitle ? H * 0.42 : H / 2;
-    ctx.font = `${size}px '${font.family}'`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const fill = createTextGradient(ctx, color, color2, text, textX, W);
-    ctx.shadowColor = color; ctx.shadowBlur = Number(glow);
-    ctx.fillStyle = fill;
-    ctx.fillText(text, textX, textY);
-    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
-    ctx.fillText(text, textX, textY);
-    if (subtitle) {
-        const subSize = Math.round(size * 0.4);
-        const subY    = textY + size * 0.75;
-        ctx.font      = `${subSize}px '${font.family}'`;
-        const subFill = createTextGradient(ctx, color, color2, subtitle, textX, W);
-        ctx.globalAlpha = 0.75;
-        ctx.shadowColor = color; ctx.shadowBlur = Number(glow) * 0.6;
-        ctx.fillStyle   = subFill;
-        ctx.fillText(subtitle, textX, subY);
-        ctx.globalAlpha = 1.0;
-        ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
-        ctx.fillText(subtitle, textX, subY);
-    }
-}
-
-function renderPalette(color, color2) {
-    const W = 800, H = 200;
-    const canvas = createCanvas(W, H);
-    const ctx    = canvas.getContext('2d');
-    const hexToRgb = hex => { const h = hex.replace('#',''); const full = h.length===3?h.split('').map(c=>c+c).join(''):h; const n=parseInt(full,16); return [(n>>16)&255,(n>>8)&255,n&255]; };
-    const blend   = (rgb, t, w) => rgb.map((c,i) => Math.round(c+(w[i]-c)*t));
-    const toHex   = rgb => '#'+rgb.map(c=>c.toString(16).padStart(2,'0')).join('');
-    const [r1,g1,b1] = hexToRgb(color);
-    const swatches = [
-        { hex: toHex(blend([r1,g1,b1], 0.4, [255,255,255])), label: 'Light'   },
-        { hex: color,                                          label: 'Primary' },
-        { hex: toHex(blend([r1,g1,b1], 0.4, [0,0,0])),       label: 'Dark'    },
-    ];
-    if (color2) {
-        const [r2,g2,b2] = hexToRgb(color2);
-        swatches.push(
-            { hex: color2,                                          label: 'Secondary' },
-            { hex: toHex(blend([r2,g2,b2], 0.4, [255,255,255])),   label: 'Sec Light' },
-            { hex: toHex(blend([r2,g2,b2], 0.4, [0,0,0])),         label: 'Sec Dark'  },
-        );
-    }
-    const colW = W / swatches.length;
-    ctx.fillStyle = '#111111'; ctx.fillRect(0, 0, W, H);
-    swatches.forEach(({ hex, label }, i) => {
-        ctx.fillStyle = hex;
-        ctx.fillRect(i * colW + 6, 6, colW - 12, H - 52);
-        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px monospace';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        ctx.fillText(hex.toUpperCase(), i * colW + colW / 2, H - 40);
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px monospace';
-        ctx.fillText(label, i * colW + colW / 2, H - 20);
-    });
-    return canvas.toBuffer();
-}
-
-// ── Command ────────────────────────────────────────────────────────────────
-
+// ── Command ───────────────────────────────────────────────────────────────────────
 module.exports = {
     cooldown: 8,
 
@@ -145,7 +70,7 @@ module.exports = {
                 .addStringOption(o => o.setName('background').setDescription('Background style').setRequired(true).addChoices(...getBackgroundChoices()))
                 .addStringOption(o =>
                     o.setName('color2')
-                        .setDescription('Optional second colour for gradients — hex code or preset')
+                        .setDescription('Optional second colour for gradients')
                         .setRequired(false)
                         .setAutocomplete(true)
                 )
@@ -170,29 +95,26 @@ module.exports = {
                         .setMaxLength(200))
                 .addStringOption(o =>
                     o.setName('image_prompt')
-                        .setDescription('Image to generate — min 8 words (e.g. "dragon on castle at dusk")')
+                        .setDescription('Image to generate — min 8 words')
                         .setRequired(true)
                         .setMaxLength(300))
                 .addStringOption(o =>
                     o.setName('name')
-                        .setDescription('Override the server name (optional — Gemini suggests one if omitted)')
+                        .setDescription('Override the server name (optional)')
                         .setRequired(false)
                         .setMaxLength(30))
         ),
 
-    // ── Autocomplete ────────────────────────────────────────────────────────
     async autocomplete(interaction) {
         const focused = interaction.options.getFocused(true);
-        if (focused.name === 'color' || focused.name === 'color2') {
-            const choices = getColorAutocomplete(focused.value);
-            await interaction.respond(choices);
-        }
+        if (focused.name === 'color' || focused.name === 'color2')
+            await interaction.respond(getColorAutocomplete(focused.value));
     },
 
     async execute(interaction) {
         const sub = interaction.options.getSubcommand();
 
-        // ── /brand kit ────────────────────────────────────────────────────
+        // ── /brand kit ───────────────────────────────────────────────────────────
         if (sub === 'kit') {
             const name       = interaction.options.getString('name');
             const initials   = interaction.options.getString('initials').slice(0, 4);
@@ -205,79 +127,60 @@ module.exports = {
             const fontKey    = interaction.options.getString('font') || 'another-danger';
 
             if (!HEX_COLOR_REGEX.test(color))
-                return interaction.reply({ content: '❌ Primary color must be a valid hex code (e.g. #FF4500). Pick from the dropdown or type a hex.', ephemeral: true });
+                return interaction.reply({ content: '\u274c Primary color must be a valid hex code (e.g. #FF4500).', ephemeral: true });
             if (color2 && !HEX_COLOR_REGEX.test(color2))
-                return interaction.reply({ content: '❌ Secondary color must be a valid hex code. Pick from the dropdown or type a hex.', ephemeral: true });
+                return interaction.reply({ content: '\u274c Secondary color must be a valid hex code.', ephemeral: true });
 
-            const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('✦ Crafting your brand kit…');
-            const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
+            const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('\u2726 Crafting your brand kit\u2026');
+            const reply = await interaction.reply({ embeds: [loadingEmbed] });
 
             try {
-                const font   = getFont(fontKey);
-                const params = { color, color2, glow, background, font };
-                const iconCanvas   = createCanvas(400, 400);
-                const bannerCanvas = createCanvas(1024, 320);
+                const kit = await renderKit({ name, initials, color, color2, background, border, glow, tagline, fontKey });
+                const colorLabel = color2 ? `${color} \u2192 ${color2}` : color;
 
-                await Promise.all([
-                    renderIcon(iconCanvas.getContext('2d'), {
-                        ...params, text: initials, border,
-                        size: Math.min(150, Math.max(60, Math.floor(220 / Math.max(initials.length, 1)))),
-                    }),
-                    renderBanner(bannerCanvas.getContext('2d'), {
-                        ...params, text: name, subtitle: tagline,
-                        size: Math.min(90, Math.max(32, Math.floor(900 / Math.max(name.length, 1)))),
-                    }),
-                ]);
-
-                const paletteBuf = renderPalette(color, color2);
-                const colorLabel = color2 ? `${color} → ${color2}` : color;
-
-                await initialReply.edit({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor('#808080')
-                            .setTitle(`✦ Brand Kit — ${name}`)
-                            .setDescription([
-                                `**Icon** — \`${initials}\` · 400×400`,
-                                `**Banner** — \`${name}\`${tagline ? ` · *${tagline}*` : ''} · 1024×320`,
-                                `**Palette** — ${colorLabel}`,
-                            ].join('\n'))
-                            .setFooter({ text: `Sigil • /brand kit • ${name} • ${background} • ${colorLabel}` }),
-                    ],
+                await reply.edit({
+                    embeds: [new EmbedBuilder()
+                        .setColor('#808080')
+                        .setTitle(`\u2726 Brand Kit \u2014 ${name}`)
+                        .setDescription([
+                            `**Icon** \u2014 \`${initials}\` \u00b7 400\u00d7400`,
+                            `**Banner** \u2014 \`${name}\`${tagline ? ` \u00b7 *${tagline}*` : ''} \u00b7 1024\u00d7320`,
+                            `**Palette** \u2014 ${colorLabel}`,
+                        ].join('\n'))
+                        .setFooter({ text: `Sigil \u2022 /brand kit \u2022 ${name} \u2022 ${background} \u2022 ${colorLabel}` })],
                     files: [
-                        new AttachmentBuilder(iconCanvas.toBuffer(),   { name: 'icon.png'    }),
-                        new AttachmentBuilder(bannerCanvas.toBuffer(), { name: 'banner.png'  }),
-                        new AttachmentBuilder(paletteBuf,              { name: 'palette.png' }),
+                        new AttachmentBuilder(kit.icon,    { name: 'icon.png'    }),
+                        new AttachmentBuilder(kit.banner,  { name: 'banner.png'  }),
+                        new AttachmentBuilder(kit.palette, { name: 'palette.png' }),
                     ],
                 });
             } catch (err) {
                 console.error('[ERROR] /brand kit failed:', err);
-                await initialReply.edit({ embeds: [new EmbedBuilder().setColor('#FF0000').setDescription('Failed to generate the brand kit. Please try again.')] });
+                await reply.edit({ embeds: [new EmbedBuilder().setColor('#FF0000').setDescription('Failed to generate the brand kit. Please try again.')] });
             }
             return;
         }
 
-        // ── /brand ai ─────────────────────────────────────────────────────
+        // ── /brand ai ─────────────────────────────────────────────────────────────
         if (sub === 'ai') {
             const description  = interaction.options.getString('description').trim();
             const imagePrompt  = interaction.options.getString('image_prompt').trim();
             const nameOverride = interaction.options.getString('name') || null;
 
             if (!process.env.GEMINI_API_KEY)
-                return interaction.reply({ content: '❌ `GEMINI_API_KEY` is not configured.', ephemeral: true });
+                return interaction.reply({ content: '\u274c `GEMINI_API_KEY` is not configured.', ephemeral: true });
 
-            // Enforce 8-word minimum on image prompt
             const wordCount = imagePrompt.split(/\s+/).filter(Boolean).length;
             if (wordCount < 8)
                 return interaction.reply({
-                    content: `❌ Your image prompt is too short (**${wordCount} word${wordCount === 1 ? '' : 's'}**). Use at least **8 words** so Gemini has enough detail to generate something great.\n\n*Example: "dark mystical forest with glowing ancient runes at dusk"*`,
+                    content: `\u274c Your image prompt is too short (**${wordCount} word${wordCount === 1 ? '' : 's'}**). Use at least **8 words**.\n\n*Example: "dark mystical forest with glowing ancient runes at dusk"*`,
                     ephemeral: true,
                 });
 
-            const loadingEmbed = new EmbedBuilder()
-                .setColor('#808080')
-                .setDescription(`✦ Gemini is designing your brand kit and generating your image…\n*"${description}"*`);
-            const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
+            const reply = await interaction.reply({
+                embeds: [new EmbedBuilder().setColor('#808080')
+                    .setDescription(`\u2726 Gemini is designing your brand kit and generating your image\u2026\n*"${description}"*`)],
+            });
 
             const kitPrompt =
 `Server description: "${description}"
@@ -299,13 +202,11 @@ Return ONLY a JSON object with these keys:
 
 Start with { and end with }. Nothing else.`;
 
-            const enhancedImagePrompt = `Discord server branding art: ${imagePrompt}. High quality, vibrant, detailed, suitable for a server banner or promotional image.`;
+            const enhancedImagePrompt = `Discord server branding art: ${imagePrompt}. High quality, vibrant, detailed.`;
 
             try {
-                await initialReply.edit({
-                    embeds: [new EmbedBuilder().setColor('#808080')
-                        .setDescription(`✦ Running in parallel…\n\n**1.** Designing brand kit\n**2.** Generating image: *"${imagePrompt}"*`)],
-                });
+                await reply.edit({ embeds: [new EmbedBuilder().setColor('#808080')
+                    .setDescription(`\u2726 Running in parallel\u2026\n\n**1.** Designing brand kit\n**2.** Generating image: *"${imagePrompt}"*`)] });
 
                 const [rawResult, imageBuf] = await Promise.allSettled([
                     geminiRequest(kitPrompt, { temperature: 1.0, maxOutputTokens: 256 }),
@@ -316,68 +217,59 @@ Start with { and end with }. Nothing else.`;
                     throw new Error(`Brand kit design failed: ${rawResult.reason?.message}`);
 
                 const kit    = parseAiKitResponse(rawResult.value);
-                const font   = getFont('another-danger');
-                const params = { color: kit.color, color2: kit.color2, glow: kit.glow, background: kit.background, font };
+                const assets = await renderKit({
+                    name:       kit.name,
+                    initials:   kit.initials,
+                    color:      kit.color,
+                    color2:     kit.color2,
+                    background: kit.background,
+                    border:     kit.border,
+                    glow:       kit.glow,
+                    tagline:    kit.tagline,
+                });
 
-                const iconCanvas   = createCanvas(400, 400);
-                const bannerCanvas = createCanvas(1024, 320);
-
-                await Promise.all([
-                    renderIcon(iconCanvas.getContext('2d'), {
-                        ...params, text: kit.initials, border: kit.border,
-                        size: Math.min(150, Math.max(60, Math.floor(220 / Math.max(kit.initials.length, 1)))),
-                    }),
-                    renderBanner(bannerCanvas.getContext('2d'), {
-                        ...params, text: kit.name, subtitle: kit.tagline,
-                        size: Math.min(90, Math.max(32, Math.floor(900 / Math.max(kit.name.length, 1)))),
-                    }),
-                ]);
-
-                const paletteBuf = renderPalette(kit.color, kit.color2);
-                const colorLabel = kit.color2 ? `${kit.color} → ${kit.color2}` : kit.color;
-
+                const colorLabel = kit.color2 ? `${kit.color} \u2192 ${kit.color2}` : kit.color;
                 const files = [
-                    new AttachmentBuilder(iconCanvas.toBuffer(),   { name: 'icon.png'    }),
-                    new AttachmentBuilder(bannerCanvas.toBuffer(), { name: 'banner.png'  }),
-                    new AttachmentBuilder(paletteBuf,              { name: 'palette.png' }),
+                    new AttachmentBuilder(assets.icon,    { name: 'icon.png'    }),
+                    new AttachmentBuilder(assets.banner,  { name: 'banner.png'  }),
+                    new AttachmentBuilder(assets.palette, { name: 'palette.png' }),
                 ];
 
                 let imageNote = '';
                 if (imageBuf.status === 'fulfilled') {
                     files.push(new AttachmentBuilder(imageBuf.value, { name: 'generated-image.png' }));
-                    imageNote = '\n🎨 **Generated Image** — attached above';
+                    imageNote = '\n\ud83c\udfa8 **Generated Image** \u2014 attached above';
                 } else {
                     console.warn('[WARN] /brand ai image gen failed (non-fatal):', imageBuf.reason?.message);
-                    imageNote = `\n⚠️ Image generation failed: *${imageBuf.reason?.message || 'unknown error'}*`;
+                    imageNote = `\n\u26a0\ufe0f Image generation failed: *${imageBuf.reason?.message || 'unknown error'}*`;
                 }
 
-                await initialReply.edit({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(kit.color)
-                            .setTitle(`✦ AI Brand Kit — ${kit.name}`)
-                            .setDescription([
-                                kit.tagline   ? `*"${kit.tagline}"*\n`           : '',
-                                `**Icon** — \`${kit.initials}\` · 400×400`,
-                                `**Banner** — \`${kit.name}\` · 1024×320`,
-                                `**Palette** — ${colorLabel}`,
-                                `**Background** — \`${kit.background}\``,
-                                `**Border** — \`${kit.border}\``,
-                                `**Glow** — ${kit.glow}`,
-                                imageNote,
-                                '',
-                                kit.rationale ? `🧠 *${kit.rationale}*` : '',
-                                '',
-                                '⚡ Use these values in `/brand kit` to tweak.',
-                            ].filter(Boolean).join('\n'))
-                            .setFooter({ text: `Sigil • /brand ai • powered by Gemini` }),
-                    ],
+                await reply.edit({
+                    embeds: [new EmbedBuilder()
+                        .setColor(kit.color)
+                        .setTitle(`\u2726 AI Brand Kit \u2014 ${kit.name}`)
+                        .setDescription([
+                            kit.tagline   ? `*"${kit.tagline}"*\n`            : '',
+                            `**Icon** \u2014 \`${kit.initials}\` \u00b7 400\u00d7400`,
+                            `**Banner** \u2014 \`${kit.name}\` \u00b7 1024\u00d7320`,
+                            `**Palette** \u2014 ${colorLabel}`,
+                            `**Background** \u2014 \`${kit.background}\``,
+                            `**Border** \u2014 \`${kit.border}\``,
+                            `**Glow** \u2014 ${kit.glow}`,
+                            imageNote,
+                            '',
+                            kit.rationale ? `\ud83e\udde0 *${kit.rationale}*` : '',
+                            '',
+                            '\u26a1 Use these values in `/brand kit` to tweak.',
+                        ].filter(Boolean).join('\n'))
+                        .setFooter({ text: 'Sigil \u2022 /brand ai \u2022 powered by Gemini' })],
                     files,
                 });
             } catch (err) {
                 console.error('[ERROR] /brand ai failed:', err);
-                await initialReply.edit({
-                    embeds: [new EmbedBuilder().setColor('#FF0000').setDescription(`Failed to generate AI brand kit. ${err.message || 'Please try again.'}`)],
+                await reply.edit({
+                    embeds: [new EmbedBuilder().setColor('#FF0000')
+                        .setDescription(`Failed to generate AI brand kit. ${err.message || 'Please try again.'}`)],
                 });
             }
         }
