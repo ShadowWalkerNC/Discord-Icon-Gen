@@ -1,12 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { createCanvas, registerFont, loadImage } = require('canvas');
-const { getFont, getAllFonts } = require('../utils/fonts');
-const { getBackgroundChoices, drawBackground } = require('../utils/backgrounds');
+const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { createCanvas }                                          = require('canvas');
+const { registerAllFonts, getAllFontFamilies }                  = require('../utils/canvas');
+const { getBackgroundChoices, drawBackground }                  = require('../utils/backgrounds');
 
-for (const font of getAllFonts()) {
-    try { registerFont(font.file, { family: font.family }); }
-    catch (e) { console.error(`[ERROR] Failed to register font '${font.family}':`, e.message); }
-}
+registerAllFonts();
 
 const COLS     = 3;
 const CELL_W   = 280;
@@ -24,7 +21,7 @@ module.exports = {
     async execute(interaction) {
         const loadingEmbed = new EmbedBuilder()
             .setColor('#808080')
-            .setDescription('\u2726 Generating background preview sheet\u2026');
+            .setDescription('✦ Generating background preview sheet…');
         const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
 
         try {
@@ -40,19 +37,16 @@ module.exports = {
             ctx.fillStyle = '#111111';
             ctx.fillRect(0, 0, sheetW, sheetH);
 
-            const registeredFonts = getAllFonts();
-            const headerFont = registeredFonts.length > 0
-                ? `bold 22px '${registeredFonts[0].family}'`
-                : "bold 22px 'Arial'";
-            const labelFont = registeredFonts.length > 0
-                ? `bold 13px '${registeredFonts[0].family}'`
-                : "bold 13px 'Arial'";
+            const families   = getAllFontFamilies?.() ?? [];
+            const labelFam   = families[0] ?? 'monospace';
+            const headerFont = `bold 22px '${labelFam}'`;
+            const labelFont  = `bold 13px '${labelFam}'`;
 
-            ctx.font             = headerFont;
-            ctx.fillStyle        = '#ffffff';
-            ctx.textAlign        = 'center';
-            ctx.textBaseline     = 'middle';
-            ctx.fillText('\u2726 Sigil \u2014 Background Preview', sheetW / 2, HEADER_H / 2);
+            ctx.font         = headerFont;
+            ctx.fillStyle    = '#ffffff';
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✦ Sigil — Background Preview', sheetW / 2, HEADER_H / 2);
 
             for (let i = 0; i < bgChoices.length; i++) {
                 const { name: label, value: key } = bgChoices[i];
@@ -61,41 +55,41 @@ module.exports = {
                 const x   = PAD + col * (CELL_W + PAD);
                 const y   = HEADER_H + PAD + row * (CELL_H + LABEL_H + PAD);
 
-                const cell  = createCanvas(CELL_W, CELL_H);
-                const cctx  = cell.getContext('2d');
-                await drawBackground(cctx, key, CELL_W, CELL_H, loadImage);
-
-                ctx.drawImage(cell, x, y, CELL_W, CELL_H);
-
-                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-                ctx.lineWidth   = 1;
-                ctx.strokeRect(x + 0.5, y + 0.5, CELL_W - 1, CELL_H - 1);
-
-                ctx.fillStyle = '#1c1c1c';
-                ctx.fillRect(x, y + CELL_H, CELL_W, LABEL_H);
+                const cell    = createCanvas(CELL_W, CELL_H);
+                const cellCtx = cell.getContext('2d');
+                try {
+                    await drawBackground(cellCtx, key, CELL_W, CELL_H);
+                } catch {
+                    cellCtx.fillStyle = '#1a1a1a';
+                    cellCtx.fillRect(0, 0, CELL_W, CELL_H);
+                }
+                ctx.drawImage(cell, x, y);
 
                 ctx.font         = labelFont;
-                ctx.fillStyle    = '#dddddd';
+                ctx.fillStyle    = '#cccccc';
                 ctx.textAlign    = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(label, x + CELL_W / 2, y + CELL_H + LABEL_H / 2);
             }
 
-            const attachment = canvas.toBuffer();
-
+            const buf = canvas.toBuffer();
             await initialReply.edit({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor('#808080')
-                        .setImage('attachment://preview.png')
-                        .setFooter({ text: 'Sigil \u2022 /preview \u2022 use these names in /icon, /banner, or /compare' }),
+                        .setColor('#8b0000')
+                        .setTitle('✦ Background Preview')
+                        .setDescription(`Showing **${bgChoices.length}** available backgrounds.\nUse the \`background\` option in \`/icon\`, \`/banner\`, \`/brand\`, or \`/mood\`.`)
+                        .setImage('attachment://backgrounds.png')
+                        .setFooter({ text: 'Sigil • /preview' }),
                 ],
-                files: [{ attachment, name: 'preview.png' }],
+                files: [new AttachmentBuilder(buf, { name: 'backgrounds.png' })],
             });
-        } catch (error) {
-            console.error('[ERROR] Preview generation failed:', error);
+        } catch (err) {
+            console.error('[ERROR] /preview failed:', err);
             await initialReply.edit({
-                embeds: [new EmbedBuilder().setColor('#FF0000').setDescription('Failed to generate preview. Please try again.')],
+                embeds: [new EmbedBuilder()
+                    .setColor('#FF0000')
+                    .setDescription(`Failed to render preview sheet. ${err.message || 'Please try again.'}`)],
             });
         }
     },
