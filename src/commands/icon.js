@@ -4,6 +4,7 @@ const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const { createTextGradient } = require('../utils/gradient');
 const { getBackgroundChoices, drawBackground } = require('../utils/backgrounds');
 const { drawBorder, getBorderChoices } = require('../utils/borders');
+const { getColorAutocomplete } = require('../utils/colors');
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
@@ -20,27 +21,30 @@ module.exports = {
     cooldown: 4,
     data: new SlashCommandBuilder()
         .setName('icon')
-        .setDescription('Generate a 400x400 profile icon.')
+        .setDescription('Generate a 400×400 profile icon.')
         .addStringOption(option =>
             option.setName('text')
                 .setDescription(`Text to display (max ${MAX_TEXT_LENGTH} chars)`)
                 .setRequired(true))
         .addIntegerOption(option =>
             option.setName('size')
-                .setDescription(`Font size in pixels (${MIN_FONT_SIZE}\u2013${MAX_FONT_SIZE})`)
+                .setDescription(`Font size in pixels (${MIN_FONT_SIZE}–${MAX_FONT_SIZE})`)
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('color')
-                .setDescription('Text color in hex (e.g. #FF0000)')
-                .setRequired(true))
+                .setDescription('Text colour — pick a preset or type a hex code like #FF0000')
+                .setRequired(true)
+                .setAutocomplete(true))
         .addStringOption(option =>
             option.setName('glow')
                 .setDescription('Glow intensity')
                 .setRequired(true)
                 .addChoices(
+                    { name: 'None',   value: '0'  },
                     { name: 'Low',    value: '5'  },
                     { name: 'Medium', value: '10' },
-                    { name: 'High',   value: '15' }
+                    { name: 'High',   value: '15' },
+                    { name: 'Ultra',  value: '25' }
                 ))
         .addStringOption(option =>
             option.setName('background')
@@ -49,11 +53,12 @@ module.exports = {
                 .addChoices(...getBackgroundChoices()))
         .addStringOption(option =>
             option.setName('color2')
-                .setDescription('Optional second color for a gradient (e.g. #0000FF)')
-                .setRequired(false))
+                .setDescription('Optional second colour for a gradient — pick a preset or type a hex code')
+                .setRequired(false)
+                .setAutocomplete(true))
         .addIntegerOption(option =>
             option.setName('opacity')
-                .setDescription('Background opacity 10\u2013100 (default: 100)')
+                .setDescription('Background opacity 10–100 (default: 100)')
                 .setMinValue(10)
                 .setMaxValue(100)
                 .setRequired(false))
@@ -67,6 +72,13 @@ module.exports = {
                 .setDescription('Font style for the text')
                 .setRequired(false)
                 .addChoices(...getFontChoices())),
+
+    async autocomplete(interaction) {
+        const focused = interaction.options.getFocused(true);
+        if (focused.name === 'color' || focused.name === 'color2') {
+            await interaction.respond(getColorAutocomplete(focused.value));
+        }
+    },
 
     async execute(interaction) {
         const text          = interaction.options.getString('text');
@@ -84,11 +96,11 @@ module.exports = {
         if (size < MIN_FONT_SIZE || size > MAX_FONT_SIZE)
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         if (!HEX_COLOR_REGEX.test(color))
-            return interaction.reply({ content: 'Color must be a valid hex code (e.g. #FF0000).', ephemeral: true });
+            return interaction.reply({ content: '❌ Color must be a valid hex code. Pick from the dropdown or type e.g. #FF0000.', ephemeral: true });
         if (color2 && !HEX_COLOR_REGEX.test(color2))
-            return interaction.reply({ content: 'Color2 must be a valid hex code (e.g. #0000FF).', ephemeral: true });
+            return interaction.reply({ content: '❌ Color2 must be a valid hex code. Pick from the dropdown or type e.g. #0000FF.', ephemeral: true });
 
-        const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('Generating your icon\u2026');
+        const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('✦ Generating your icon…');
         const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
 
         try {
@@ -126,16 +138,16 @@ module.exports = {
             ctx.fillText(text, drawX, drawY);
 
             const attachment   = canvas.toBuffer();
-            const colorLabel   = color2 ? `gradient ${color}\u2192${color2}` : color;
-            const opacityLabel = opacity < 100 ? ` \u2022 bg:${opacity}%` : '';
-            const borderLabel  = borderStyle !== 'none' ? ` \u2022 border:${borderStyle}` : '';
+            const colorLabel   = color2 ? `gradient ${color}→${color2}` : color;
+            const opacityLabel = opacity < 100 ? ` • bg:${opacity}%` : '';
+            const borderLabel  = borderStyle !== 'none' ? ` • border:${borderStyle}` : '';
 
             await initialReply.edit({
                 embeds: [
                     new EmbedBuilder()
                         .setColor('#808080')
                         .setImage('attachment://icon.png')
-                        .setFooter({ text: `Discord Icon Gen \u2022 /icon \u2022 ${background}${opacityLabel}${borderLabel} \u2022 ${colorLabel} \u2022 font: ${font.label}` }),
+                        .setFooter({ text: `Sigil • /icon • ${background}${opacityLabel}${borderLabel} • ${colorLabel} • font: ${font.label}` }),
                 ],
                 files: [{ attachment, name: 'icon.png' }],
             });
