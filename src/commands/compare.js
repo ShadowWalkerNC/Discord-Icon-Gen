@@ -4,6 +4,7 @@ const { getFont, getFontChoices, getAllFonts }   = require('../utils/fonts');
 const { createTextGradient }                     = require('../utils/gradient');
 const { getBackgroundChoices, drawBackground }   = require('../utils/backgrounds');
 const { drawBorder, getBorderChoices, BORDER_LABELS } = require('../utils/borders');
+const { getColorAutocomplete }                   = require('../utils/colors');
 
 const HEX_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const ICON_SIZE = 400;
@@ -51,33 +52,44 @@ async function renderIcon(params) {
     return canvas;
 }
 
+const GLOW_CHOICES = [
+    { name: 'None',   value: '0'  },
+    { name: 'Low',    value: '5'  },
+    { name: 'Medium', value: '10' },
+    { name: 'High',   value: '15' },
+    { name: 'Ultra',  value: '25' },
+];
+const GLOW_LABELS = { '0': 'None', '5': 'Low', '10': 'Medium', '15': 'High', '25': 'Ultra' };
+
+const COLOR_FIELDS = new Set(['color_a', 'color2_a', 'color_b', 'color2_b']);
+
 module.exports = {
     cooldown: 8,
     data: new SlashCommandBuilder()
         .setName('compare')
         .setDescription('Render two icon variants side-by-side to compare colours, backgrounds, or styles.')
         .addStringOption(o  => o.setName('text')        .setDescription('Text shown on both icons (max 20 chars)').setRequired(true))
-        .addIntegerOption(o => o.setName('size')        .setDescription('Font size in pixels (10\u2013150)').setRequired(true))
-        .addStringOption(o  => o.setName('color_a')     .setDescription('Side A \u2014 primary text colour (hex)').setRequired(true))
-        .addStringOption(o  => o.setName('glow_a')      .setDescription('Side A \u2014 glow intensity').setRequired(true)
-            .addChoices({ name:'Low',value:'5'},{ name:'Medium',value:'10'},{ name:'High',value:'15'}))
-        .addStringOption(o  => o.setName('background_a').setDescription('Side A \u2014 background style').setRequired(true)
-            .addChoices(...getBackgroundChoices()))
-        .addStringOption(o  => o.setName('color_b')     .setDescription('Side B \u2014 primary text colour (hex)').setRequired(true))
-        .addStringOption(o  => o.setName('glow_b')      .setDescription('Side B \u2014 glow intensity').setRequired(true)
-            .addChoices({ name:'Low',value:'5'},{ name:'Medium',value:'10'},{ name:'High',value:'15'}))
-        .addStringOption(o  => o.setName('background_b').setDescription('Side B \u2014 background style').setRequired(true)
-            .addChoices(...getBackgroundChoices()))
-        .addStringOption(o  => o.setName('font')        .setDescription('Font (same for both sides)').setRequired(false)
-            .addChoices(...getFontChoices()))
-        .addStringOption(o  => o.setName('color2_a')    .setDescription('Side A \u2014 gradient second colour (hex)').setRequired(false))
-        .addIntegerOption(o => o.setName('opacity_a')   .setDescription('Side A \u2014 background opacity 10\u2013100').setRequired(false).setMinValue(10).setMaxValue(100))
-        .addStringOption(o  => o.setName('border_a')    .setDescription('Side A \u2014 border style').setRequired(false)
-            .addChoices(...getBorderChoices()))
-        .addStringOption(o  => o.setName('color2_b')    .setDescription('Side B \u2014 gradient second colour (hex)').setRequired(false))
-        .addIntegerOption(o => o.setName('opacity_b')   .setDescription('Side B \u2014 background opacity 10\u2013100').setRequired(false).setMinValue(10).setMaxValue(100))
-        .addStringOption(o  => o.setName('border_b')    .setDescription('Side B \u2014 border style').setRequired(false)
-            .addChoices(...getBorderChoices())),
+        .addIntegerOption(o => o.setName('size')        .setDescription('Font size in pixels (10–150)').setRequired(true))
+        .addStringOption(o  => o.setName('color_a')     .setDescription('Side A — primary colour — pick a preset or type a hex').setRequired(true).setAutocomplete(true))
+        .addStringOption(o  => o.setName('glow_a')      .setDescription('Side A — glow intensity').setRequired(true).addChoices(...GLOW_CHOICES))
+        .addStringOption(o  => o.setName('background_a').setDescription('Side A — background style').setRequired(true).addChoices(...getBackgroundChoices()))
+        .addStringOption(o  => o.setName('color_b')     .setDescription('Side B — primary colour — pick a preset or type a hex').setRequired(true).setAutocomplete(true))
+        .addStringOption(o  => o.setName('glow_b')      .setDescription('Side B — glow intensity').setRequired(true).addChoices(...GLOW_CHOICES))
+        .addStringOption(o  => o.setName('background_b').setDescription('Side B — background style').setRequired(true).addChoices(...getBackgroundChoices()))
+        .addStringOption(o  => o.setName('font')        .setDescription('Font (same for both sides)').setRequired(false).addChoices(...getFontChoices()))
+        .addStringOption(o  => o.setName('color2_a')    .setDescription('Side A — gradient second colour — pick a preset or type a hex').setRequired(false).setAutocomplete(true))
+        .addIntegerOption(o => o.setName('opacity_a')   .setDescription('Side A — background opacity 10–100').setRequired(false).setMinValue(10).setMaxValue(100))
+        .addStringOption(o  => o.setName('border_a')    .setDescription('Side A — border style').setRequired(false).addChoices(...getBorderChoices()))
+        .addStringOption(o  => o.setName('color2_b')    .setDescription('Side B — gradient second colour — pick a preset or type a hex').setRequired(false).setAutocomplete(true))
+        .addIntegerOption(o => o.setName('opacity_b')   .setDescription('Side B — background opacity 10–100').setRequired(false).setMinValue(10).setMaxValue(100))
+        .addStringOption(o  => o.setName('border_b')    .setDescription('Side B — border style').setRequired(false).addChoices(...getBorderChoices())),
+
+    async autocomplete(interaction) {
+        const focused = interaction.options.getFocused(true);
+        if (COLOR_FIELDS.has(focused.name)) {
+            await interaction.respond(getColorAutocomplete(focused.value));
+        }
+    },
 
     async execute(interaction) {
         const text    = interaction.options.getString('text');
@@ -103,16 +115,16 @@ module.exports = {
             border:     interaction.options.getString('border_b')   || 'none',
         };
 
-        for (const [key, val] of [['color_a',A.color],['color_b',B.color],['color2_a',A.color2],['color2_b',B.color2]]) {
+        for (const [key, val] of [['color_a', A.color], ['color_b', B.color], ['color2_a', A.color2], ['color2_b', B.color2]]) {
             if (val && !HEX_REGEX.test(val))
-                return interaction.reply({ content: `\`${key}\` must be a valid hex colour (e.g. #FF0000).`, ephemeral: true });
+                return interaction.reply({ content: `❌ \`${key}\` must be a valid hex colour. Pick from the dropdown or type e.g. #FF0000.`, ephemeral: true });
         }
         if (text.length > 20)
             return interaction.reply({ content: 'Text must be 20 characters or fewer.', ephemeral: true });
         if (size < 10 || size > 150)
             return interaction.reply({ content: 'Size must be between 10 and 150.', ephemeral: true });
 
-        const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('\u23F3 Rendering comparison\u2026');
+        const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('✦ Rendering comparison…');
         const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
 
         try {
@@ -141,22 +153,20 @@ module.exports = {
             const attachment = out.toBuffer();
             const fontObj    = getFont(fontKey);
 
-            const GLOW_LABELS = { '5': 'Low', '10': 'Medium', '15': 'High' };
-
             const resultEmbed = new EmbedBuilder()
                 .setColor('#808080')
                 .setImage('attachment://compare.png')
                 .addFields(
-                    { name: 'A \u2014 colour',     value: A.color2 ? `${A.color} \u2192 ${A.color2}` : A.color,    inline: true },
-                    { name: 'A \u2014 background', value: `\`${A.background}\``,                                    inline: true },
-                    { name: 'A \u2014 glow',       value: `\`${GLOW_LABELS[A.glow]}\``,                             inline: true },
-                    { name: 'A \u2014 border',     value: `\`${BORDER_LABELS[A.border] ?? A.border}\``,             inline: true },
-                    { name: 'B \u2014 colour',     value: B.color2 ? `${B.color} \u2192 ${B.color2}` : B.color,    inline: true },
-                    { name: 'B \u2014 background', value: `\`${B.background}\``,                                    inline: true },
-                    { name: 'B \u2014 glow',       value: `\`${GLOW_LABELS[B.glow]}\``,                             inline: true },
-                    { name: 'B \u2014 border',     value: `\`${BORDER_LABELS[B.border] ?? B.border}\``,             inline: true },
+                    { name: 'A — colour',     value: A.color2 ? `${A.color} → ${A.color2}` : A.color,    inline: true },
+                    { name: 'A — background', value: `\`${A.background}\``,                                  inline: true },
+                    { name: 'A — glow',       value: `\`${GLOW_LABELS[A.glow] ?? A.glow}\``,                inline: true },
+                    { name: 'A — border',     value: `\`${BORDER_LABELS[A.border] ?? A.border}\``,           inline: true },
+                    { name: 'B — colour',     value: B.color2 ? `${B.color} → ${B.color2}` : B.color,    inline: true },
+                    { name: 'B — background', value: `\`${B.background}\``,                                  inline: true },
+                    { name: 'B — glow',       value: `\`${GLOW_LABELS[B.glow] ?? B.glow}\``,                inline: true },
+                    { name: 'B — border',     value: `\`${BORDER_LABELS[B.border] ?? B.border}\``,           inline: true },
                 )
-                .setFooter({ text: `Discord Icon Gen \u2022 /compare \u2022 font: ${fontObj.label} \u2022 text: ${text}` });
+                .setFooter({ text: `Sigil • /compare • font: ${fontObj.label} • text: ${text}` });
 
             await initialReply.edit({
                 embeds: [resultEmbed],

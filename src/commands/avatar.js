@@ -2,15 +2,16 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { createCanvas, registerFont, loadImage } = require('canvas');
 const { getFont, getFontChoices, getAllFonts } = require('../utils/fonts');
 const { createTextGradient } = require('../utils/gradient');
+const { getColorAutocomplete } = require('../utils/colors');
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const MAX_TEXT_LENGTH = 20;
-const MIN_FONT_SIZE = 10;
-const MAX_FONT_SIZE = 150;
-const CANVAS_SIZE = 400;
+const MIN_FONT_SIZE   = 10;
+const MAX_FONT_SIZE   = 150;
+const CANVAS_SIZE     = 400;
 
 const TEXT_POSITIONS = {
-    top: 0.15,
+    top:    0.15,
     center: 0.5,
     bottom: 0.85,
 };
@@ -31,20 +32,23 @@ module.exports = {
                 .setRequired(true))
         .addIntegerOption(option =>
             option.setName('size')
-                .setDescription(`Font size in pixels (${MIN_FONT_SIZE}\u2013${MAX_FONT_SIZE})`)
+                .setDescription(`Font size in pixels (${MIN_FONT_SIZE}–${MAX_FONT_SIZE})`)
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('color')
-                .setDescription('Text color in hex format (e.g. #FFFFFF)')
-                .setRequired(true))
+                .setDescription('Text colour — pick a preset or type a hex code like #FFFFFF')
+                .setRequired(true)
+                .setAutocomplete(true))
         .addStringOption(option =>
             option.setName('glow')
                 .setDescription('Glow intensity')
                 .setRequired(true)
                 .addChoices(
-                    { name: 'Low', value: '5' },
+                    { name: 'None',   value: '0'  },
+                    { name: 'Low',    value: '5'  },
                     { name: 'Medium', value: '10' },
-                    { name: 'High', value: '15' }
+                    { name: 'High',   value: '15' },
+                    { name: 'Ultra',  value: '25' }
                 ))
         .addStringOption(option =>
             option.setName('position')
@@ -57,8 +61,9 @@ module.exports = {
                 ))
         .addStringOption(option =>
             option.setName('color2')
-                .setDescription('Optional second color for a gradient (e.g. #FF00FF)')
-                .setRequired(false))
+                .setDescription('Optional second colour for a gradient — pick a preset or type a hex code')
+                .setRequired(false)
+                .setAutocomplete(true))
         .addBooleanOption(option =>
             option.setName('circular')
                 .setDescription('Crop the avatar into a circle (default: false)')
@@ -68,6 +73,13 @@ module.exports = {
                 .setDescription('Font style for the text')
                 .setRequired(false)
                 .addChoices(...getFontChoices())),
+
+    async autocomplete(interaction) {
+        const focused = interaction.options.getFocused(true);
+        if (focused.name === 'color' || focused.name === 'color2') {
+            await interaction.respond(getColorAutocomplete(focused.value));
+        }
+    },
 
     async execute(interaction) {
         const text          = interaction.options.getString('text');
@@ -84,11 +96,11 @@ module.exports = {
         if (size < MIN_FONT_SIZE || size > MAX_FONT_SIZE)
             return interaction.reply({ content: `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}.`, ephemeral: true });
         if (!HEX_COLOR_REGEX.test(color))
-            return interaction.reply({ content: 'Color must be a valid hex code (e.g. #FFFFFF).', ephemeral: true });
+            return interaction.reply({ content: '❌ Color must be a valid hex code. Pick from the dropdown or type e.g. #FFFFFF.', ephemeral: true });
         if (color2 && !HEX_COLOR_REGEX.test(color2))
-            return interaction.reply({ content: 'Color2 must be a valid hex code (e.g. #FF00FF).', ephemeral: true });
+            return interaction.reply({ content: '❌ Color2 must be a valid hex code. Pick from the dropdown or type e.g. #FF00FF.', ephemeral: true });
 
-        const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('Generating your avatar overlay\u2026');
+        const loadingEmbed = new EmbedBuilder().setColor('#808080').setDescription('✦ Generating your avatar overlay…');
         const initialReply = await interaction.reply({ embeds: [loadingEmbed] });
 
         try {
@@ -135,14 +147,14 @@ module.exports = {
             ctx.fillText(text, drawX, drawY);
 
             const attachment = canvas.toBuffer();
-            const colorLabel = color2 ? `gradient ${color}\u2192${color2}` : color;
+            const colorLabel = color2 ? `gradient ${color}→${color2}` : color;
 
             await initialReply.edit({
                 embeds: [
                     new EmbedBuilder()
                         .setColor('#808080')
                         .setImage('attachment://avatar.png')
-                        .setFooter({ text: `Discord Icon Gen \u2022 /avatar \u2022 ${colorLabel} \u2022 font: ${font.label}` }),
+                        .setFooter({ text: `Sigil • /avatar • ${colorLabel} • pos: ${position} • font: ${font.label}` }),
                 ],
                 files: [{ attachment, name: 'avatar.png' }],
             });
