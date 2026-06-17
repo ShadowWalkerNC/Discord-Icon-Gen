@@ -5,6 +5,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.3.0] — 2026-06-17
+
+### Added
+- `gui/gui-server.js` — lightweight Node HTTP bridge server (v1.2.1) with endpoints:
+  `GET /`, `GET /health`, `POST /preview`, `POST /generate`, `POST /webhook-register`
+- `gui/sigil-gui-builder.html` — fully self-contained visual brand builder GUI:
+  54-colour swatch picker, 12 background presets, gradient toggle, 6 border modes,
+  glow slider, 6 font options, live preview panel, Discord embed mockup,
+  Gemini API integration, PNG download tray
+- `/gui open` and `/gui status` Discord slash commands
+- `src/utils/canvas.js` — `getAllFontFamilies()` export for GUI font picker
+- `src/utils/fonts.js` — full 6-font registry (`another-danger`, `bebas-neue`,
+  `oswald`, `playfair`, `dancing-script`, `source-code-pro`) with stub detection
+  (files < 1 KB are skipped with a warning and fall back to `another-danger`)
+- `getAllFontOptions()` export in `fonts.js` for GUI full font picker (shows all
+  registered fonts regardless of stub status)
+- `docs/FONTS.md` — font download sources, licence info, and one-shot `curl` install script
+- `GUI_PORT` and `GUI_PUBLIC_URL` environment variables (documented in `.env.example`)
+- `npm run gui` and `npm run gui:dev` scripts in `package.json`
+- `/brand` and `/mood` added as saveable commands in `/saveme`
+
+### Fixed
+- `gui/gui-server.js` `POST /generate`: variable scoping bug where `opts` was
+  declared with `const` then referenced in a nested spread, causing a ReferenceError.
+  Fixed by splitting into `baseOpts` + `finalOpts`.
+- `src/utils/canvas.js`: `preview.js` called `getAllFontFamilies?.()` but the
+  function was never exported — always returned `[]` and fell back to `monospace`.
+  Function now properly exported.
+
+---
+
 ## [1.2.0] — 2026-06-16 (ShadowWalkerNC fork)
 
 ### Added

@@ -8,7 +8,9 @@
     },
     "scripts": {
         "start": "node src/index.js",
-        "dev": "node --watch src/index.js"
+        "dev": "node --watch src/index.js",
+        "gui": "node gui/gui-server.js",
+        "gui:dev": "node --watch gui/gui-server.js"
     },
     "author": "ShadowWalkerNC (fork of NoVa-Gh0ul)",
     "license": "MIT",
