@@ -6,6 +6,55 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 
 ---
 
+## [1.7.0] — 2026-06-18
+
+### Added
+- **12 missing named background presets** in `src/utils/backgrounds.js` — these IDs were referenced by GUI templates and the Gemini AI prompt but had no `draw()` implementation (silently fell back to `solid-black`):
+  - `midnight-gradient` — 3-stop deep-purple linear gradient
+  - `deep-space` — dark base + deterministic star field + nebula radial glow
+  - `inferno` — bottom-up fire gradient + heat shimmer radial
+  - `ocean-depth` — deep-blue linear gradient + caustic light ray strokes
+  - `twilight` — 4-stop dusk vertical (indigo → magenta → orange)
+  - `aurora` — dark base + 3 overlapping radial aurora band glows
+  - `storm` — grey radial vortex + faint lightning bolt stroke
+  - `void` — pure black + subtle dark radial vignette + distant star pinpricks
+  - `neon-city` — sky gradient + building silhouettes + 3 neon radial glows
+  - `sunset-fade` — 5-stop sunset sky + sun disc radial highlight
+  - `forest-night` — dark sky + moon glow radial + 10 deterministic tree silhouettes
+  - `polar` — ice-blue sky gradient + aurora shimmer + snow ground ellipse
+- Total background count: **32** (was 20)
+
+### Fixed
+- `bg-image-1` (Abstract Mesh) and `bg-image-2` (Neon Lines) previously used `Math.random()` for positions, producing different output on every render. Both now use **fixed coordinate arrays** for deterministic, consistent output.
+
+---
+
+## [1.6.1] — 2026-06-18
+
+### Added
+- **`/compare`** — `shape_a` and `shape_b` options (Circle / Rounded / Square / Hexagon / Diamond); each design renders with its own independent shape clip
+- **`/avatar`** — `shape` option (defaults to `circle`); overlay image is now clipped to the **same shape** as the base icon using `applyShapeClip` — previously the overlay was always circle-cropped regardless of shape
+
+### Changed
+- `/compare` embed fields expanded from single-line to 3-line breakdown (text, shape, BG/border)
+- `/compare` gap background darkened from `#000000` to `#111111`
+- `/avatar` now imports `applyShapeClip` from `canvas.js` instead of inlining a hardcoded circle clip
+
+---
+
+## [1.6.0] — 2026-06-18
+
+### Added
+- **`shape` option** added to `/icon`, `/logo`, `/random` slash commands
+  - Choices: Circle, Rounded, Square, Hexagon, Diamond
+  - `/random` picks a shape automatically and displays it in the result embed
+  - Shape label shown as embed field in `/icon` and `/logo` replies
+  - Shape saved to per-user command history
+- **`/help`** updated to document `shape` option on all relevant commands
+- **`SHAPE_CHOICES`** constant shared across command files
+
+---
+
 ## [1.5.1] — 2026-06-18
 
 ### Added
@@ -58,7 +107,7 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 - **7 output size presets** in GUI Step 3 — Discord Icon (512×512), Discord Banner (960×540), Twitch Panel (320×160), Twitch Banner (1200×480), YouTube Art (2560×1440), Reddit Banner (1920×384), Square (1024×1024)
 - **URL hash share/restore** — full brand state (including active template and size preset) encoded in URL hash; Share button copies link to clipboard
 - **Randomize button** — randomizes colors, background, border, and font; clears active template selection
-- **Light/dark theme toggle** in navbar
+- **Light/dark theme toggle**
 - **Server health pill** in navbar — live online/offline indicator polling every 8 seconds
 - **Export dialog** — exports full config JSON compatible with `/brand ai` and `gemini.js`
 - **Copy JSON** button in Output & Palette tab

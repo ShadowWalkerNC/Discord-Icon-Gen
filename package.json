@@ -1,6 +1,6 @@
 {
     "name": "sigil",
-    "version": "2.0.0",
+    "version": "1.7.0",
     "description": "Sigil — Your server's mark. Crafted by AI. A Discord bot for AI-powered server branding, icons, banners, badges, and full brand kit generation.",
     "main": "src/index.js",
     "engines": {
