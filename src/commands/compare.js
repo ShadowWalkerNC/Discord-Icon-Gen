@@ -21,16 +21,17 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('compare')
         .setDescription('Compare two icon designs side by side')
-        // --- Design A ---
+        // Required options MUST come first
         .addStringOption(opt => opt.setName('text_a').setDescription('Text for design A').setRequired(true))
+        .addStringOption(opt => opt.setName('text_b').setDescription('Text for design B').setRequired(true))
+        // Non-required options for Design A
         .addStringOption(opt => opt.setName('shape_a').setDescription('Shape for A').addChoices(...SHAPE_CHOICES))
         .addStringOption(opt => opt.setName('background_a').setDescription('Background for A').addChoices(...getBackgroundChoices()))
         .addStringOption(opt => opt.setName('border_a').setDescription('Border for A').addChoices(...getBorderChoices()))
         .addStringOption(opt => opt.setName('primary_a').setDescription('Primary color for A').setAutocomplete(true))
         .addStringOption(opt => opt.setName('secondary_a').setDescription('Secondary color for A').setAutocomplete(true))
         .addNumberOption(opt => opt.setName('glow_a').setDescription('Glow for A (0–25)').setMinValue(0).setMaxValue(25))
-        // --- Design B ---
-        .addStringOption(opt => opt.setName('text_b').setDescription('Text for design B').setRequired(true))
+        // Non-required options for Design B
         .addStringOption(opt => opt.setName('shape_b').setDescription('Shape for B').addChoices(...SHAPE_CHOICES))
         .addStringOption(opt => opt.setName('background_b').setDescription('Background for B').addChoices(...getBackgroundChoices()))
         .addStringOption(opt => opt.setName('border_b').setDescription('Border for B').addChoices(...getBorderChoices()))
@@ -70,7 +71,6 @@ module.exports = {
             renderIcon(bOpts),
         ]);
 
-        // Stitch side-by-side onto a shared canvas
         const { loadImage } = require('canvas');
         const [imgA, imgB] = await Promise.all([loadImage(bufA), loadImage(bufB)]);
         const GAP = 20;
