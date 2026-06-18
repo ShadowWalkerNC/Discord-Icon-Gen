@@ -23,8 +23,35 @@ app.get('/', (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-    res.json({ ok: true, version: '1.3.0' });
+    res.json({ ok: true, version: '1.3.1' });
 });
+
+// ── Error classifier ──────────────────────────────────────────────────────
+// Turns raw Gemini/network errors into short, user-friendly strings.
+function classifyError(err) {
+    const msg = (err?.message || String(err));
+
+    if (msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('Quota exceeded')) {
+        return '⚠️ Gemini free-tier quota exceeded. Wait a few minutes and try again, or add a paid API key.';
+    }
+    if (msg.includes('API_KEY_INVALID') || msg.includes('400') && msg.includes('key')) {
+        return '⚠️ Invalid Gemini API key. Double-check the key in Integration Settings.';
+    }
+    if (msg.includes('403') || msg.includes('PERMISSION_DENIED')) {
+        return '⚠️ Gemini API key does not have permission. Check your key settings at aistudio.google.com.';
+    }
+    if (msg.includes('503') || msg.includes('unavailable') || msg.includes('UNAVAILABLE')) {
+        return '⚠️ Gemini is temporarily unavailable. Try again in a moment.';
+    }
+    if (msg.includes('fetch') || msg.includes('ENOTFOUND') || msg.includes('ECONNREFUSED')) {
+        return '⚠️ Network error — could not reach Gemini. Check your connection.';
+    }
+    if (msg.includes('JSON') || msg.includes('Unexpected token') || msg.includes('extractJson')) {
+        return '⚠️ Gemini returned an unreadable response. Try again.';
+    }
+    // Fallback — short first line only, no raw JSON
+    return '⚠️ ' + msg.split('\n')[0].slice(0, 120);
+}
 
 // ── POST /preview ─────────────────────────────────────────────────────────
 // Fast canvas-only render (no Gemini). Returns base64 PNGs.
@@ -48,13 +75,14 @@ app.post('/preview', async (req, res) => {
         });
 
         res.json({
+            ok: true,
             icon_b64:    iconBuf.toString('base64'),
             banner_b64:  bannerBuf.toString('base64'),
             palette_b64: paletteBuf.toString('base64'),
         });
     } catch (err) {
         console.error('[/preview]', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ ok: false, error: classifyError(err) });
     }
 });
 
@@ -69,7 +97,7 @@ app.post('/generate', async (req, res) => {
         } = req.body;
 
         if (!gemini_key && !process.env.GEMINI_API_KEY) {
-            return res.status(400).json({ error: 'Gemini API key required.' });
+            return res.status(400).json({ ok: false, error: '⚠️ Enter your Gemini API key in Integration Settings first.' });
         }
 
         // Temporarily override env key if provided by GUI
@@ -102,7 +130,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
             brand = extractJson(raw);
         } catch (err) {
             if (gemini_key) process.env.GEMINI_API_KEY = originalKey;
-            return res.status(500).json({ error: 'Gemini returned unexpected response: ' + err.message });
+            return res.status(500).json({ ok: false, error: classifyError(err) });
         }
 
         const { name, tagline, primary_color, secondary_color, background, border, font, glow, palette, image_prompt: aiPrompt } = brand;
@@ -114,7 +142,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
             font, glow: Number(glow), palette,
         });
 
-        // Try AI image
+        // Try AI image — silent fail, not shown as error to user
         const finalPrompt = image_prompt || aiPrompt || `Minimalist logo for: ${name}`;
         let ai_image_b64 = null;
         try {
@@ -124,6 +152,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
         if (gemini_key) process.env.GEMINI_API_KEY = originalKey;
 
         res.json({
+            ok: true,
             brand,
             icon_b64:    iconBuf.toString('base64'),
             banner_b64:  bannerBuf.toString('base64'),
@@ -132,7 +161,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
         });
     } catch (err) {
         console.error('[/generate]', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ ok: false, error: classifyError(err) });
     }
 });
 
