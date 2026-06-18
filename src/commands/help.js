@@ -3,86 +3,94 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Show all Sigil commands and how to use them'),
+        .setDescription('Show all Sigil commands and options'),
 
     async execute(interaction) {
         const embed = new EmbedBuilder()
             .setTitle('📖 Sigil — Command Reference')
-            .setDescription('**Sigil** is your AI-powered Discord server branding bot. Use slash commands or the **Visual Brand Builder** GUI to create icons, banners, logos, and full brand kits.')
-            .setColor('#6a0dad')
+            .setColor('#8B0000')
+            .setDescription('Generate Discord server icons, banners, and full brand kits powered by AI.')
             .addFields(
                 {
-                    name: '🖥️ /gui — Visual Brand Builder',
+                    name: '🖼️ `/icon`',
                     value: [
-                        '`/gui open` — Get the link to the browser-based brand builder.',
-                        '`/gui status` — Check if the GUI server is online.',
-                        '',
-                        'The GUI includes **8 brand templates** (Dark Fantasy, Cyberpunk, Fantasy RPG, Community, Racing, Tactical FPS, Survival RPG, Sci-Fi), live preview, 7 platform size presets, shareable links, randomize, and optional AI generation.',
+                        '`text` *(required)* — text to render',
+                        '`shape` — Circle / Rounded / Square / Hexagon / Diamond',
+                        '`background` — one of 20 presets',
+                        '`border` — none / solid / glow / gradient / double / dashed',
+                        '`primary_color` / `secondary_color` — hex color with autocomplete',
+                        '`font` — Arial Black, Impact, Bebas Neue…',
+                        '`glow` — 0–25',
+                        '`opacity` — 0.0–1.0',
                     ].join('\n'),
                 },
                 {
-                    name: '🎨 /brand',
+                    name: '🎨 `/logo`',
                     value: [
-                        '`/brand kit` — Build a full brand kit (icon + banner + palette) from your own options.',
-                        '`/brand ai` — Describe your server and let AI design your entire brand kit.',
-                        '`  description:` Your server in a sentence.',
-                        '`  image_prompt:` Custom prompt for the AI image (optional).',
+                        '`text` *(required)*',
+                        '`shape` — Circle / Rounded / Square / Hexagon / Diamond',
+                        '`background`, `primary_color`, `secondary_color`, `font`, `glow`',
+                        '`transparent` — true/false for transparent background',
                     ].join('\n'),
                 },
                 {
-                    name: '🖼️ /icon',
-                    value: 'Generate a standalone server icon.\n`text` `background` `border` `primary_color` `secondary_color` `font` `glow` `opacity`',
-                },
-                {
-                    name: '🏳️ /banner',
-                    value: 'Generate a wide server banner.\n`text` `subtitle` `background` `border` `primary_color` `secondary_color` `font` `align` `glow` `opacity`',
-                },
-                {
-                    name: '🪙 /logo',
-                    value: 'Generate a logo-style icon with a solid or transparent background.\n`text` `background` `border` `primary_color` `secondary_color` `font` `glow`',
-                },
-                {
-                    name: '👤 /avatar',
-                    value: 'Generate a server avatar/profile icon, optionally with an image overlay.\n`text` `overlay` `background` `border` `primary_color` `secondary_color` `font` `glow` `opacity`',
-                },
-                {
-                    name: '🎭 /mood',
-                    value: 'Describe a mood and let AI generate a matching color palette + preview.\n`mood:` e.g. *"cozy autumn evening"*',
-                },
-                {
-                    name: '⚖️ /compare',
-                    value: 'Compare two icon designs side by side.\n`text_a` `text_b` + background/border/color/glow options for each.',
-                },
-                {
-                    name: '🎲 /random',
-                    value: 'Generate a completely random icon — surprise yourself!\n`text` (optional)',
-                },
-                {
-                    name: '👁️ /preview',
-                    value: 'Preview all available backgrounds and borders in a quick grid.\n`text` `primary_color` `secondary_color`',
-                },
-                {
-                    name: '💾 /saveme',
-                    value: 'Save your last generated design as a kit you can replay.\n`name:` A label for this saved kit.',
-                },
-                {
-                    name: '📜 /history',
-                    value: 'View your recent command history with copy-paste commands.',
-                },
-                {
-                    name: '📐 Output Size Presets (GUI)',
+                    name: '🏞️ `/banner`',
                     value: [
-                        'Discord Icon — 512×512',
-                        'Discord Banner — 960×540',
-                        'Twitch Panel — 320×160',
-                        'Twitch Banner — 1200×480',
-                        'YouTube Channel Art — 2560×1440',
-                        'Reddit Banner — 1920×384',
-                        'Square — 1024×1024',
+                        '`text` *(required)*',
+                        '`subtitle`, `background`, `border`, `primary_color`, `secondary_color`',
+                        '`font`, `glow`, `opacity`, `align` (left / center / right)',
                     ].join('\n'),
+                },
+                {
+                    name: '🤖 `/brand ai`',
+                    value: 'Describe your server → Gemini designs a full brand kit (icon + banner + palette + AI image)',
+                },
+                {
+                    name: '📦 `/brand kit`',
+                    value: 'Manually specify brand name, tagline, colors, background, border, font, glow',
+                },
+                {
+                    name: '🎲 `/random`',
+                    value: 'Generate a fully randomized icon — random shape, colors, background, border, font, glow',
+                },
+                {
+                    name: '🔍 `/compare`',
+                    value: 'Side-by-side comparison of two icon configs (two `text` options, each with full styling)',
+                },
+                {
+                    name: '🧑‍🎨 `/avatar`',
+                    value: 'Server avatar / profile icon with optional image overlay',
+                },
+                {
+                    name: '🌈 `/mood`',
+                    value: 'Generate a 5-color palette from a mood description (AI)',
+                },
+                {
+                    name: '🗂️ `/preview`',
+                    value: 'Grid preview of all available backgrounds',
+                },
+                {
+                    name: '💾 `/saveme`',
+                    value: 'Save your most recent design as a named kit',
+                },
+                {
+                    name: '📜 `/history`',
+                    value: 'View recent command history with copy-paste commands',
+                },
+                {
+                    name: '🖥️ `/gui open`',
+                    value: 'Get the link to the visual GUI brand builder',
+                },
+                {
+                    name: '🟢 `/gui status`',
+                    value: 'Check if the GUI server is online',
+                },
+                {
+                    name: 'ℹ️ `/status`',
+                    value: 'Show bot status, uptime, and version',
                 },
             )
-            .setFooter({ text: 'Sigil v1.4.0 • Your server\'s mark. Crafted by AI.' });
+            .setFooter({ text: 'Sigil v1.6.0 • /help' });
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     },

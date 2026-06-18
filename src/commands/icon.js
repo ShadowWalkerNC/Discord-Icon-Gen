@@ -6,11 +6,20 @@ const { saveEntry } = require('../utils/history.js');
 
 registerAllFonts();
 
+const SHAPE_CHOICES = [
+    { name: 'Circle',  value: 'circle'  },
+    { name: 'Rounded', value: 'rounded' },
+    { name: 'Square',  value: 'square'  },
+    { name: 'Hexagon', value: 'hexagon' },
+    { name: 'Diamond', value: 'diamond' },
+];
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('icon')
         .setDescription('Generate a server icon')
         .addStringOption(opt => opt.setName('text').setDescription('Text to display').setRequired(true))
+        .addStringOption(opt => opt.setName('shape').setDescription('Icon shape').addChoices(...SHAPE_CHOICES))
         .addStringOption(opt => opt.setName('background').setDescription('Background style').addChoices(...getBackgroundChoices()))
         .addStringOption(opt => opt.setName('border').setDescription('Border style').addChoices(...getBorderChoices()))
         .addStringOption(opt => opt.setName('primary_color').setDescription('Primary hex color').setAutocomplete(true))
@@ -28,6 +37,7 @@ module.exports = {
         await interaction.deferReply();
 
         const text       = interaction.options.getString('text');
+        const shape      = interaction.options.getString('shape')           ?? 'square';
         const background = interaction.options.getString('background')      ?? 'gradient-purple';
         const border     = interaction.options.getString('border')          ?? 'none';
         const primary    = interaction.options.getString('primary_color')   ?? '#ffffff';
@@ -36,17 +46,20 @@ module.exports = {
         const glow       = interaction.options.getNumber('glow')            ?? 0;
         const opacity    = interaction.options.getNumber('opacity')         ?? 1.0;
 
-        const buf = await renderIcon({ text, background, border, primary, secondary, font, glow, opacity });
+        const buf = await renderIcon({ text, shape, background, border, primary, secondary, font, glow, opacity });
         const attachment = new AttachmentBuilder(buf, { name: 'icon.png' });
+
+        const shapeLabel = SHAPE_CHOICES.find(s => s.value === shape)?.name ?? shape;
 
         const embed = new EmbedBuilder()
             .setTitle(`🖼️ ${text}`)
             .setDescription('Your custom server icon is ready!')
             .setImage('attachment://icon.png')
             .setColor(primary)
+            .addFields({ name: 'Shape', value: shapeLabel, inline: true })
             .setFooter({ text: 'Sigil • icon' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
-        saveEntry(interaction.user.id, { command: 'icon', text, background, border, primary_color: primary, secondary_color: secondary, font, glow, opacity });
+        saveEntry(interaction.user.id, { command: 'icon', text, shape, background, border, primary_color: primary, secondary_color: secondary, font, glow, opacity });
     },
 };
