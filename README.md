@@ -1,10 +1,10 @@
-# Sigil — Discord Branding & Nitro-Free Tools Bot
+# Sigil — Discord Branding & Community Tools Bot
 
-**Sigil** gives every Discord server premium-quality branding and Nitro-style features — completely free. Generate server icons, banners, stickers, custom emoji, profile cards, splash screens, role badges, text effects, reaction packs, and more — all from slash commands. No Nitro required. No paywall. Power back to the user.
+**Sigil** gives every Discord server premium-quality branding and community tools — completely free. Generate server icons, banners, welcome cards, rank cards, event banners, certificates, invite cards, stickers, custom emoji, profile cards, and more — all from slash commands. No Nitro required. No paywall. Power back to the server.
 
 Also includes a browser-based **Visual Brand Builder** GUI with live preview, 8 brand templates, shape selector, and optional AI generation.
 
-> **Current version: v1.8.0** — 29 commands
+> **Current version: v1.9.0** — 32 commands
 
 ---
 
@@ -36,13 +36,22 @@ Also includes a browser-based **Visual Brand Builder** GUI with live preview, 8 
 | `/profilecard` | Nitro-style profile card mockup with banner, avatar, bio, and badge |
 | `/themepreview` | Full Discord UI mockup showing your color scheme applied to a server |
 
+### 🏆 Community Tools
+| Command | Description |
+|---|---|
+| `/welcomecard` | Custom welcome image for new members — replaces MEE6 Pro welcome cards |
+| `/rankcard` | XP / level rank card — replaces MEE6 Pro and Tatsu premium rank cards |
+| `/announcebanner` | Professional announcement graphic (6 types: announcement, alert, update, etc.) |
+| `/eventbanner` | Event banner with title, date, description, and host |
+| `/certificate` | Achievement or award certificate (8 types: Staff of the Month, Tournament Winner, etc.) |
+| `/invitecard` | Branded invite card with QR code — shareable on social media and IRL |
+
 ### 🧠 AI & Utilities
 | Command | Description |
 |---|---|
 | `/mood` | AI color palette from a mood description |
-| `/random` | Fully randomized icon |
 | `/template` | Load a built-in brand template and render its full kit |
-| `/preview` | Grid preview of all available backgrounds |
+| `/saveme` | Save your most recent design as a named kit |
 | `/history` | View recent command history |
 | `/gui open` | Get the link to the visual GUI builder |
 | `/gui status` | Check if the GUI server is online |
@@ -51,18 +60,18 @@ Also includes a browser-based **Visual Brand Builder** GUI with live preview, 8 
 
 ---
 
-## Nitro-Free Features Explained
+## Nitro-Free & Anti-Paywall Features
 
-Discord locks many visual features behind a Nitro paywall. Sigil works around this by generating downloadable assets you upload yourself — no subscription ever needed.
+Discord and popular bots lock many features behind subscriptions. Sigil generates downloadable assets you upload yourself — no subscription ever needed.
 
-| Discord Nitro Feature | Sigil Workaround |
-|---|---|
-| Custom animated stickers | `/sticker` — generate PNG, upload to Server Settings → Stickers |
-| Extra emoji slots (Nitro Boost) | `/emote` — generate 128×128 PNG, upload to Server Settings → Emoji |
-| Custom profile banner | `/profilecard` — full Nitro-style card mockup as a shareable PNG |
-| Animated server icon | `/icon` + `/texteffect` — high-quality static alternatives |
-| Server invite splash | `/splash` — 1920×1080 PNG ready to upload |
-| Reaction packs | `/reactionpack` — 5-emoji themed pack as ZIP |
+| Paid Feature | What You Pay Elsewhere | Sigil Workaround |
+|---|---|---|
+| Custom welcome images | MEE6 Pro — $5.99/mo | `/welcomecard` — free, fully customizable |
+| Styled rank cards | MEE6 Pro / Tatsu Premium | `/rankcard` — free with XP bar, level, rank |
+| Custom stickers | Discord Nitro | `/sticker` — upload PNG to any server free |
+| Extra emoji slots | Nitro Boost | `/emote` — upload 128×128 PNG to any server free |
+| Server invite splash | Level 1 Boost | `/splash` — 1920×1080 PNG ready to upload |
+| Profile banner | Discord Nitro | `/profilecard` — Nitro-style card as shareable PNG |
 
 ---
 
@@ -155,7 +164,7 @@ Sigil/
 │   ├── gui-server.js
 │   └── sigil-gui-builder.html
 ├── src/
-│   ├── commands/              # 29 slash command handlers
+│   ├── commands/              # 32 slash command handlers
 │   ├── events/                # Discord.js event handlers
 │   ├── fonts/                 # Bundled font files
 │   ├── utils/
@@ -178,7 +187,7 @@ Sigil/
 
 ## Credits
 
-Sigil was inspired by and built upon the original concept from [**NoVa-Gh0ul/Discord-Icon-Gen**](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen). Sigil has since evolved into a full branding and Nitro-free tools platform.
+Sigil was inspired by and built upon the original concept from [**NoVa-Gh0ul/Discord-Icon-Gen**](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen). Sigil has since evolved into a full branding and community tools platform.
 
 ---
 
