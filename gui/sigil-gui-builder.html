@@ -3,464 +3,910 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sigil GUI Builder</title>
+  <title>Sigil — Brand Builder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
-      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
-      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
-      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem;
-      --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
-      --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem; --radius-full: 9999px;
-      --font-display: 'Orbitron', sans-serif; --font-body: 'Inter', sans-serif;
-      --color-bg: #0a0a0f; --color-surface: #13131b; --color-surface-2: #1b1b25; --color-surface-3: #232331;
-      --color-border: rgba(255,255,255,.12); --color-divider: rgba(255,255,255,.08);
-      --color-text: #f5f7fb; --color-text-muted: #a9b1c7; --color-text-faint: #68708b;
-      --color-primary: #8b0000; --color-primary-2: #4b0082; --color-success: #39ff14; --color-warning: #ffbf00;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.25); --shadow-md: 0 8px 24px rgba(0,0,0,.35); --shadow-lg: 0 16px 48px rgba(0,0,0,.45);
-      --transition: 180ms cubic-bezier(.16,1,.3,1);
+      --bg:        #08080f;
+      --surface:   #111118;
+      --surface2:  #18181f;
+      --surface3:  #202028;
+      --border:    rgba(255,255,255,.1);
+      --divider:   rgba(255,255,255,.06);
+      --text:      #f0f2f8;
+      --muted:     #9299b0;
+      --faint:     #555d78;
+      --primary:   #8b0000;
+      --secondary: #4b0082;
+      --success:   #39ff14;
+      --warning:   #ffbf00;
+      --error:     #ff4444;
+      --radius:    .75rem;
+      --radiuslg:  1.25rem;
+      --font:      'Inter', sans-serif;
+      --fontd:     'Orbitron', sans-serif;
+      --ease:      cubic-bezier(.16,1,.3,1);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; }
-    body { font-family: var(--font-body); font-size: var(--text-base); color: var(--color-text); background:
-      radial-gradient(circle at top, rgba(139,0,0,.18), transparent 30%),
-      radial-gradient(circle at right, rgba(75,0,130,.15), transparent 25%),
-      var(--color-bg); line-height: 1.55; }
+    [data-theme="light"] {
+      --bg: #f0f2f8; --surface: #fff; --surface2: #e8eaf2; --surface3: #dde0ee;
+      --border: rgba(0,0,0,.1); --divider: rgba(0,0,0,.06);
+      --text: #0e0e1a; --muted: #555d78; --faint: #9299b0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
     button, input, select, textarea { font: inherit; color: inherit; }
-    button { cursor: pointer; }
-    .app { display: grid; grid-template-columns: 360px 1fr; min-height: 100vh; }
-    .sidebar { background: rgba(12,12,18,.9); border-right: 1px solid var(--color-border); padding: var(--space-6); overflow-y: auto; position: sticky; top: 0; height: 100vh; backdrop-filter: blur(18px); }
-    .brand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6); }
-    .brand-mark { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #8b0000, #4b0082); display: grid; place-items: center; box-shadow: 0 0 24px rgba(139,0,0,.45); font-family: var(--font-display); font-weight: 900; }
-    .brand h1 { font-family: var(--font-display); font-size: var(--text-lg); letter-spacing: .04em; }
-    .brand p { color: var(--color-text-muted); font-size: var(--text-sm); }
-    .section { margin-bottom: var(--space-6); padding-bottom: var(--space-6); border-bottom: 1px solid var(--color-divider); }
-    .section:last-child { border-bottom: 0; }
-    .section-title { font-size: var(--text-sm); text-transform: uppercase; letter-spacing: .12em; color: var(--color-text-faint); margin-bottom: var(--space-4); }
-    .field { margin-bottom: var(--space-4); }
-    .field label { display: block; font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-2); }
-    .input, .select, .textarea { width: 100%; background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: .85rem 1rem; }
-    .textarea { min-height: 96px; resize: vertical; }
-    .input:focus, .select:focus, .textarea:focus { outline: 2px solid rgba(255,255,255,.15); border-color: rgba(255,255,255,.25); }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-    .swatch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .swatch { border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden; background: var(--color-surface-2); transition: transform var(--transition), border-color var(--transition); }
-    .swatch:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.22); }
-    .swatch.active { border-color: white; box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 0 20px rgba(255,255,255,.08); }
-    .swatch-color { height: 52px; }
-    .swatch-meta { padding: .55rem; }
-    .swatch-name { font-size: .78rem; font-weight: 700; }
-    .swatch-hex { font-size: .7rem; color: var(--color-text-faint); margin-top: 2px; }
-    .chip-row { display: flex; flex-wrap: wrap; gap: 10px; }
-    .chip { padding: .65rem .9rem; border-radius: var(--radius-full); background: var(--color-surface-2); border: 1px solid var(--color-border); font-size: .82rem; font-weight: 700; }
-    .chip.active { background: linear-gradient(135deg, rgba(139,0,0,.35), rgba(75,0,130,.35)); border-color: rgba(255,255,255,.3); }
-    .main { padding: var(--space-6); }
-    .topbar { display: flex; justify-content: space-between; gap: var(--space-4); align-items: center; margin-bottom: var(--space-6); }
-    .title-wrap h2 { font-size: var(--text-xl); font-family: var(--font-display); letter-spacing: .02em; }
-    .title-wrap p { color: var(--color-text-muted); margin-top: 6px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-    .btn { border-radius: 14px; padding: .9rem 1.1rem; border: 1px solid var(--color-border); background: var(--color-surface); font-weight: 700; }
-    .btn:disabled { opacity: .55; cursor: not-allowed; }
-    .btn-primary { background: linear-gradient(135deg, #8b0000, #4b0082); border: 0; box-shadow: 0 10px 28px rgba(139,0,0,.28); }
-    .workspace { display: grid; grid-template-columns: 1.1fr .9fr; gap: var(--space-6); align-items: start; }
-    .panel { background: rgba(19,19,27,.86); border: 1px solid var(--color-border); border-radius: 24px; box-shadow: var(--shadow-md); overflow: hidden; }
-    .panel-head { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-divider); display: flex; justify-content: space-between; align-items: center; }
-    .panel-head h3 { font-size: var(--text-lg); }
-    .panel-body { padding: var(--space-5); }
-    .preview-stage { display: grid; gap: var(--space-5); }
-    .kit-preview { display: grid; grid-template-columns: 1.3fr .7fr; gap: 16px; }
-    .mock-card { border-radius: 22px; min-height: 300px; position: relative; overflow: hidden; box-shadow: var(--shadow-lg); }
-    .mock-card.inner-pad { padding: 24px; }
-    .logo-mark { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 5rem; font-weight: 900; text-shadow: 0 0 35px rgba(255,255,255,.14); }
-    .side-stack { display: grid; gap: 16px; }
-    .mini-card { border-radius: 18px; min-height: 142px; overflow: hidden; position: relative; }
-    .mini-card.palette { display: grid; grid-template-columns: 1fr 1fr; background: var(--color-surface-2); }
-    .palette-box { padding: 16px; display: flex; flex-direction: column; justify-content: end; font-weight: 700; }
-    .palette-box span { font-size: .74rem; opacity: .9; }
-    .embed { background: #11131a; border: 1px solid rgba(255,255,255,.08); border-left: 6px solid var(--color-primary); border-radius: 20px; padding: 24px; }
-    .embed h4 { font-size: 2rem; margin-bottom: 12px; }
-    .tagline { color: #dfe5f6; font-style: italic; font-size: 1.15rem; margin-bottom: 20px; }
-    .specs { display: grid; gap: 10px; margin-bottom: 20px; }
-    .specs div { font-size: 1rem; }
-    .specs strong { color: white; }
-    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
-    .status-list { display: grid; gap: 12px; }
-    .status-item { padding: 14px 16px; border-radius: 16px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .range-wrap { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
-    .range-output { min-width: 42px; text-align: right; font-weight: 800; }
-    input[type='range'] { width: 100%; accent-color: #8b0000; }
-    .footer-note { color: var(--color-text-faint); font-size: var(--text-sm); margin-top: var(--space-4); }
-    .toggle { display: inline-flex; align-items: center; gap: 10px; font-size: var(--text-sm); color: var(--color-text-muted); }
-    .toggle input { width: 18px; height: 18px; }
-    @media (max-width: 1180px) { .workspace { grid-template-columns: 1fr; } .app { grid-template-columns: 1fr; } .sidebar { position: relative; height: auto; } }
-    @media (max-width: 720px) { .main, .sidebar { padding: var(--space-4); } .topbar { flex-direction: column; align-items: stretch; } .kit-preview { grid-template-columns: 1fr; } .swatch-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
+    button { cursor: pointer; border: none; background: none; }
+    a { color: inherit; }
+
+    /* ── Layout ── */
+    .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; overflow: hidden; }
+    .navbar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem; z-index: 10; }
+    .nav-logo { font-family: var(--fontd); font-weight: 900; font-size: 1.1rem; background: linear-gradient(135deg, #ff4444, #8b0000, #4b0082); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-right: .5rem; }
+    .nav-sep { width: 1px; height: 24px; background: var(--border); }
+    .nav-pill { padding: .3rem .75rem; border-radius: 999px; font-size: .78rem; font-weight: 700; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); display: flex; align-items: center; gap: 6px; transition: all 200ms; }
+    .nav-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+    .nav-pill.online .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .nav-actions { margin-left: auto; display: flex; gap: .5rem; align-items: center; }
+    .nav-btn { padding: .35rem .85rem; border-radius: .5rem; font-size: .82rem; font-weight: 600; border: 1px solid var(--border); background: var(--surface2); transition: all 160ms var(--ease); }
+    .nav-btn:hover { background: var(--surface3); }
+    .nav-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; }
+
+    .body { display: grid; grid-template-columns: 380px 1fr; overflow: hidden; height: 100%; }
+
+    /* ── Sidebar ── */
+    .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .wizard-header { padding: 1.25rem 1.5rem 0; }
+    .wizard-title { font-family: var(--fontd); font-size: .95rem; font-weight: 700; margin-bottom: 1rem; }
+
+    /* Progress stepper */
+    .stepper { display: flex; gap: 0; margin-bottom: 0; }
+    .step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; }
+    .step::before { content: ''; position: absolute; top: 14px; left: 50%; right: -50%; height: 2px; background: var(--border); z-index: 0; }
+    .step:last-child::before { display: none; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface2); display: grid; place-items: center; font-size: .72rem; font-weight: 800; z-index: 1; transition: all 250ms var(--ease); }
+    .step.done .step-dot  { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-color: transparent; color: #fff; }
+    .step.active .step-dot { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 4px rgba(139,0,0,.18); }
+    .step-label { font-size: .65rem; font-weight: 700; color: var(--faint); margin-top: 5px; text-transform: uppercase; letter-spacing: .07em; text-align: center; }
+    .step.active .step-label { color: var(--text); }
+    .step.done .step-label  { color: var(--muted); }
+    .step::after { content: ''; position: absolute; top: 13px; left: -50%; right: 50%; height: 2px; background: linear-gradient(90deg, var(--primary), var(--secondary)); z-index: 0; opacity: 0; transition: opacity 300ms; }
+    .step.done::after { opacity: 1; }
+
+    .progress-bar-wrap { height: 3px; background: var(--surface2); margin: 1rem 0 0; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 400ms var(--ease); }
+
+    /* Panels */
+    .sidebar-body { flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem; }
+    .wizard-panel { display: none; }
+    .wizard-panel.active { display: block; }
+
+    .field { margin-bottom: 1.1rem; }
+    .field > label { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; font-weight: 600; margin-bottom: .4rem; color: var(--muted); }
+    .field > label span { font-weight: 400; color: var(--faint); }
+    .inp { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem .9rem; font-size: .88rem; transition: border-color 160ms; outline: none; }
+    .inp:focus { border-color: rgba(255,255,255,.25); }
+    textarea.inp { min-height: 80px; resize: vertical; }
+    select.inp { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23888'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .75rem center; padding-right: 2rem; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+
+    /* Color picker row */
+    .color-row { display: flex; gap: .5rem; align-items: center; }
+    .color-row input[type=color] { width: 40px; height: 38px; border-radius: .45rem; border: 1px solid var(--border); padding: 2px; background: var(--surface2); cursor: pointer; flex-shrink: 0; }
+    .color-row .inp { flex: 1; }
+
+    /* Range slider */
+    .range-row { display: grid; grid-template-columns: 1fr 44px; gap: .75rem; align-items: center; }
+    input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+    .range-val { font-size: .88rem; font-weight: 800; text-align: right; color: var(--text); }
+
+    /* Chip buttons */
+    .chip-wrap { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .chip { padding: .4rem .8rem; border-radius: 999px; font-size: .78rem; font-weight: 700; border: 1px solid var(--border); background: var(--surface2); transition: all 160ms var(--ease); white-space: nowrap; }
+    .chip:hover { border-color: rgba(255,255,255,.2); }
+    .chip.on { background: linear-gradient(135deg, rgba(139,0,0,.4), rgba(75,0,130,.4)); border-color: rgba(255,255,255,.28); color: #fff; }
+
+    /* Swatch grid */
+    .swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .swatch { border-radius: .55rem; overflow: hidden; border: 2px solid transparent; cursor: pointer; transition: all 160ms; }
+    .swatch:hover { transform: scale(1.06); }
+    .swatch.on { border-color: #fff; }
+    .swatch-color { height: 38px; }
+    .swatch-name { font-size: .62rem; font-weight: 700; padding: 3px 4px; background: var(--surface2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Section headings in sidebar */
+    .sh { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--faint); margin: 1rem 0 .5rem; }
+    .sh:first-child { margin-top: 0; }
+
+    /* Accordion */
+    details.acc { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: .6rem; overflow: hidden; }
+    details.acc summary { padding: .75rem 1rem; font-size: .82rem; font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; background: var(--surface2); }
+    details.acc summary::after { content: '\25BE'; font-size: .7rem; color: var(--faint); transition: transform 200ms; }
+    details.acc[open] summary::after { transform: rotate(180deg); }
+    details.acc .acc-body { padding: .85rem 1rem; }
+
+    /* Wizard footer nav */
+    .wizard-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--divider); display: flex; justify-content: space-between; gap: .5rem; background: var(--surface); }
+    .wbtn { padding: .6rem 1.25rem; border-radius: var(--radius); font-size: .85rem; font-weight: 700; border: 1px solid var(--border); background: var(--surface2); transition: all 160ms var(--ease); }
+    .wbtn:hover { background: var(--surface3); }
+    .wbtn.next { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; }
+    .wbtn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Main ── */
+    .main { display: flex; flex-direction: column; overflow: hidden; }
+    .main-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 1.5rem; background: var(--surface); flex-shrink: 0; }
+    .mtab { padding: .75rem 1rem; font-size: .82rem; font-weight: 700; color: var(--faint); border-bottom: 2px solid transparent; transition: all 160ms; cursor: pointer; }
+    .mtab.on { color: var(--text); border-bottom-color: var(--primary); }
+
+    .main-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    .mpanel { display: none; }
+    .mpanel.on { display: block; }
+
+    /* Preview canvas */
+    .preview-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+    .mock { border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 12px 40px rgba(0,0,0,.45); }
+    .mock-icon { aspect-ratio: 1; min-height: 240px; display: grid; place-items: center; }
+    .mock-text { font-family: var(--fontd); font-size: 4rem; font-weight: 900; z-index: 1; }
+    .mock-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+    .mock-banner { min-height: 112px; display: flex; align-items: flex-end; padding: 1rem 1.25rem; font-family: var(--fontd); font-size: 1.6rem; font-weight: 900; }
+    .mock-palette { display: grid; grid-template-columns: 1fr 1fr; min-height: 88px; }
+    .palette-cell { display: flex; flex-direction: column; justify-content: flex-end; padding: .75rem; font-size: .72rem; font-weight: 700; }
+    .palette-cell strong { font-size: .88rem; }
+    .img-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s var(--ease); display: none; }
+    .img-overlay.show { display: block; opacity: 1; }
+
+    /* Embed card */
+    .embed { background: #0e1018; border: 1px solid var(--border); border-left: 5px solid var(--primary); border-radius: 1rem; padding: 1.25rem 1.5rem; }
+    .embed-title { font-size: 1.4rem; font-weight: 800; margin-bottom: .5rem; }
+    .embed-tag { font-style: italic; color: var(--muted); margin-bottom: 1rem; }
+    .embed-specs { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .75rem; margin-bottom: 1rem; font-size: .85rem; }
+    .embed-specs dt { color: var(--faint); font-weight: 600; }
+    .embed-specs dd { color: var(--text); font-weight: 700; }
+
+    /* AI image panel */
+    #aiImageWrap { border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); display: none; }
+    #aiImageWrap img { width: 100%; display: block; }
+
+    /* Output panel */
+    .palette-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .palette-table th { text-align: left; padding: .5rem .75rem; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); border-bottom: 1px solid var(--border); }
+    .palette-table td { padding: .6rem .75rem; border-bottom: 1px solid var(--divider); }
+    .palette-table tr:last-child td { border-bottom: none; }
+    .color-chip-sm { width: 20px; height: 20px; border-radius: .25rem; display: inline-block; vertical-align: middle; border: 1px solid var(--border); }
+
+    /* Status / progress */
+    .gen-status { display: none; padding: .65rem 1rem; border-radius: .65rem; background: var(--surface2); border-left: 4px solid var(--primary); font-size: .85rem; margin-bottom: 1rem; }
+    progress.gen-prog { width: 100%; height: 4px; border-radius: 999px; border: none; appearance: none; margin-bottom: .75rem; display: none; }
+    progress.gen-prog::-webkit-progress-bar { background: var(--surface2); border-radius: 999px; }
+    progress.gen-prog::-webkit-progress-value { background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 999px; transition: width 300ms; }
+
+    /* Download bar */
+    .dl-bar { display: none; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+    .dl-btn { padding: .45rem .9rem; border-radius: .5rem; font-size: .8rem; font-weight: 700; border: 1px solid var(--border); background: var(--surface2); transition: all 160ms; }
+    .dl-btn:hover { background: var(--surface3); }
+
+    /* Dialog / modal */
+    dialog { border: 1px solid var(--border); border-radius: var(--radiuslg); background: var(--surface); color: var(--text); padding: 0; max-width: 680px; width: 92vw; box-shadow: 0 24px 80px rgba(0,0,0,.6); }
+    dialog::backdrop { background: rgba(0,0,0,.7); backdrop-filter: blur(4px); }
+    .dialog-head { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .dialog-head h3 { font-size: 1rem; font-weight: 800; }
+    .dialog-close { width: 32px; height: 32px; border-radius: .45rem; background: var(--surface2); display: grid; place-items: center; font-size: 1.1rem; border: 1px solid var(--border); }
+    .dialog-body { padding: 1.5rem; }
+    .dialog-foot { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .5rem; }
+
+    /* Misc */
+    code { font-family: monospace; font-size: .85em; background: var(--surface2); padding: .1em .4em; border-radius: .3em; }
+    .tag { display: inline-flex; align-items: center; gap: 5px; padding: .25rem .6rem; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); font-size: .75rem; font-weight: 700; }
+    .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radiuslg); padding: 1.25rem; margin-bottom: 1.25rem; }
+    .panel-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .panel-card-head h3 { font-size: .95rem; font-weight: 800; }
+
+    @media (max-width: 1100px) {
+      .body { grid-template-columns: 320px 1fr; }
+      .preview-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 780px) {
+      .body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; }
+    }
   </style>
 </head>
 <body>
-  <div class="app">
+<div class="app">
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar">
+    <span class="nav-logo">SIGIL</span>
+    <div class="nav-sep"></div>
+    <span style="font-size:.82rem;color:var(--muted);font-weight:600;">Brand Builder</span>
+    <div id="serverPill" class="nav-pill"><span class="dot"></span><span id="serverLabel">Offline</span></div>
+    <div class="nav-actions">
+      <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
+      <button class="nav-btn" id="exportBtn">&#10515; Export JSON</button>
+      <button class="nav-btn" id="previewBtn">&#9889; Preview</button>
+      <button class="nav-btn primary" id="generateBtn">&#10022; Generate</button>
+    </div>
+  </nav>
+
+  <div class="body">
+
+    <!-- ── Sidebar Wizard ── -->
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">S</div>
-        <div><h1>Sigil GUI</h1><p>Visual brand builder and generator</p></div>
+      <div class="wizard-header">
+        <div class="wizard-title">Setup Wizard</div>
+        <nav class="stepper" id="stepper" aria-label="wizard steps"></nav>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:25%"></div></div>
       </div>
-      <div class="section">
-        <div class="section-title">Brand identity</div>
-        <div class="field"><label for="brandName">Brand name</label><input id="brandName" class="input" value="Demonfall" /></div>
-        <div class="field"><label for="tagline">Tagline</label><input id="tagline" class="input" value="Unleash the Darkness. Fight the Demons." /></div>
-        <div class="field"><label for="description">Prompt / description</label><textarea id="description" class="textarea">dark fantasy fighting guild with infernal magic and supernatural atmosphere</textarea></div>
-        <div class="grid-2">
-          <div class="field"><label for="iconText">Icon text</label><input id="iconText" class="input" value="DF" /></div>
-          <div class="field"><label for="bannerText">Banner text</label><input id="bannerText" class="input" value="Demonfall" /></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Colors</div>
-        <div class="grid-2" style="margin-bottom:16px">
-          <div class="field"><label for="primaryHex">Primary hex</label><input id="primaryHex" class="input" value="#8B0000" /></div>
-          <div class="field"><label for="secondaryHex">Secondary hex</label><input id="secondaryHex" class="input" value="#4B0082" /></div>
-        </div>
-        <div id="colorGroups"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Background</div>
-        <div id="backgroundChips" class="chip-row"></div>
-      </div>
-      <div class="section">
-        <div class="section-title">Border style</div>
-        <div id="borderChips" class="chip-row"></div>
-        <div class="range-wrap" style="margin-top:16px">
-          <input type="range" id="glowRange" min="0" max="25" value="15" />
-          <span class="range-output" id="glowOutput">15</span>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-title">Font</div>
-        <div id="fontChips" class="chip-row"></div>
-      </div>
-      <div class="section">
-        <label class="toggle"><input type="checkbox" id="gradientToggle" checked /> Gradient overlay</label>
-      </div>
-      <div class="section">
-        <div class="section-title">Integration settings</div>
-        <div class="field"><label for="apiKey">Gemini API key</label><input id="apiKey" class="input" type="password" placeholder="AIza…" /></div>
-        <div class="field"><label for="imagePrompt">Image prompt</label><textarea id="imagePrompt" class="textarea">ancient demon sigil hovering over a ruined crimson fortress in a violet storm</textarea></div>
-      </div>
-    </aside>
-    <main class="main">
-      <div class="topbar">
-        <div class="title-wrap">
-          <h2>Sigil GUI Builder</h2>
-          <p><span id="serverPill" style="font-size:.82rem;color:var(--color-text-faint);margin-right:8px;">&#9675; Server offline</span> Front-end control panel &mdash; live preview, export JSON, integrated AI-branding workflow.</p>
-        </div>
-        <div class="actions">
-          <button class="btn" id="themeBtn">Toggle theme</button>
-          <button class="btn" id="copyJsonBtn">Copy JSON</button>
-          <button class="btn" id="previewBtn">&#9889; Fast Preview</button>
-          <button class="btn btn-primary" id="generateBtn">&#10022; Generate</button>
-        </div>
-      </div>
-      <div class="workspace">
-        <section class="panel">
-          <div class="panel-head"><h3>Live preview</h3><span class="pill"><span style="width:10px;height:10px;border-radius:50%;background:var(--color-success);display:inline-block"></span>Synced</span></div>
-          <div class="panel-body preview-stage">
-            <div class="kit-preview">
-              <div class="mock-card inner-pad" id="iconCard">
-                <div class="logo-mark" id="logoMark">DF</div>
-                <img id="iconImg" alt="Generated icon" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:22px;opacity:0;transition:opacity .4s ease;" />
-              </div>
-              <div class="side-stack">
-                <div class="mini-card inner-pad" id="bannerCard" style="display:flex;align-items:end;font-size:2rem;font-weight:900;padding:24px;position:relative;overflow:hidden;">
-                  Demonfall
-                  <img id="bannerImg" alt="Generated banner" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:18px;opacity:0;transition:opacity .4s ease;" />
-                </div>
-                <div class="mini-card palette" id="paletteCard">
-                  <div class="palette-box" id="palettePrimary"><strong>#8B0000</strong><span>Primary</span></div>
-                  <div class="palette-box" id="paletteSecondary"><strong>#4B0082</strong><span>Secondary</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="embed" id="embedCard">
-              <h4 id="embedTitle">&#10022; AI Brand Kit &mdash; Demonfall</h4>
-              <div class="tagline" id="embedTagline">"Unleash the Darkness. Fight the Demons."</div>
-              <div class="specs">
-                <div><strong>Icon</strong> &mdash; <span id="specIcon">DF</span> &middot; 400&times;400</div>
-                <div><strong>Banner</strong> &mdash; <span id="specBanner">Demonfall</span> &middot; 1024&times;320</div>
-                <div><strong>Palette</strong> &mdash; <span id="specPalette">#8B0000 &rarr; #4B0082</span></div>
-                <div><strong>Background</strong> &mdash; <span id="specBackground">midnight-gradient</span></div>
-                <div><strong>Border</strong> &mdash; <span id="specBorder">glow</span></div>
-                <div><strong>Glow</strong> &mdash; <span id="specGlow">15</span></div>
-                <div><strong>Font</strong> &mdash; <span id="specFont">Arial Black</span></div>
-              </div>
-              <div class="status-list">
-                <div class="status-item" id="integrationStatus"><strong>Integrated mode:</strong> preview, JSON export, and Gemini-ready payload all stay aligned.</div>
-                <div class="status-item" id="promptStatus"><strong>Current prompt:</strong> dark fantasy fighting guild...</div>
-              </div>
-            </div>
-            <!-- AI image tray: shown when /generate returns ai_image_b64 -->
-            <div id="aiImageTray" style="display:none;border-radius:18px;overflow:hidden;border:1px solid var(--color-border);position:relative;">
-              <img id="aiImageEl" alt="AI generated image" style="width:100%;display:block;border-radius:18px;" />
-              <div id="aiImageLabel" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.82),transparent);padding:14px 16px;font-size:.82rem;font-weight:700;color:#fff;">AI Image</div>
-            </div>
-            <!-- Download tray: shown after any successful render -->
-            <div id="downloadTray" style="display:none;gap:10px;flex-wrap:wrap;">
-              <button class="btn" id="dlIcon">&#8595; Icon PNG</button>
-              <button class="btn" id="dlBanner">&#8595; Banner PNG</button>
-              <button class="btn" id="dlPalette">&#8595; Palette PNG</button>
-              <button class="btn" id="dlAiImage" style="display:none;">&#8595; AI Image</button>
-            </div>
-            <!-- Status bar -->
-            <div id="genStatus" style="display:none;font-size:.82rem;padding:10px 14px;border-radius:12px;background:var(--color-surface-2);border-left:4px solid var(--color-primary);"></div>
+
+      <div class="sidebar-body" id="sidebarBody">
+
+        <!-- Step 1: Identity -->
+        <fieldset class="wizard-panel active" id="panel-1" data-step="1">
+          <legend class="sh">Brand identity</legend>
+          <div class="field">
+            <label for="brandName">Brand name</label>
+            <input id="brandName" class="inp" value="Demonfall" />
           </div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><h3>Integrated output</h3><span class="pill">Ready</span></div>
-          <div class="panel-body">
-            <div class="status-list" style="margin-bottom:18px">
-              <div class="status-item"><strong>Front end:</strong> Live preview, visual selectors, range sliders, prompt controls, copy/export.</div>
-              <div class="status-item"><strong>Customization:</strong> 54 color swatches, 12 backgrounds, 6 borders, 6 fonts, glow 0&ndash;25, gradient blend toggle.</div>
-              <div class="status-item"><strong>Integration:</strong> Config JSON drives Discord commands, local desktop, Electron, or web generator &mdash; same payload shape as <code>/brand ai</code>.</div>
+          <div class="field">
+            <label for="tagline">Tagline</label>
+            <input id="tagline" class="inp" value="Unleash the Darkness. Fight the Demons." />
+          </div>
+          <div class="field">
+            <label for="description">AI prompt / description <span>Used by Gemini Generate</span></label>
+            <textarea id="description" class="inp">dark fantasy fighting guild with infernal magic and supernatural atmosphere</textarea>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label for="iconText">Icon text</label>
+              <input id="iconText" class="inp" value="DF" />
             </div>
             <div class="field">
-              <label for="jsonOutput">Config JSON</label>
-              <textarea id="jsonOutput" class="textarea" style="min-height:420px;font-family:monospace;font-size:.82rem;" readonly></textarea>
+              <label for="bannerText">Banner text</label>
+              <input id="bannerText" class="inp" value="Demonfall" />
             </div>
-            <p class="footer-note">Unified payload between GUI and Sigil backend. Compatible with gemini.js and /brand ai.</p>
           </div>
-        </section>
+        </fieldset>
+
+        <!-- Step 2: Colors -->
+        <fieldset class="wizard-panel" id="panel-2" data-step="2">
+          <legend class="sh">Colors</legend>
+          <div class="field">
+            <label for="primaryHex">Primary color</label>
+            <div class="color-row">
+              <input type="color" id="primaryPicker" value="#8b0000" />
+              <input id="primaryHex" class="inp" value="#8B0000" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="secondaryHex">Secondary color</label>
+            <div class="color-row">
+              <input type="color" id="secondaryPicker" value="#4b0082" />
+              <input id="secondaryHex" class="inp" value="#4B0082" />
+            </div>
+          </div>
+
+          <div class="sh">Color library <span style="font-weight:400;color:var(--faint);font-size:.72rem">(click = primary, shift+click = secondary)</span></div>
+          <div id="colorLibrary"></div>
+        </fieldset>
+
+        <!-- Step 3: Style -->
+        <fieldset class="wizard-panel" id="panel-3" data-step="3">
+          <legend class="sh">Background</legend>
+          <div id="bgChips" class="chip-wrap" style="margin-bottom:1rem"></div>
+
+          <div class="sh">Border</div>
+          <div id="borderChips" class="chip-wrap" style="margin-bottom:1rem"></div>
+
+          <div class="field">
+            <label for="glowRange">Glow intensity</label>
+            <div class="range-row">
+              <input type="range" id="glowRange" min="0" max="25" value="15" />
+              <span class="range-val" id="glowVal">15</span>
+            </div>
+          </div>
+
+          <div class="sh">Font</div>
+          <div class="field">
+            <select id="fontSelect" class="inp">
+              <option value="Another Danger">Another Danger</option>
+              <option value="Bebas Neue">Bebas Neue</option>
+              <option value="Oswald">Oswald</option>
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Source Code Pro">Source Code Pro</option>
+              <option value="Dancing Script">Dancing Script</option>
+              <option value="Arial Black">Arial Black</option>
+              <option value="Impact">Impact</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="opacityRange">Overlay opacity</label>
+            <div class="range-row">
+              <input type="range" id="opacityRange" min="0" max="100" value="85" />
+              <span class="range-val" id="opacityVal">85%</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Step 4: Generate -->
+        <fieldset class="wizard-panel" id="panel-4" data-step="4">
+          <legend class="sh">Integration &amp; generate</legend>
+          <div class="field">
+            <label for="apiKey">Gemini API key <span>Optional — for AI Generate</span></label>
+            <input id="apiKey" class="inp" type="password" placeholder="AIza…" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="imagePrompt">Image prompt <span>AI icon overlay</span></label>
+            <textarea id="imagePrompt" class="inp">ancient demon sigil hovering over a ruined crimson fortress in a violet storm</textarea>
+          </div>
+
+          <details class="acc">
+            <summary>Advanced options</summary>
+            <div class="acc-body">
+              <div class="field">
+                <label for="modelSelect">Gemini model</label>
+                <select id="modelSelect" class="inp">
+                  <option value="gemini-2.0-flash">gemini-2.0-flash (default)</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tempRange">Temperature <span id="tempLbl">0.9</span></label>
+                <input type="range" id="tempRange" min="0" max="20" value="9" style="width:100%" />
+              </div>
+              <div class="field">
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+                  <input type="checkbox" id="gradientToggle" checked style="width:16px;height:16px" />
+                  Gradient blend overlay
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <div style="margin-top:1rem;padding:.9rem;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);font-size:.82rem;color:var(--muted);">
+            <strong style="color:var(--text);">Ready to generate!</strong><br />
+            Click <strong>&#9889; Preview</strong> for a fast canvas render, or <strong>&#10022; Generate</strong> to use Gemini AI for a full brand kit.
+          </div>
+        </fieldset>
+
+      </div>
+
+      <!-- Wizard footer nav -->
+      <div class="wizard-footer">
+        <button class="wbtn" id="prevBtn" disabled>&#8592; Back</button>
+        <div style="display:flex;gap:.5rem;align-items:center" id="stepIndicator" aria-live="polite"></div>
+        <button class="wbtn next" id="nextBtn">Next &#8594;</button>
+      </div>
+    </aside>
+
+    <!-- ── Main panel ── -->
+    <main class="main">
+      <div class="main-tabs" role="tablist">
+        <button class="mtab on" role="tab" data-tab="preview">Preview</button>
+        <button class="mtab" role="tab" data-tab="output">Output &amp; Palette</button>
+        <button class="mtab" role="tab" data-tab="ai">AI Image</button>
+      </div>
+
+      <div class="main-body">
+
+        <!-- Status / progress -->
+        <progress class="gen-prog" id="genProg" max="100" value="0"></progress>
+        <div class="gen-status" id="genStatus"></div>
+        <div class="dl-bar" id="dlBar">
+          <button class="dl-btn" id="dlIcon">&#8595; Icon PNG</button>
+          <button class="dl-btn" id="dlBanner">&#8595; Banner PNG</button>
+          <button class="dl-btn" id="dlPalette">&#8595; Palette PNG</button>
+          <button class="dl-btn" id="dlAi" style="display:none">&#8595; AI Image</button>
+        </div>
+
+        <!-- Preview tab -->
+        <div class="mpanel on" id="tab-preview">
+          <div class="preview-grid">
+            <div class="mock mock-icon" id="iconCard">
+              <span class="mock-text" id="iconText2">DF</span>
+              <img class="img-overlay" id="iconImg" alt="icon" />
+            </div>
+            <div class="mock-stack">
+              <div class="mock mock-banner" id="bannerCard">
+                <span id="bannerText2">Demonfall</span>
+                <img class="img-overlay" id="bannerImg" alt="banner" />
+              </div>
+              <div class="mock mock-palette" id="paletteCard">
+                <div class="palette-cell" id="palPrimary"><strong>#8B0000</strong><span>Primary</span></div>
+                <div class="palette-cell" id="palSecondary"><strong>#4B0082</strong><span>Secondary</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="embed" id="embedCard">
+            <div class="embed-title" id="embedTitle">✦ AI Brand Kit — Demonfall</div>
+            <div class="embed-tag" id="embedTag">&ldquo;Unleash the Darkness. Fight the Demons.&rdquo;</div>
+            <dl class="embed-specs">
+              <dt>Icon text</dt>  <dd id="s-icon">DF</dd>
+              <dt>Banner text</dt><dd id="s-banner">Demonfall</dd>
+              <dt>Primary</dt>    <dd id="s-primary">#8B0000</dd>
+              <dt>Secondary</dt>  <dd id="s-secondary">#4B0082</dd>
+              <dt>Background</dt> <dd id="s-bg">midnight-gradient</dd>
+              <dt>Border</dt>     <dd id="s-border">glow</dd>
+              <dt>Glow</dt>       <dd id="s-glow">15</dd>
+              <dt>Font</dt>       <dd id="s-font">Arial Black</dd>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Output tab -->
+        <div class="mpanel" id="tab-output">
+          <div class="panel-card">
+            <div class="panel-card-head"><h3>Color palette</h3><span class="tag">Auto-generated</span></div>
+            <table class="palette-table" id="paletteTable">
+              <thead><tr><th>Swatch</th><th>Name</th><th>Hex</th><th>Role</th></tr></thead>
+              <tbody id="paletteTbody"></tbody>
+            </table>
+          </div>
+          <div class="panel-card">
+            <div class="panel-card-head"><h3>Config JSON</h3><button class="dl-btn" id="copyJsonBtn">&#10063; Copy</button></div>
+            <textarea class="inp" id="jsonOutput" style="min-height:360px;font-family:monospace;font-size:.78rem;" readonly></textarea>
+          </div>
+        </div>
+
+        <!-- AI Image tab -->
+        <div class="mpanel" id="tab-ai">
+          <div id="aiImageWrap">
+            <img id="aiImageEl" alt="AI generated image" />
+          </div>
+          <p id="aiPlaceholder" style="color:var(--faint);font-size:.88rem;margin-top:2rem;text-align:center;">AI image will appear here after you click <strong>&#10022; Generate</strong> with a Gemini API key.</p>
+        </div>
+
       </div>
     </main>
   </div>
-  <script>
-    const COLORS={"Reds & Pinks":[{"name":"Crimson","hex":"#DC143C"},{"name":"Scarlet","hex":"#FF2400"},{"name":"Rose","hex":"#FF007F"},{"name":"Hot Pink","hex":"#FF69B4"},{"name":"Deep Pink","hex":"#FF1493"},{"name":"Ruby","hex":"#9B111E"}],"Oranges":[{"name":"Inferno","hex":"#FF4500"},{"name":"Dragon Red","hex":"#C0392B"},{"name":"Ember","hex":"#FF6B35"},{"name":"Sunset","hex":"#FF8C00"},{"name":"Amber","hex":"#FFBF00"},{"name":"Burnt Orange","hex":"#CC5500"}],"Yellows & Golds":[{"name":"Gold","hex":"#FFD700"},{"name":"Yellow","hex":"#FFFF00"},{"name":"Canary","hex":"#FFEF00"},{"name":"Champagne","hex":"#F7E7CE"},{"name":"Honey","hex":"#FFC30B"},{"name":"Marigold","hex":"#EAA221"}],"Greens":[{"name":"Neon Green","hex":"#39FF14"},{"name":"Emerald","hex":"#50C878"},{"name":"Forest","hex":"#228B22"},{"name":"Lime","hex":"#00FF00"},{"name":"Sage","hex":"#9CAF88"},{"name":"Mint","hex":"#98FF98"}],"Blues":[{"name":"Electric Blue","hex":"#7DF9FF"},{"name":"Sapphire","hex":"#0F52BA"},{"name":"Sky Blue","hex":"#87CEEB"},{"name":"Navy","hex":"#001F5B"},{"name":"Cerulean","hex":"#007BA7"},{"name":"Cobalt","hex":"#0047AB"}],"Purples & Violets":[{"name":"Violet","hex":"#EE82EE"},{"name":"Purple","hex":"#800080"},{"name":"Indigo","hex":"#4B0082"},{"name":"Lavender","hex":"#E6E6FA"},{"name":"Amethyst","hex":"#9966CC"},{"name":"Plum","hex":"#DDA0DD"}],"Cyans & Teals":[{"name":"Cyan","hex":"#00FFFF"},{"name":"Teal","hex":"#008080"},{"name":"Aqua","hex":"#00FFFF"},{"name":"Turquoise","hex":"#40E0D0"},{"name":"Seafoam","hex":"#93E9BE"},{"name":"Ice Blue","hex":"#99C5C4"}],"Whites & Silvers":[{"name":"White","hex":"#FFFFFF"},{"name":"Silver","hex":"#C0C0C0"},{"name":"Platinum","hex":"#E5E4E2"},{"name":"Pearl","hex":"#EAE0C8"},{"name":"Ghost White","hex":"#F8F8FF"},{"name":"Ash","hex":"#B2BEB5"}],"Blacks & Darks":[{"name":"Black","hex":"#000000"},{"name":"Void Black","hex":"#0A0A0A"},{"name":"Obsidian","hex":"#1A1A2E"},{"name":"Charcoal","hex":"#36454F"},{"name":"Dark Slate","hex":"#2F4F4F"},{"name":"Midnight","hex":"#191970"}]};
-    const BACKGROUNDS=[{"name":"midnight-gradient","label":"Midnight Gradient","css":"linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 50%,#0a1a2e 100%)"},{"name":"deep-space","label":"Deep Space","css":"linear-gradient(135deg,#000010 0%,#0a0020 50%,#000510 100%)"},{"name":"inferno","label":"Inferno","css":"linear-gradient(135deg,#1a0000 0%,#3d0000 50%,#1a0500 100%)"},{"name":"ocean-depth","label":"Ocean Depth","css":"linear-gradient(135deg,#001020 0%,#002040 50%,#001530 100%)"},{"name":"forest-night","label":"Forest Night","css":"linear-gradient(135deg,#001008 0%,#002010 50%,#001508 100%)"},{"name":"twilight","label":"Twilight","css":"linear-gradient(135deg,#1a0a1a 0%,#2a0a3a 50%,#1a1a2a 100%)"},{"name":"aurora","label":"Aurora","css":"linear-gradient(135deg,#001a10 0%,#001a20 33%,#0a0015 66%,#001510 100%)"},{"name":"storm","label":"Storm","css":"linear-gradient(135deg,#0a0a0a 0%,#1a1a2a 50%,#0a0a1a 100%)"},{"name":"sunset-fade","label":"Sunset Fade","css":"linear-gradient(135deg,#1a0a00 0%,#2a0a0a 50%,#1a0510 100%)"},{"name":"void","label":"Void","css":"linear-gradient(135deg,#000000 0%,#050005 50%,#000000 100%)"},{"name":"neon-city","label":"Neon City","css":"linear-gradient(135deg,#000010 0%,#0a0020 33%,#100005 66%,#000010 100%)"},{"name":"polar","label":"Polar","css":"linear-gradient(135deg,#0a1520 0%,#0a2030 50%,#051525 100%)"}];
-    const BORDERS=[{"name":"none","label":"None"},{"name":"solid","label":"Solid"},{"name":"glow","label":"Glow"},{"name":"gradient","label":"Gradient"},{"name":"double","label":"Double"},{"name":"dashed","label":"Dashed"}];
-    const FONTS=[{"name":"Arial Black","label":"Arial Black"},{"name":"Impact","label":"Impact"},{"name":"Georgia","label":"Georgia"},{"name":"Courier New","label":"Courier New"},{"name":"Verdana","label":"Verdana"},{"name":"Trebuchet MS","label":"Trebuchet MS"}];
-    const state={brandName:'Demonfall',tagline:'Unleash the Darkness. Fight the Demons.',description:'dark fantasy fighting guild with infernal magic and supernatural atmosphere',iconText:'DF',bannerText:'Demonfall',primaryHex:'#8B0000',secondaryHex:'#4B0082',background:'midnight-gradient',border:'glow',glow:15,font:'Arial Black',gradient:true,imagePrompt:'ancient demon sigil hovering over a ruined crimson fortress in a violet storm',apiKey:''};
-    const $=id=>document.getElementById(id);
-    const els={brandName:$('brandName'),tagline:$('tagline'),description:$('description'),iconText:$('iconText'),bannerText:$('bannerText'),primaryHex:$('primaryHex'),secondaryHex:$('secondaryHex'),glowRange:$('glowRange'),glowOutput:$('glowOutput'),gradientToggle:$('gradientToggle'),apiKey:$('apiKey'),imagePrompt:$('imagePrompt'),colorGroups:$('colorGroups'),backgroundChips:$('backgroundChips'),borderChips:$('borderChips'),fontChips:$('fontChips'),iconCard:$('iconCard'),bannerCard:$('bannerCard'),palettePrimary:$('palettePrimary'),paletteSecondary:$('paletteSecondary'),logoMark:$('logoMark'),embedCard:$('embedCard'),embedTitle:$('embedTitle'),embedTagline:$('embedTagline'),specIcon:$('specIcon'),specBanner:$('specBanner'),specPalette:$('specPalette'),specBackground:$('specBackground'),specBorder:$('specBorder'),specGlow:$('specGlow'),specFont:$('specFont'),integrationStatus:$('integrationStatus'),promptStatus:$('promptStatus'),jsonOutput:$('jsonOutput'),copyJsonBtn:$('copyJsonBtn'),generateBtn:$('generateBtn'),themeBtn:$('themeBtn')};
-    function byName(list,name){return list.find(x=>x.name===name)||list[0];}
-    function hexToRgba(hex,alpha){const c=hex.replace('#','');const b=parseInt(c.length===3?c.split('').map(x=>x+x).join(''):c,16);return `rgba(${(b>>16)&255},${(b>>8)&255},${b&255},${alpha})`;}
-    function renderColorGroups(){
-      els.colorGroups.innerHTML='';
-      Object.entries(COLORS).forEach(([group,items])=>{
-        const wrap=document.createElement('div');wrap.style.marginBottom='18px';
-        wrap.innerHTML=`<div style="font-size:.82rem;font-weight:800;color:var(--color-text-muted);margin-bottom:10px;">${group}</div>`;
-        const grid=document.createElement('div');grid.className='swatch-grid';
-        items.forEach(item=>{
-          const btn=document.createElement('button');btn.className='swatch';
-          if(item.hex===state.primaryHex)btn.classList.add('active');
-          btn.innerHTML=`<div class="swatch-color" style="background:${item.hex}"></div><div class="swatch-meta"><div class="swatch-name">${item.name}</div><div class="swatch-hex">${item.hex}</div></div>`;
-          btn.addEventListener('click',e=>{if(e.shiftKey){state.secondaryHex=item.hex;els.secondaryHex.value=item.hex;}else{state.primaryHex=item.hex;els.primaryHex.value=item.hex;}update();});
-          grid.appendChild(btn);
-        });
-        wrap.appendChild(grid);els.colorGroups.appendChild(wrap);
+</div>
+
+<!-- Export dialog -->
+<dialog id="exportDialog">
+  <div class="dialog-head">
+    <h3>✦ Export brand config</h3>
+    <button class="dialog-close" id="dialogClose">&#10005;</button>
+  </div>
+  <div class="dialog-body">
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">This JSON payload is compatible with Sigil’s <code>/brand ai</code> command and <code>gemini.js</code>.</p>
+    <textarea class="inp" id="dialogJson" style="min-height:300px;font-family:monospace;font-size:.78rem;" readonly></textarea>
+  </div>
+  <div class="dialog-foot">
+    <button class="wbtn" id="dialogCopyBtn">&#10063; Copy to clipboard</button>
+    <button class="wbtn next" id="dialogClose2">Done</button>
+  </div>
+</dialog>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+const COLORS = {
+  'Reds':     [{name:'Crimson',hex:'#DC143C'},{name:'Scarlet',hex:'#FF2400'},{name:'Ruby',hex:'#9B111E'},{name:'Blood Red',hex:'#8b0000'}],
+  'Purples':  [{name:'Indigo',hex:'#4B0082'},{name:'Violet',hex:'#EE82EE'},{name:'Amethyst',hex:'#9966CC'},{name:'Deep Purple',hex:'#6600CC'}],
+  'Blues':    [{name:'Electric',hex:'#7DF9FF'},{name:'Sapphire',hex:'#0F52BA'},{name:'Navy',hex:'#001F5B'},{name:'Cobalt',hex:'#0047AB'}],
+  'Greens':   [{name:'Neon',hex:'#39FF14'},{name:'Emerald',hex:'#50C878'},{name:'Forest',hex:'#228B22'},{name:'Lime',hex:'#ADFF2F'}],
+  'Oranges':  [{name:'Inferno',hex:'#FF4500'},{name:'Amber',hex:'#FFBF00'},{name:'Gold',hex:'#FFD700'},{name:'Ember',hex:'#FF6B35'}],
+  'Cyans':    [{name:'Cyan',hex:'#00FFFF'},{name:'Teal',hex:'#008080'},{name:'Turquoise',hex:'#40E0D0'},{name:'Seafoam',hex:'#93E9BE'}],
+  'Neutrals': [{name:'White',hex:'#FFFFFF'},{name:'Silver',hex:'#C0C0C0'},{name:'Charcoal',hex:'#36454F'},{name:'Black',hex:'#000000'}],
+};
+
+const BACKGROUNDS = [
+  {k:'midnight-gradient', l:'Midnight',  css:'linear-gradient(135deg,#0a0a1a,#1a0a2e,#0a1a2e)'},
+  {k:'deep-space',        l:'Deep Space',css:'linear-gradient(135deg,#000010,#0a0020,#000510)'},
+  {k:'inferno',           l:'Inferno',   css:'linear-gradient(135deg,#1a0000,#3d0000,#1a0500)'},
+  {k:'ocean-depth',       l:'Ocean',     css:'linear-gradient(135deg,#001020,#002040,#001530)'},
+  {k:'twilight',          l:'Twilight',  css:'linear-gradient(135deg,#1a0a1a,#2a0a3a,#1a1a2a)'},
+  {k:'aurora',            l:'Aurora',    css:'linear-gradient(135deg,#001a10,#001a20,#0a0015,#001510)'},
+  {k:'storm',             l:'Storm',     css:'linear-gradient(135deg,#0a0a0a,#1a1a2a,#0a0a1a)'},
+  {k:'void',              l:'Void',      css:'linear-gradient(135deg,#000000,#050005,#000000)'},
+  {k:'neon-city',         l:'Neon City', css:'linear-gradient(135deg,#000010,#0a0020,#100005,#000010)'},
+  {k:'sunset-fade',       l:'Sunset',    css:'linear-gradient(135deg,#1a0a00,#2a0a0a,#1a0510)'},
+  {k:'forest-night',      l:'Forest',    css:'linear-gradient(135deg,#001008,#002010,#001508)'},
+  {k:'polar',             l:'Polar',     css:'linear-gradient(135deg,#0a1520,#0a2030,#051525)'},
+];
+
+const BORDERS = ['none','solid','glow','gradient','double','dashed'];
+
+const state = {
+  brandName:'Demonfall', tagline:'Unleash the Darkness. Fight the Demons.',
+  description:'dark fantasy fighting guild with infernal magic and supernatural atmosphere',
+  iconText:'DF', bannerText:'Demonfall',
+  primaryHex:'#8B0000', secondaryHex:'#4B0082',
+  background:'midnight-gradient', border:'glow', glow:15, font:'Arial Black',
+  opacity:85, gradient:true,
+  imagePrompt:'ancient demon sigil hovering over a ruined crimson fortress in a violet storm',
+  apiKey:'', model:'gemini-2.0-flash', temperature:0.9,
+  step:1, totalSteps:4,
+};
+
+let lastRender = null;
+let serverAlive = false;
+const SERVER = window.location.origin;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+function hexToRgba(hex, a) {
+  const c = hex.replace('#','');
+  const n = parseInt(c.length===3 ? c.split('').map(x=>x+x).join('') : c, 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+
+function dlBlob(b64, name, mime='image/png') {
+  const a = document.createElement('a');
+  a.href = `data:${mime};base64,${b64}`; a.download = name; a.click();
+}
+
+function setStatus(msg, type='info') {
+  const el = $('genStatus');
+  el.style.display = 'block';
+  el.style.borderLeftColor = type==='ok' ? 'var(--success)' : type==='error' ? 'var(--error)' : 'var(--primary)';
+  el.textContent = msg;
+}
+
+function setProgress(v) {
+  const p = $('genProg');
+  if (v < 0) { p.style.display='none'; return; }
+  p.style.display = 'block'; p.value = v;
+}
+
+function readState() {
+  state.brandName    = $('brandName').value.trim() || 'Untitled';
+  state.tagline      = $('tagline').value.trim();
+  state.description  = $('description').value.trim();
+  state.iconText     = ($('iconText').value.trim() || 'S').slice(0,4).toUpperCase();
+  state.bannerText   = $('bannerText').value.trim() || state.brandName;
+  state.primaryHex   = $('primaryHex').value.trim() || '#8B0000';
+  state.secondaryHex = $('secondaryHex').value.trim() || '#4B0082';
+  state.glow         = Number($('glowRange').value);
+  state.opacity      = Number($('opacityRange').value);
+  state.gradient     = $('gradientToggle').checked;
+  state.apiKey       = $('apiKey').value.trim();
+  state.imagePrompt  = $('imagePrompt').value.trim();
+  state.font         = $('fontSelect').value;
+  state.model        = $('modelSelect').value;
+  state.temperature  = Number($('tempRange').value) / 10;
+  $('glowVal').textContent    = state.glow;
+  $('opacityVal').textContent = state.opacity + '%';
+  $('tempLbl').textContent    = state.temperature.toFixed(1);
+}
+
+// ── Wizard stepper ────────────────────────────────────────────────────────────
+const STEP_LABELS = ['Identity','Colors','Style','Generate'];
+
+function buildStepper() {
+  const nav = $('stepper'); nav.innerHTML = '';
+  STEP_LABELS.forEach((l,i) => {
+    const n = i+1;
+    const btn = document.createElement('button');
+    btn.className = 'step' + (n < state.step ? ' done' : n===state.step ? ' active' : '');
+    btn.setAttribute('aria-label', `Step ${n}: ${l}`);
+    btn.innerHTML = `<span class="step-dot">${n < state.step ? '&#10003;' : n}</span><span class="step-label">${l}</span>`;
+    btn.addEventListener('click', () => goStep(n));
+    nav.appendChild(btn);
+  });
+  $('progressFill').style.width = (state.step / state.totalSteps * 100) + '%';
+
+  // Step indicator dots
+  const si = $('stepIndicator'); si.innerHTML='';
+  for(let i=1;i<=state.totalSteps;i++) {
+    const d=document.createElement('span');
+    d.style.cssText=`width:7px;height:7px;border-radius:50%;background:${i===state.step?'var(--primary)':'var(--border)'};display:inline-block;`;
+    si.appendChild(d);
+  }
+
+  $('prevBtn').disabled = state.step === 1;
+  $('nextBtn').textContent = state.step === state.totalSteps ? '&#10022; Generate' : 'Next &#8594;';
+  $('nextBtn').innerHTML  = state.step === state.totalSteps ? '&#10022; Generate' : 'Next &#8594;';
+}
+
+function goStep(n) {
+  if (n < 1 || n > state.totalSteps) return;
+  $$('.wizard-panel').forEach(p => p.classList.remove('active'));
+  $(`panel-${n}`).classList.add('active');
+  state.step = n;
+  buildStepper();
+}
+
+$('prevBtn').addEventListener('click', () => goStep(state.step-1));
+$('nextBtn').addEventListener('click', () => {
+  if (state.step === state.totalSteps) { runGenerate(); }
+  else goStep(state.step+1);
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+$$('[role=tab]').forEach(t => {
+  t.addEventListener('click', () => {
+    $$('[role=tab]').forEach(x => x.classList.remove('on'));
+    $$('.mpanel').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    $('tab-' + t.dataset.tab).classList.add('on');
+  });
+});
+
+// ── Color library ─────────────────────────────────────────────────────────────
+function buildColorLibrary() {
+  const lib = $('colorLibrary'); lib.innerHTML = '';
+  Object.entries(COLORS).forEach(([group, items]) => {
+    const h = document.createElement('div');
+    h.className='sh'; h.style.marginTop='.75rem'; h.textContent=group;
+    lib.appendChild(h);
+    const grid = document.createElement('div'); grid.className='swatch-grid';
+    items.forEach(item => {
+      const btn = document.createElement('button'); btn.className='swatch';
+      if(item.hex.toLowerCase()===state.primaryHex.toLowerCase()) btn.classList.add('on');
+      btn.title=`${item.name} ${item.hex}`;
+      btn.innerHTML = `<div class="swatch-color" style="background:${item.hex}"></div><div class="swatch-name">${item.name}</div>`;
+      btn.addEventListener('click', e => {
+        if (e.shiftKey) { state.secondaryHex=item.hex; $('secondaryHex').value=item.hex; $('secondaryPicker').value=item.hex; }
+        else { state.primaryHex=item.hex; $('primaryHex').value=item.hex; $('primaryPicker').value=item.hex; }
+        updatePreview(); buildColorLibrary();
       });
-    }
-    function renderChips(){
-      const render=(target,list,key)=>{target.innerHTML='';list.forEach(item=>{const btn=document.createElement('button');btn.className='chip';if(state[key]===item.name)btn.classList.add('active');btn.textContent=item.label||item.name;if(key==='font')btn.style.fontFamily=item.name;btn.addEventListener('click',()=>{state[key]=item.name;update();});target.appendChild(btn);});};
-      render(els.backgroundChips,BACKGROUNDS,'background');render(els.borderChips,BORDERS,'border');render(els.fontChips,FONTS,'font');
-    }
-    function applyBorder(card){card.style.outline='none';card.style.boxShadow='var(--shadow-lg)';const p=state.primaryHex;if(state.border==='solid')card.style.outline=`3px solid ${p}`;else if(state.border==='glow')card.style.boxShadow=`0 0 ${10+state.glow*1.6}px ${hexToRgba(p,.65)}, 0 16px 48px rgba(0,0,0,.45)`;else if(state.border==='double')card.style.outline=`4px double ${p}`;else if(state.border==='dashed')card.style.outline=`3px dashed ${p}`;else if(state.border==='none')card.style.outline='1px solid rgba(255,255,255,.08)';}
-    function buildBg(){const bg=byName(BACKGROUNDS,state.background);return state.gradient?`linear-gradient(135deg,${state.primaryHex}22,${state.secondaryHex}18),${bg.css}`:bg.css;}
-    function getConfig(){return {app:'Sigil GUI Builder',mode:'integrated-brand-builder',brand:{name:state.brandName,tagline:state.tagline,description:state.description,image_prompt:state.imagePrompt,icon_text:state.iconText,banner_text:state.bannerText},visuals:{icon_text:state.iconText,banner_text:state.bannerText,primary_color:state.primaryHex,secondary_color:state.secondaryHex,background:state.background,border:state.border,glow:state.glow,font:state.font,gradient_enabled:state.gradient},integration:{gemini_ready:true,has_api_key:Boolean(state.apiKey),api_key:state.apiKey,recommended_backend:'proxy Sigil gemini.js or Electron/Express wrapper',payload_shape:'compatible with /brand ai + custom frontend presets'},ui:{live_preview:true,color_library:Object.values(COLORS).flat().length,backgrounds:BACKGROUNDS.length,borders:BORDERS.length,fonts:FONTS.length}};}
-    function update(){
-      state.brandName=els.brandName.value.trim()||'Untitled';state.tagline=els.tagline.value.trim();state.description=els.description.value.trim();
-      state.iconText=(els.iconText.value.trim()||'SG').slice(0,4).toUpperCase();state.bannerText=els.bannerText.value.trim()||state.brandName;
-      state.primaryHex=els.primaryHex.value.trim()||'#8B0000';state.secondaryHex=els.secondaryHex.value.trim()||'#4B0082';
-      state.glow=Number(els.glowRange.value);state.gradient=els.gradientToggle.checked;state.apiKey=els.apiKey.value.trim();state.imagePrompt=els.imagePrompt.value.trim();
-      els.glowOutput.textContent=state.glow;renderChips();
-      document.documentElement.style.setProperty('--color-primary',state.primaryHex);document.documentElement.style.setProperty('--color-primary-2',state.secondaryHex);
-      const bg=buildBg();
-      els.iconCard.style.background=bg;applyBorder(els.iconCard);
-      els.logoMark.textContent=state.iconText;els.logoMark.style.cssText=`color:${state.primaryHex};font-family:'${state.font}',sans-serif;position:absolute;inset:0;display:grid;place-items:center;font-size:5rem;font-weight:900;text-shadow:0 0 35px ${hexToRgba(state.primaryHex,.45)};`;
-      els.bannerCard.style.background=bg;applyBorder(els.bannerCard);
-      els.bannerCard.childNodes[0].textContent=state.bannerText;
-      els.bannerCard.style.fontFamily=`'${state.font}',sans-serif`;
-      els.palettePrimary.style.background=state.primaryHex;els.palettePrimary.querySelector('strong').textContent=state.primaryHex;
-      els.paletteSecondary.style.background=state.secondaryHex;els.paletteSecondary.querySelector('strong').textContent=state.secondaryHex;
-      els.embedCard.style.borderLeftColor=state.primaryHex;
-      els.embedTitle.textContent=`\u2726 AI Brand Kit \u2014 ${state.brandName}`;
-      els.embedTagline.textContent=`"${state.tagline}"`;
-      els.specIcon.textContent=state.iconText;els.specBanner.textContent=state.bannerText;
-      els.specPalette.textContent=`${state.primaryHex} \u2192 ${state.secondaryHex}`;
-      els.specBackground.textContent=state.background;els.specBorder.textContent=state.border;
-      els.specGlow.textContent=state.glow;els.specFont.textContent=state.font;
-      els.promptStatus.innerHTML=`<strong>Current prompt:</strong> ${state.description}`;
-      els.integrationStatus.innerHTML=`<strong>Integrated mode:</strong> GUI, exported config, and backend payload stay in sync${state.apiKey?' \u2014 API key attached.':' \u2014 no API key yet.'}`;
-      els.jsonOutput.value=JSON.stringify(getConfig(),null,2);
-      renderColorGroups();
-    }
-    ['brandName','tagline','description','iconText','bannerText','primaryHex','secondaryHex','apiKey','imagePrompt'].forEach(id=>els[id].addEventListener('input',update));
-    els.glowRange.addEventListener('input',update);els.gradientToggle.addEventListener('change',update);
-    els.copyJsonBtn.addEventListener('click',async()=>{await navigator.clipboard.writeText(els.jsonOutput.value);els.copyJsonBtn.textContent='Copied!';setTimeout(()=>els.copyJsonBtn.textContent='Copy JSON',1400);});
-    els.themeBtn.addEventListener('click',()=>{const root=document.documentElement;const isDark=root.getAttribute('data-theme')==='dark';root.setAttribute('data-theme',isDark?'light':'dark');if(isDark){root.style.setProperty('--color-bg','#f5f5f8');root.style.setProperty('--color-surface','#ffffff');root.style.setProperty('--color-surface-2','#ececf3');root.style.setProperty('--color-text','#13131b');root.style.setProperty('--color-text-muted','#4f5568');root.style.setProperty('--color-text-faint','#7b8198');}else{root.style.setProperty('--color-bg','#0a0a0f');root.style.setProperty('--color-surface','#13131b');root.style.setProperty('--color-surface-2','#1b1b25');root.style.setProperty('--color-text','#f5f7fb');root.style.setProperty('--color-text-muted','#a9b1c7');root.style.setProperty('--color-text-faint','#68708b');}});
+      grid.appendChild(btn);
+    });
+    lib.appendChild(grid);
+  });
+}
 
-    // ── Server health ping ──────────────────────────────────────────────────
-    const SERVER = 'http://localhost:3420';
-    let serverAlive = false;
-    async function pingServer() {
-      try {
-        const r = await fetch(`${SERVER}/health`, { signal: AbortSignal.timeout(1800) });
-        serverAlive = r.ok;
-      } catch { serverAlive = false; }
-      const pill = $('serverPill');
-      if (pill) {
-        pill.textContent = serverAlive ? '\u25cf Server online' : '\u25cb Server offline';
-        pill.style.color = serverAlive ? 'var(--color-success)' : 'var(--color-text-faint)';
+// ── Background & border chips ─────────────────────────────────────────────────
+function buildChips() {
+  const bgWrap = $('bgChips'); bgWrap.innerHTML='';
+  BACKGROUNDS.forEach(bg => {
+    const b=document.createElement('button'); b.className='chip'+(state.background===bg.k?' on':'');
+    b.style.background=bg.css; b.style.color='#fff'; b.style.fontSize='.72rem';
+    b.textContent=bg.l;
+    b.addEventListener('click', () => { state.background=bg.k; buildChips(); updatePreview(); });
+    bgWrap.appendChild(b);
+  });
+
+  const bWrap = $('borderChips'); bWrap.innerHTML='';
+  BORDERS.forEach(bdr => {
+    const b=document.createElement('button'); b.className='chip'+(state.border===bdr?' on':'');
+    b.textContent=bdr.charAt(0).toUpperCase()+bdr.slice(1);
+    b.addEventListener('click', () => { state.border=bdr; buildChips(); updatePreview(); });
+    bWrap.appendChild(b);
+  });
+}
+
+// ── Sync pickers ──────────────────────────────────────────────────────────────
+$('primaryPicker').addEventListener('input', e => { $('primaryHex').value=e.target.value.toUpperCase(); updatePreview(); });
+$('secondaryPicker').addEventListener('input', e => { $('secondaryHex').value=e.target.value.toUpperCase(); updatePreview(); });
+$('primaryHex').addEventListener('input', e => { try{$('primaryPicker').value=e.target.value;}catch{} updatePreview(); });
+$('secondaryHex').addEventListener('input', e => { try{$('secondaryPicker').value=e.target.value;}catch{} updatePreview(); });
+
+// ── Preview update ────────────────────────────────────────────────────────────
+function buildBg() {
+  const bg = BACKGROUNDS.find(b=>b.k===state.background)||BACKGROUNDS[0];
+  return state.gradient
+    ? `linear-gradient(135deg,${hexToRgba(state.primaryHex,.22)},${hexToRgba(state.secondaryHex,.18)}),${bg.css}`
+    : bg.css;
+}
+
+function applyBorder(el) {
+  el.style.outline=''; el.style.boxShadow='0 12px 40px rgba(0,0,0,.45)';
+  const p=state.primaryHex, g=state.glow;
+  if(state.border==='solid')    el.style.outline=`3px solid ${p}`;
+  else if(state.border==='glow') el.style.boxShadow=`0 0 ${10+g*1.5}px ${hexToRgba(p,.7)},0 12px 40px rgba(0,0,0,.45)`;
+  else if(state.border==='double') el.style.outline=`4px double ${p}`;
+  else if(state.border==='dashed') el.style.outline=`3px dashed ${p}`;
+  else if(state.border==='gradient') el.style.outline=`3px solid ${p}`;
+}
+
+function updatePreview() {
+  readState();
+  document.documentElement.style.setProperty('--primary',   state.primaryHex);
+  document.documentElement.style.setProperty('--secondary', state.secondaryHex);
+
+  const bg = buildBg();
+  const ic = $('iconCard'), bc=$('bannerCard');
+  ic.style.background=bg; bc.style.background=bg;
+  applyBorder(ic); applyBorder(bc);
+
+  $('iconText2').textContent  = state.iconText;
+  $('iconText2').style.color  = state.primaryHex;
+  $('iconText2').style.fontFamily = `'${state.font}',sans-serif`;
+  $('iconText2').style.textShadow = `0 0 40px ${hexToRgba(state.primaryHex,.5)}`;
+
+  $('bannerText2').textContent = state.bannerText;
+  $('bannerText2').style.fontFamily = `'${state.font}',sans-serif`;
+
+  $('palPrimary').style.background   = state.primaryHex;
+  $('palPrimary').querySelector('strong').textContent   = state.primaryHex;
+  $('palSecondary').style.background = state.secondaryHex;
+  $('palSecondary').querySelector('strong').textContent = state.secondaryHex;
+
+  $('embedCard').style.borderLeftColor = state.primaryHex;
+  $('embedTitle').textContent = `\u2726 AI Brand Kit \u2014 ${state.brandName}`;
+  $('embedTag').textContent   = `\u201C${state.tagline}\u201D`;
+  $('s-icon').textContent=state.iconText; $('s-banner').textContent=state.bannerText;
+  $('s-primary').textContent=state.primaryHex; $('s-secondary').textContent=state.secondaryHex;
+  $('s-bg').textContent=state.background; $('s-border').textContent=state.border;
+  $('s-glow').textContent=state.glow; $('s-font').textContent=state.font;
+
+  updatePaletteTable();
+  $('jsonOutput').value = JSON.stringify(getConfig(), null, 2);
+}
+
+// ── Palette table ─────────────────────────────────────────────────────────────
+function updatePaletteTable() {
+  const tbody = $('paletteTbody'); tbody.innerHTML='';
+  const entries = [
+    {hex:state.primaryHex,   name:'Primary',   role:'Main brand color'},
+    {hex:state.secondaryHex, name:'Secondary', role:'Accent / gradient end'},
+    {hex:'#ffffff',          name:'White',     role:'Text on dark bg'},
+    {hex:'#000000',          name:'Black',     role:'Text on light bg'},
+  ];
+  entries.forEach(e => {
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="color-chip-sm" style="background:${e.hex}"></span></td><td>${e.name}</td><td><code>${e.hex}</code></td><td style="color:var(--faint);font-size:.78rem">${e.role}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Config payload ────────────────────────────────────────────────────────────
+function getConfig() {
+  return {
+    brand: { name:state.brandName, tagline:state.tagline, description:state.description, image_prompt:state.imagePrompt },
+    visuals: { icon_text:state.iconText, banner_text:state.bannerText, primary_color:state.primaryHex, secondary_color:state.secondaryHex, background:state.background, border:state.border, glow:state.glow, font:state.font, opacity:state.opacity/100, gradient:state.gradient },
+    ai: { gemini_key:state.apiKey, model:state.model, temperature:state.temperature },
+  };
+}
+
+// ── Server health ─────────────────────────────────────────────────────────────
+async function pingServer() {
+  try {
+    const r = await fetch(`${SERVER}/health`, {signal:AbortSignal.timeout(2000)});
+    serverAlive = r.ok;
+  } catch { serverAlive=false; }
+  const pill=$('serverPill'), lbl=$('serverLabel');
+  pill.classList.toggle('online', serverAlive);
+  lbl.textContent = serverAlive ? 'Online' : 'Offline';
+}
+pingServer(); setInterval(pingServer, 8000);
+
+// ── Fast preview ──────────────────────────────────────────────────────────────
+async function runPreview() {
+  if (!serverAlive) { setStatus('\u26a0 Server offline', 'error'); return; }
+  updatePreview();
+  setProgress(30);
+  setStatus('Rendering canvas\u2026', 'info');
+  const btn=$('previewBtn'); btn.disabled=true; btn.textContent='\u27f3 Rendering\u2026';
+  try {
+    const res = await fetch(`${SERVER}/preview`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(getConfig().visuals), signal:AbortSignal.timeout(20000),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    setProgress(100);
+    showImages(data); wireDownloads(data);
+    setStatus('\u2713 Canvas preview rendered', 'ok');
+  } catch(e) { setStatus(`\u2717 ${e.message}`, 'error'); }
+  finally { setProgress(-1); btn.disabled=false; btn.textContent='\u26a1 Preview'; }
+}
+
+// ── AI generate ───────────────────────────────────────────────────────────────
+async function runGenerate() {
+  if (!serverAlive) { setStatus('\u26a0 Server offline', 'error'); return; }
+  if (!state.apiKey) {
+    goStep(4);
+    setStatus('\u26a0 Enter your Gemini API key in Step 4 first', 'error');
+    return;
+  }
+  updatePreview();
+  setProgress(20);
+  setStatus('Calling Gemini AI\u2026', 'info');
+  const btn=$('generateBtn'); btn.disabled=true; btn.textContent='\u27f3 Generating\u2026';
+  try {
+    setProgress(40);
+    const res = await fetch(`${SERVER}/generate`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ description:state.description, image_prompt:state.imagePrompt, gemini_key:state.apiKey }),
+      signal:AbortSignal.timeout(90000),
+    });
+    setProgress(80);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // Write AI brand back into form
+    if (data.brand) {
+      const b=data.brand;
+      if(b.name)      { $('brandName').value=b.name; state.brandName=b.name; }
+      if(b.tagline)   { $('tagline').value=b.tagline; state.tagline=b.tagline; }
+      if(b.palette?.length) {
+        state.primaryHex=b.palette[0]; $('primaryHex').value=b.palette[0]; $('primaryPicker').value=b.palette[0];
+        if(b.palette[1]){ state.secondaryHex=b.palette[1]; $('secondaryHex').value=b.palette[1]; $('secondaryPicker').value=b.palette[1]; }
       }
-    }
-    pingServer();
-    setInterval(pingServer, 8000);
-
-    // ── Image helpers ───────────────────────────────────────────────────────
-    function showImg(imgEl, b64, mime='image/png') {
-      imgEl.src = `data:${mime};base64,${b64}`;
-      imgEl.style.display = 'block';
-      requestAnimationFrame(() => { imgEl.style.opacity = '1'; });
-    }
-    function hideImg(imgEl) {
-      imgEl.style.opacity = '0';
-      setTimeout(() => { imgEl.style.display = 'none'; imgEl.src = ''; }, 420);
-    }
-    function dlBlob(b64, filename, mime='image/png') {
-      const a = document.createElement('a');
-      a.href = `data:${mime};base64,${b64}`;
-      a.download = filename;
-      a.click();
+      if(b.background){ state.background=b.background; }
+      if(b.border)    { state.border=b.border; }
+      if(b.font)      { state.font=b.font; try{$('fontSelect').value=b.font;}catch{} }
+      if(b.glow!=null){ state.glow=b.glow; $('glowRange').value=b.glow; }
     }
 
-    // ── Download tray ───────────────────────────────────────────────────────
-    let lastResult = null;
-    function wireDownloads(data) {
-      lastResult = data;
-      const tray = $('downloadTray');
-      if (tray) tray.style.display = 'flex';
-      const dlIcon    = $('dlIcon');
-      const dlBanner  = $('dlBanner');
-      const dlPalette = $('dlPalette');
-      const dlAiImage = $('dlAiImage');
-      if (dlIcon)    dlIcon.onclick    = () => dlBlob(data.icon_b64,    `${state.brandName}-icon.png`);
-      if (dlBanner)  dlBanner.onclick  = () => dlBlob(data.banner_b64,  `${state.brandName}-banner.png`);
-      if (dlPalette) dlPalette.onclick = () => dlBlob(data.palette_b64, `${state.brandName}-palette.png`);
-      if (dlAiImage && data.ai_image_b64) {
-        dlAiImage.style.display = 'inline-flex';
-        dlAiImage.onclick = () => dlBlob(data.ai_image_b64, `${state.brandName}-ai.png`);
-      }
-    }
+    showImages(data);
+    if (data.ai_image_b64) showAiImage(data.ai_image_b64, data.brand?.name||state.brandName);
+    wireDownloads(data);
+    updatePreview(); buildChips(); buildColorLibrary();
+    setProgress(100);
+    setStatus(`\u2713 Brand kit generated${data.ai_image_b64?' + AI image':''}`, 'ok');
+  } catch(e) { setStatus(`\u2717 ${e.message}`, 'error'); }
+  finally { setProgress(-1); btn.disabled=false; btn.textContent='\u2726 Generate'; }
+}
 
-    // ── Status bar ──────────────────────────────────────────────────────────
-    function setStatus(msg, type='info') {
-      const el = $('genStatus');
-      if (!el) return;
-      el.style.display = 'block';
-      const colours = { error: 'var(--color-warning,#ffbf00)', ok: 'var(--color-success,#39ff14)', info: 'var(--color-primary,#8b0000)' };
-      el.style.borderLeftColor = colours[type] || colours.info;
-      el.textContent = msg;
-    }
-    function setBtnLoading(btn, loading, defaultText) {
-      btn.disabled = loading;
-      btn.textContent = loading ? '\u27f3 Running\u2026' : defaultText;
-    }
+// ── Image helpers ─────────────────────────────────────────────────────────────
+function showImages(data) {
+  if (data.icon_b64)   setOverlay($('iconImg'),   data.icon_b64);
+  if (data.banner_b64) setOverlay($('bannerImg'), data.banner_b64);
+}
+function setOverlay(img, b64) {
+  img.src=`data:image/png;base64,${b64}`; img.style.display='block';
+  requestAnimationFrame(()=>img.classList.add('show'));
+}
+function showAiImage(b64, name) {
+  const wrap=$('aiImageWrap'), img=$('aiImageEl'), ph=$('aiPlaceholder');
+  wrap.style.display='block'; ph.style.display='none';
+  img.src=`data:image/png;base64,${b64}`; img.alt=`AI image: ${name}`;
+  // switch to AI tab
+  $$('[role=tab]').forEach(t=>t.classList.remove('on'));
+  $$('.mpanel').forEach(t=>t.classList.remove('on'));
+  document.querySelector('[data-tab=ai]').classList.add('on');
+  $('tab-ai').classList.add('on');
+}
 
-    // ── POST /preview ───────────────────────────────────────────────────────
-    async function runPreview() {
-      const btn = $('previewBtn');
-      if (!serverAlive) { setStatus('\u26a0 Server offline \u2014 run: node gui/gui-server.js', 'error'); return; }
-      update();
-      setBtnLoading(btn, true, '\u26a1 Fast Preview');
-      setStatus('Rendering canvas\u2026', 'info');
-      try {
-        const res = await fetch(`${SERVER}/preview`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(getConfig()),
-          signal: AbortSignal.timeout(15000),
-        });
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || 'Preview failed');
-        const iconImg   = $('iconImg');
-        const bannerImg = $('bannerImg');
-        if (iconImg)   showImg(iconImg,   data.icon_b64);
-        if (bannerImg) showImg(bannerImg, data.banner_b64);
-        wireDownloads(data);
-        setStatus('\u2713 Canvas preview rendered', 'ok');
-      } catch (e) {
-        setStatus(`\u2717 ${e.message}`, 'error');
-      } finally {
-        setBtnLoading(btn, false, '\u26a1 Fast Preview');
-      }
-    }
+// ── Downloads ─────────────────────────────────────────────────────────────────
+function wireDownloads(data) {
+  lastRender=data;
+  const bar=$('dlBar'); bar.style.display='flex';
+  if(data.icon_b64)    $('dlIcon').onclick=()=>dlBlob(data.icon_b64,   `${state.brandName}-icon.png`);
+  if(data.banner_b64)  $('dlBanner').onclick=()=>dlBlob(data.banner_b64, `${state.brandName}-banner.png`);
+  if(data.palette_b64) $('dlPalette').onclick=()=>dlBlob(data.palette_b64,`${state.brandName}-palette.png`);
+  if(data.ai_image_b64){ $('dlAi').style.display='inline-flex'; $('dlAi').onclick=()=>dlBlob(data.ai_image_b64,`${state.brandName}-ai.png`); }
+}
 
-    // ── POST /generate ──────────────────────────────────────────────────────
-    async function runGenerate() {
-      const btn = $('generateBtn');
-      if (!serverAlive) { setStatus('\u26a0 Server offline \u2014 run: node gui/gui-server.js', 'error'); return; }
-      if (!state.apiKey) { setStatus('\u26a0 Enter your Gemini API key in Integration Settings first', 'error'); return; }
-      update();
-      setBtnLoading(btn, true, '\u2726 Generate');
-      setStatus('Calling Gemini + rendering canvas\u2026', 'info');
-      try {
-        const res = await fetch(`${SERVER}/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(getConfig()),
-          signal: AbortSignal.timeout(60000),
-        });
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || 'Generate failed');
+// ── Export dialog ─────────────────────────────────────────────────────────────
+$('exportBtn').addEventListener('click', () => {
+  updatePreview();
+  $('dialogJson').value = JSON.stringify(getConfig(), null, 2);
+  $('exportDialog').showModal();
+});
+$('dialogClose').addEventListener('click',  () => $('exportDialog').close());
+$('dialogClose2').addEventListener('click', () => $('exportDialog').close());
+$('dialogCopyBtn').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('dialogJson').value);
+  $('dialogCopyBtn').textContent='\u2713 Copied!';
+  setTimeout(()=>$('dialogCopyBtn').textContent='\u10063 Copy to clipboard',1600);
+});
+$('copyJsonBtn').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('jsonOutput').value);
+  $('copyJsonBtn').textContent='\u2713 Copied!';
+  setTimeout(()=>$('copyJsonBtn').textContent='\u10063 Copy',1600);
+});
 
-        // Inject canvas renders
-        const iconImg   = $('iconImg');
-        const bannerImg = $('bannerImg');
-        if (iconImg)   showImg(iconImg,   data.icon_b64);
-        if (bannerImg) showImg(bannerImg, data.banner_b64);
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+$('themeBtn').addEventListener('click', () => {
+  const root=document.documentElement;
+  root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark');
+});
 
-        // Inject AI image if returned
-        const aiTray = $('aiImageTray');
-        const aiImg  = $('aiImageEl');
-        const aiLbl  = $('aiImageLabel');
-        if (data.ai_image_b64 && aiImg) {
-          if (aiTray) aiTray.style.display = 'block';
-          showImg(aiImg, data.ai_image_b64);
-          if (aiLbl) aiLbl.textContent = `AI Image \u2014 ${data.brand?.name || state.brandName}`;
-        }
+// ── Wire all inputs ───────────────────────────────────────────────────────────
+['brandName','tagline','description','iconText','bannerText','apiKey','imagePrompt','fontSelect','modelSelect']
+  .forEach(id => $(id).addEventListener('input', updatePreview));
+['glowRange','opacityRange','tempRange','gradientToggle']
+  .forEach(id => $(id).addEventListener('input', updatePreview));
 
-        // Write brand data back into form
-        if (data.brand) {
-          const b = data.brand;
-          if (b.tagline) { els.tagline.value = b.tagline; state.tagline = b.tagline; }
-          if (b.palette?.length) {
-            state.primaryHex = b.palette[0];
-            els.primaryHex.value = b.palette[0];
-            if (b.palette[1]) { state.secondaryHex = b.palette[1]; els.secondaryHex.value = b.palette[1]; }
-          }
-          update();
-        }
+$('previewBtn').addEventListener('click', runPreview);
+$('generateBtn').addEventListener('click', runGenerate);
 
-        // Update JSON output with server response merged in
-        els.jsonOutput.value = JSON.stringify({ ...getConfig(), _brand_response: data.brand || null }, null, 2);
-        wireDownloads(data);
-        setStatus(`\u2713 Brand kit generated${data.ai_image_b64 ? ' + AI image' : ' (canvas only \u2014 AI image skipped)'}`, 'ok');
-      } catch (e) {
-        setStatus(`\u2717 ${e.message}`, 'error');
-      } finally {
-        setBtnLoading(btn, false, '\u2726 Generate');
-      }
-    }
-
-    $('previewBtn').addEventListener('click', runPreview);
-    $('generateBtn').addEventListener('click', runGenerate);
-
-    // ── Boot ────────────────────────────────────────────────────────────────
-    renderColorGroups();
-    renderChips();
-    update();
-  </script>
+// ── Boot ──────────────────────────────────────────────────────────────────────
+buildStepper();
+buildColorLibrary();
+buildChips();
+updatePreview();
+</script>
 </body>
 </html>
