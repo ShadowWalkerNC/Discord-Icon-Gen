@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sigil — Community Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#08080f; --surface:#111118; --surface2:#18181f; --surface3:#202028;
+      --border:rgba(255,255,255,.1); --divider:rgba(255,255,255,.06);
+      --text:#f0f2f8; --muted:#9299b0; --faint:#555d78;
+      --primary:#5865F2; --secondary:#eb459e;
+      --success:#39ff14; --warning:#ffbf00; --error:#ff4444;
+      --radius:.75rem; --radiuslg:1.25rem;
+      --font:'Inter',sans-serif; --fontd:'Orbitron',sans-serif;
+      --ease:cubic-bezier(.16,1,.3,1);
+    }
+    [data-theme="light"] {
+      --bg:#f0f2f8; --surface:#fff; --surface2:#e8eaf2; --surface3:#dde0ee;
+      --border:rgba(0,0,0,.1); --divider:rgba(0,0,0,.06);
+      --text:#0e0e1a; --muted:#555d78; --faint:#9299b0;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--bg);line-height:1.55;min-height:100dvh;}
+    button,input,select,textarea{font:inherit;color:inherit;}
+    button{cursor:pointer;border:none;background:none;}
+    fieldset{border:none;}
+
+    /* ── Navbar ── */
+    .navbar{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.6rem 1rem;}
+    .nav-logo{font-family:var(--fontd);font-weight:900;font-size:1.1rem;background:linear-gradient(135deg,#5865F2,#eb459e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .nav-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+    .nav-subtitle{font-size:.8rem;color:var(--muted);font-weight:600;}
+    .nav-pill{padding:.25rem .7rem;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--muted);display:flex;align-items:center;gap:5px;}
+    .nav-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex-shrink:0;}
+    .nav-pill.online .dot{background:var(--success);box-shadow:0 0 7px var(--success);}
+    .nav-actions{margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap;}
+    .nav-btn{padding:.35rem .8rem;border-radius:.5rem;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--surface2);transition:background 150ms;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;}
+    .nav-btn:hover{background:var(--surface3);}
+    .nav-btn.active{background:linear-gradient(135deg,rgba(88,101,242,.3),rgba(235,69,158,.3));border-color:rgba(255,255,255,.2);color:var(--text);}
+    @media(max-width:480px){.nav-subtitle,.nav-sep{display:none;}}
+
+    /* ── Sub-tabs ── */
+    .sub-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1rem;background:var(--surface);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .sub-tabs::-webkit-scrollbar{display:none;}
+    .stab{padding:.7rem 1.1rem;font-size:.82rem;font-weight:700;color:var(--faint);border-bottom:2px solid transparent;transition:all 150ms;cursor:pointer;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:.4rem;}
+    .stab.on{color:var(--text);border-bottom-color:var(--primary);}
+
+    /* ── Layout ── */
+    .page{display:flex;flex-direction:column;}
+    @media(min-width:900px){.page{flex-direction:row;min-height:calc(100dvh - 100px);}}
+
+    .controls{background:var(--surface);border-right:1px solid var(--border);padding:1.25rem;overflow-y:auto;}
+    @media(min-width:900px){.controls{width:360px;flex-shrink:0;position:sticky;top:100px;max-height:calc(100dvh - 100px);}}
+
+    .preview-area{flex:1;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;}
+
+    .spanel{display:none;}
+    .spanel.on{display:contents;}
+
+    /* ── Form elements ── */
+    .field{margin-bottom:.9rem;}
+    .field>label{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:600;margin-bottom:.35rem;color:var(--muted);}
+    .field>label span{font-weight:400;color:var(--faint);font-size:.75rem;}
+    .inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;font-size:.88rem;transition:border-color 150ms;outline:none;}
+    .inp:focus{border-color:rgba(255,255,255,.3);}
+    select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;padding-right:2rem;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;}
+    .color-row{display:flex;gap:.4rem;align-items:center;}
+    .color-row input[type=color]{width:38px;height:36px;border-radius:.4rem;border:1px solid var(--border);padding:2px;background:var(--surface2);cursor:pointer;flex-shrink:0;}
+    .color-row .inp{flex:1;}
+    .sh{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin:.8rem 0 .35rem;}
+    .sh:first-child{margin-top:0;}
+    .chip-wrap{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.8rem;}
+    .chip{padding:.3rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;border:1px solid var(--border);background:var(--surface2);transition:all 140ms var(--ease);white-space:nowrap;cursor:pointer;}
+    .chip.on{background:linear-gradient(135deg,rgba(88,101,242,.4),rgba(235,69,158,.3));border-color:rgba(255,255,255,.25);color:#fff;}
+
+    /* ── Preview card ── */
+    .preview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiuslg);overflow:hidden;}
+    .preview-card-head{padding:.8rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+    .preview-card-head h3{font-size:.88rem;font-weight:800;}
+    .preview-card-body{padding:1rem;min-height:160px;display:flex;align-items:center;justify-content:center;position:relative;}
+    .preview-card-body img{width:100%;border-radius:.6rem;display:block;}
+    .preview-placeholder{color:var(--faint);font-size:.82rem;text-align:center;padding:2rem;}
+    .preview-spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;position:absolute;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ── Action bar ── */
+    .action-bar{display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border);background:var(--surface2);}
+    .abtn{padding:.42rem .9rem;border-radius:.45rem;font-size:.78rem;font-weight:700;border:1px solid var(--border);background:var(--surface3);transition:background 140ms;display:inline-flex;align-items:center;gap:.35rem;}
+    .abtn:hover{background:var(--surface);}
+    .abtn.primary{background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:#fff;}
+    .abtn:disabled{opacity:.4;cursor:not-allowed;}
+
+    /* ── Command box ── */
+    .cmd-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.65rem .9rem;font-family:monospace;font-size:.78rem;color:var(--muted);word-break:break-all;line-height:1.6;margin-top:.5rem;}
+
+    /* ── Status ── */
+    .status-bar{font-size:.78rem;padding:.4rem .8rem;border-radius:.4rem;display:none;}
+    .status-bar.ok{display:block;color:var(--success);background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.2);}
+    .status-bar.err{display:block;color:var(--error);background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);}
+    .status-bar.info{display:block;color:var(--muted);background:var(--surface2);border:1px solid var(--border);}
+
+    /* ── Toast ── */
+    #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(4rem);opacity:0;transition:all 320ms var(--ease);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.55rem 1.1rem;font-size:.82rem;font-weight:700;pointer-events:none;z-index:200;white-space:nowrap;}
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+    /* ── Responsive ── */
+    @media(max-width:899px){
+      .controls{border-right:none;border-bottom:1px solid var(--border);}
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <span class="nav-logo">SIGIL</span>
+  <div class="nav-sep"></div>
+  <span class="nav-subtitle">Community Tools</span>
+  <div id="serverPill" class="nav-pill"><span class="dot"></span><span id="serverLabel">Offline</span></div>
+  <div class="nav-actions">
+    <a class="nav-btn" href="/">&#127912; Brand Builder</a>
+    <a class="nav-btn active" href="/community">&#127942; Community Tools</a>
+    <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
+  </div>
+</nav>
+
+<div class="sub-tabs" role="tablist">
+  <button class="stab on" role="tab" data-panel="welcome">&#127881; Welcome Card</button>
+  <button class="stab" role="tab" data-panel="rank">&#127942; Rank Card</button>
+  <button class="stab" role="tab" data-panel="stats">&#128202; Server Stats</button>
+</div>
+
+<div id="toast">&#10003; Copied!</div>
+
+<div class="page">
+
+  <!-- ═══════════════ CONTROLS ═══════════════ -->
+  <aside class="controls">
+
+    <!-- Welcome Card Controls -->
+    <div class="spanel on" id="ctrl-welcome">
+      <div class="sh" style="margin-top:0">Member info</div>
+      <div class="field"><label for="wc-username">Username</label><input id="wc-username" class="inp" value="ShadowWalker" /></div>
+      <div class="field"><label for="wc-message">Welcome message</label><input id="wc-message" class="inp" value="Welcome to the server!" /></div>
+      <div class="field"><label for="wc-count">Member count <span>optional</span></label><input id="wc-count" class="inp" placeholder="e.g. You are member #1,042" /></div>
+      <div class="sh">Style</div>
+      <div class="field">
+        <label for="wc-color">Accent color</label>
+        <div class="color-row"><input type="color" id="wc-color-picker" value="#39ff14" /><input id="wc-color" class="inp" value="#39FF14" /></div>
+      </div>
+      <div class="field"><label for="wc-font">Font</label>
+        <select id="wc-font" class="inp">
+          <option value="Arial">Arial (default)</option>
+          <option value="Arial Black">Arial Black</option>
+          <option value="Impact">Impact</option>
+          <option value="Bebas Neue">Bebas Neue</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="Source Code Pro">Source Code Pro</option>
+          <option value="Dancing Script">Dancing Script</option>
+        </select>
+      </div>
+      <div class="sh">Background</div>
+      <div id="wc-bg-chips" class="chip-wrap"></div>
+    </div>
+
+    <!-- Rank Card Controls -->
+    <div class="spanel" id="ctrl-rank">
+      <div class="sh" style="margin-top:0">Player info</div>
+      <div class="field"><label for="rc-username">Username</label><input id="rc-username" class="inp" value="ShadowWalker" /></div>
+      <div class="grid2">
+        <div class="field"><label for="rc-level">Level</label><input id="rc-level" class="inp" type="number" min="1" value="42" /></div>
+        <div class="field"><label for="rc-rank">Rank #</label><input id="rc-rank" class="inp" type="number" min="1" value="7" /></div>
+      </div>
+      <div class="sh">XP progress</div>
+      <div class="grid2">
+        <div class="field"><label for="rc-xp-cur">Current XP</label><input id="rc-xp-cur" class="inp" type="number" min="0" value="3400" /></div>
+        <div class="field"><label for="rc-xp-req">Required XP</label><input id="rc-xp-req" class="inp" type="number" min="1" value="5000" /></div>
+      </div>
+      <div class="sh">Style</div>
+      <div class="field">
+        <label for="rc-color">Accent color</label>
+        <div class="color-row"><input type="color" id="rc-color-picker" value="#5865F2" /><input id="rc-color" class="inp" value="#5865F2" /></div>
+      </div>
+      <div class="field"><label for="rc-font">Font</label>
+        <select id="rc-font" class="inp">
+          <option value="Arial">Arial (default)</option>
+          <option value="Arial Black">Arial Black</option>
+          <option value="Impact">Impact</option>
+          <option value="Bebas Neue">Bebas Neue</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Source Code Pro">Source Code Pro</option>
+        </select>
+      </div>
+      <div class="sh">Background</div>
+      <div id="rc-bg-chips" class="chip-wrap"></div>
+    </div>
+
+    <!-- Server Stats Controls -->
+    <div class="spanel" id="ctrl-stats">
+      <div class="sh" style="margin-top:0">Server info</div>
+      <div class="field"><label for="ss-name">Server name</label><input id="ss-name" class="inp" value="My Awesome Server" /></div>
+      <div class="grid2">
+        <div class="field"><label for="ss-members">Members</label><input id="ss-members" class="inp" type="number" min="0" value="1042" /></div>
+        <div class="field"><label for="ss-channels">Channels</label><input id="ss-channels" class="inp" type="number" min="0" value="24" /></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="ss-roles">Roles</label><input id="ss-roles" class="inp" type="number" min="0" value="18" /></div>
+        <div class="field"><label for="ss-emoji">Emoji</label><input id="ss-emoji" class="inp" type="number" min="0" value="50" /></div>
+      </div>
+      <div class="sh">Boosts &amp; age</div>
+      <div class="grid2">
+        <div class="field"><label for="ss-boost-level">Boost level <span>0–3</span></label><input id="ss-boost-level" class="inp" type="number" min="0" max="3" value="2" /></div>
+        <div class="field"><label for="ss-boost-count">Boost count</label><input id="ss-boost-count" class="inp" type="number" min="0" value="14" /></div>
+      </div>
+      <div class="field"><label for="ss-age">Server age <span>days</span></label><input id="ss-age" class="inp" type="number" min="0" value="365" /></div>
+      <div class="sh">Style</div>
+      <div class="field">
+        <label for="ss-color">Accent color</label>
+        <div class="color-row"><input type="color" id="ss-color-picker" value="#5865F2" /><input id="ss-color" class="inp" value="#5865F2" /></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════ PREVIEW ═══════════════ -->
+  <main class="preview-area">
+
+    <!-- Welcome Card Preview -->
+    <div class="spanel on" id="prev-welcome">
+      <div class="preview-card">
+        <div class="preview-card-head">
+          <h3>&#127881; Welcome Card Preview</h3>
+          <div id="wc-status" class="status-bar"></div>
+        </div>
+        <div class="preview-card-body" id="wc-body">
+          <div class="preview-placeholder">Fill in the fields and the card renders live &#8594;</div>
+          <div class="preview-spinner" id="wc-spinner" style="display:none"></div>
+        </div>
+        <div class="action-bar">
+          <button class="abtn primary" id="wc-render">&#9889; Render</button>
+          <button class="abtn" id="wc-dl" disabled>&#8595; Download PNG</button>
+          <button class="abtn" id="wc-copy-cmd">&#128203; Copy Command</button>
+        </div>
+      </div>
+      <div class="preview-card" style="margin-top:0">
+        <div class="preview-card-head"><h3>&#128203; Discord Command</h3></div>
+        <div style="padding:.75rem 1rem">
+          <div class="cmd-box" id="wc-cmd">/welcomecard username:ShadowWalker message:Welcome to the server!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rank Card Preview -->
+    <div class="spanel" id="prev-rank">
+      <div class="preview-card">
+        <div class="preview-card-head">
+          <h3>&#127942; Rank Card Preview</h3>
+          <div id="rc-status" class="status-bar"></div>
+        </div>
+        <div class="preview-card-body" id="rc-body">
+          <div class="preview-placeholder">Fill in the fields and the card renders live &#8594;</div>
+          <div class="preview-spinner" id="rc-spinner" style="display:none"></div>
+        </div>
+        <div class="action-bar">
+          <button class="abtn primary" id="rc-render">&#9889; Render</button>
+          <button class="abtn" id="rc-dl" disabled>&#8595; Download PNG</button>
+          <button class="abtn" id="rc-copy-cmd">&#128203; Copy Command</button>
+        </div>
+      </div>
+      <div class="preview-card" style="margin-top:0">
+        <div class="preview-card-head"><h3>&#128203; Discord Command</h3></div>
+        <div style="padding:.75rem 1rem">
+          <div class="cmd-box" id="rc-cmd">/rankcard username:ShadowWalker level:42 rank:7 current_xp:3400 required_xp:5000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Server Stats Preview -->
+    <div class="spanel" id="prev-stats">
+      <div class="preview-card">
+        <div class="preview-card-head">
+          <h3>&#128202; Server Stats Preview</h3>
+          <div id="ss-status" class="status-bar"></div>
+        </div>
+        <div class="preview-card-body" id="ss-body">
+          <div class="preview-placeholder">Fill in the fields and the card renders live &#8594;</div>
+          <div class="preview-spinner" id="ss-spinner" style="display:none"></div>
+        </div>
+        <div class="action-bar">
+          <button class="abtn primary" id="ss-render">&#9889; Render</button>
+          <button class="abtn" id="ss-dl" disabled>&#8595; Download PNG</button>
+          <button class="abtn" id="ss-copy-cmd">&#128203; Copy Command</button>
+        </div>
+      </div>
+      <div class="preview-card" style="margin-top:0">
+        <div class="preview-card-head"><h3>&#128203; Discord Command</h3></div>
+        <div style="padding:.75rem 1rem">
+          <div class="cmd-box" id="ss-cmd">/serverstats</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const SERVER = window.location.origin;
+const $ = id => document.getElementById(id);
+let serverAlive = false;
+
+// ── Server health ping ────────────────────────────────────────────────────
+async function pingServer() {
+  try { const r = await fetch(`${SERVER}/health`, { signal: AbortSignal.timeout(2500) }); serverAlive = r.ok; } catch { serverAlive = false; }
+  const pill = $('serverPill'), lbl = $('serverLabel');
+  pill.classList.toggle('online', serverAlive);
+  lbl.textContent = serverAlive ? 'Online' : 'Offline';
+}
+pingServer(); setInterval(pingServer, 9000);
+
+// ── Theme toggle ─────────────────────────────────────────────────────────
+$('themeBtn').addEventListener('click', () => {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg = '✓ Copied!') {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+const PANELS = ['welcome', 'rank', 'stats'];
+document.querySelectorAll('.stab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.stab').forEach(t => t.classList.remove('on'));
+    tab.classList.add('on');
+    const p = tab.dataset.panel;
+    PANELS.forEach(id => {
+      $(`ctrl-${id}`).classList.toggle('on', id === p);
+      $(`prev-${id}`).classList.toggle('on', id === p);
+    });
+  });
+});
+
+// ── Backgrounds ───────────────────────────────────────────────────────────
+const BACKGROUNDS = [
+  { k: 'gradient-purple', l: 'Purple',    css: 'linear-gradient(135deg,#1a0a2e,#2a0a3a)' },
+  { k: 'midnight-gradient', l: 'Midnight', css: 'linear-gradient(135deg,#0a0a1a,#1a0a2e)' },
+  { k: 'inferno',          l: 'Inferno',   css: 'linear-gradient(135deg,#1a0000,#3d0000)' },
+  { k: 'ocean-depth',      l: 'Ocean',     css: 'linear-gradient(135deg,#001020,#002040)' },
+  { k: 'neon-city',        l: 'Neon City', css: 'linear-gradient(135deg,#000010,#0a0020)' },
+  { k: 'forest-night',     l: 'Forest',    css: 'linear-gradient(135deg,#001008,#002010)' },
+  { k: 'deep-space',       l: 'Deep Space',css: 'linear-gradient(135deg,#000010,#050020)' },
+  { k: 'solid-dark',       l: 'Dark',      css: '#1e1f22' },
+  { k: 'storm',            l: 'Storm',     css: 'linear-gradient(135deg,#0a0a0a,#1a1a2a)' },
+  { k: 'polar',            l: 'Polar',     css: 'linear-gradient(135deg,#0a1520,#0a2030)' },
+];
+
+function buildBgChips(containerId, stateKey, onPick) {
+  const wrap = $(containerId); wrap.innerHTML = '';
+  BACKGROUNDS.forEach(bg => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (bgState[stateKey] === bg.k ? ' on' : '');
+    b.style.cssText = `background:${bg.css};color:#fff;font-size:.7rem;`;
+    b.textContent = bg.l;
+    b.addEventListener('click', () => { bgState[stateKey] = bg.k; buildBgChips(containerId, stateKey, onPick); onPick(); });
+    wrap.appendChild(b);
+  });
+}
+
+const bgState = { wc: 'gradient-purple', rc: 'solid-dark' };
+buildBgChips('wc-bg-chips', 'wc', () => debounce(renderWelcome, 'wc')());
+buildBgChips('rc-bg-chips', 'rc', () => debounce(renderRank, 'rc')());
+
+// ── Debounce ──────────────────────────────────────────────────────────────
+const timers = {};
+function debounce(fn, key, delay = 350) {
+  return (...args) => {
+    clearTimeout(timers[key]);
+    timers[key] = setTimeout(() => fn(...args), delay);
+  };
+}
+
+// ── Color pickers sync ────────────────────────────────────────────────────
+function syncColor(pickerId, hexId, callback) {
+  const picker = $(pickerId), hex = $(hexId);
+  picker.addEventListener('input', e => { hex.value = e.target.value.toUpperCase(); callback(); });
+  hex.addEventListener('input', e => { try { picker.value = e.target.value; } catch {} callback(); });
+}
+syncColor('wc-color-picker', 'wc-color', () => debounce(renderWelcome, 'wc')());
+syncColor('rc-color-picker', 'rc-color', () => debounce(renderRank, 'rc')());
+syncColor('ss-color-picker', 'ss-color', () => debounce(renderStats, 'ss')());
+
+// ── Render helpers ────────────────────────────────────────────────────────
+function setStatus(id, msg, type) {
+  const el = $(id);
+  el.className = 'status-bar ' + type;
+  el.textContent = msg;
+}
+function showSpinner(id, on) { $(id).style.display = on ? 'block' : 'none'; }
+function setImg(bodyId, b64) {
+  const body = $(bodyId);
+  body.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = `data:image/png;base64,${b64}`;
+  img.style.borderRadius = '.6rem';
+  body.appendChild(img);
+}
+function dlBlob(b64, name) {
+  const a = document.createElement('a');
+  a.href = `data:image/png;base64,${b64}`;
+  a.download = name; a.click();
+}
+
+// ── Welcome Card ──────────────────────────────────────────────────────────
+let wcB64 = null;
+
+function updateWcCmd() {
+  const u = $('wc-username').value.trim() || 'NewMember';
+  const m = $('wc-message').value.trim() || 'Welcome to the server!';
+  const cnt = $('wc-count').value.trim();
+  const col = $('wc-color').value.trim();
+  const bg = bgState.wc;
+  const font = $('wc-font').value;
+  let cmd = `/welcomecard username:${u} message:${m}`;
+  if (cnt) cmd += ` member_count:${cnt}`;
+  if (col !== '#39FF14') cmd += ` primary_color:${col}`;
+  if (bg !== 'gradient-purple') cmd += ` background:${bg}`;
+  if (font !== 'Arial') cmd += ` font:${font}`;
+  $('wc-cmd').textContent = cmd;
+}
+
+async function renderWelcome() {
+  if (!serverAlive) { setStatus('wc-status', '⚠ Server offline', 'err'); return; }
+  updateWcCmd();
+  showSpinner('wc-spinner', true);
+  setStatus('wc-status', 'Rendering…', 'info');
+  try {
+    const res = await fetch(`${SERVER}/preview/welcome`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: $('wc-username').value.trim() || 'NewMember',
+        message: $('wc-message').value.trim() || 'Welcome to the server!',
+        member_count: $('wc-count').value.trim(),
+        primary_color: $('wc-color').value.trim(),
+        background: bgState.wc,
+        font: $('wc-font').value,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    wcB64 = data.image_b64;
+    setImg('wc-body', wcB64);
+    $('wc-dl').disabled = false;
+    setStatus('wc-status', '✓ Rendered', 'ok');
+  } catch (e) {
+    setStatus('wc-status', '⚠ ' + String(e.message || e).slice(0, 80), 'err');
+  } finally { showSpinner('wc-spinner', false); }
+}
+
+$('wc-render').addEventListener('click', renderWelcome);
+$('wc-dl').addEventListener('click', () => wcB64 && dlBlob(wcB64, `welcome-${$('wc-username').value.trim() || 'card'}.png`));
+$('wc-copy-cmd').addEventListener('click', () => { navigator.clipboard.writeText($('wc-cmd').textContent); showToast('✓ Command copied!'); });
+
+['wc-username', 'wc-message', 'wc-count', 'wc-font'].forEach(id =>
+  $(id).addEventListener('input', () => { updateWcCmd(); debounce(renderWelcome, 'wc')(); })
+);
+
+// ── Rank Card ─────────────────────────────────────────────────────────────
+let rcB64 = null;
+
+function updateRcCmd() {
+  const u = $('rc-username').value.trim() || 'Player';
+  const lv = $('rc-level').value || '1';
+  const rk = $('rc-rank').value || '1';
+  const cur = $('rc-xp-cur').value || '0';
+  const req = $('rc-xp-req').value || '100';
+  const col = $('rc-color').value.trim();
+  const bg = bgState.rc;
+  const font = $('rc-font').value;
+  let cmd = `/rankcard username:${u} level:${lv} rank:${rk} current_xp:${cur} required_xp:${req}`;
+  if (col !== '#5865F2') cmd += ` primary_color:${col}`;
+  if (bg !== 'solid-dark') cmd += ` background:${bg}`;
+  if (font !== 'Arial') cmd += ` font:${font}`;
+  $('rc-cmd').textContent = cmd;
+}
+
+async function renderRank() {
+  if (!serverAlive) { setStatus('rc-status', '⚠ Server offline', 'err'); return; }
+  updateRcCmd();
+  showSpinner('rc-spinner', true);
+  setStatus('rc-status', 'Rendering…', 'info');
+  try {
+    const res = await fetch(`${SERVER}/preview/rankcard`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: $('rc-username').value.trim() || 'Player',
+        level: Number($('rc-level').value) || 1,
+        rank: Number($('rc-rank').value) || 1,
+        current_xp: Number($('rc-xp-cur').value) || 0,
+        required_xp: Number($('rc-xp-req').value) || 100,
+        primary_color: $('rc-color').value.trim(),
+        background: bgState.rc,
+        font: $('rc-font').value,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    rcB64 = data.image_b64;
+    setImg('rc-body', rcB64);
+    $('rc-dl').disabled = false;
+    setStatus('rc-status', '✓ Rendered', 'ok');
+  } catch (e) {
+    setStatus('rc-status', '⚠ ' + String(e.message || e).slice(0, 80), 'err');
+  } finally { showSpinner('rc-spinner', false); }
+}
+
+$('rc-render').addEventListener('click', renderRank);
+$('rc-dl').addEventListener('click', () => rcB64 && dlBlob(rcB64, `rankcard-${$('rc-username').value.trim() || 'card'}.png`));
+$('rc-copy-cmd').addEventListener('click', () => { navigator.clipboard.writeText($('rc-cmd').textContent); showToast('✓ Command copied!'); });
+
+['rc-username', 'rc-level', 'rc-rank', 'rc-xp-cur', 'rc-xp-req', 'rc-font'].forEach(id =>
+  $(id).addEventListener('input', () => { updateRcCmd(); debounce(renderRank, 'rc')(); })
+);
+
+// ── Server Stats ──────────────────────────────────────────────────────────
+let ssB64 = null;
+
+function updateSsCmd() {
+  $('ss-cmd').textContent = '/serverstats';
+}
+
+async function renderStats() {
+  if (!serverAlive) { setStatus('ss-status', '⚠ Server offline', 'err'); return; }
+  updateSsCmd();
+  showSpinner('ss-spinner', true);
+  setStatus('ss-status', 'Rendering…', 'info');
+  try {
+    const res = await fetch(`${SERVER}/preview/serverstats`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        server_name: $('ss-name').value.trim() || 'My Server',
+        member_count: Number($('ss-members').value) || 0,
+        channel_count: Number($('ss-channels').value) || 0,
+        role_count: Number($('ss-roles').value) || 0,
+        emoji_count: Number($('ss-emoji').value) || 0,
+        boost_level: Number($('ss-boost-level').value) || 0,
+        boost_count: Number($('ss-boost-count').value) || 0,
+        age_days: Number($('ss-age').value) || 0,
+        accent_color: $('ss-color').value.trim(),
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    ssB64 = data.image_b64;
+    setImg('ss-body', ssB64);
+    $('ss-dl').disabled = false;
+    setStatus('ss-status', '✓ Rendered', 'ok');
+  } catch (e) {
+    setStatus('ss-status', '⚠ ' + String(e.message || e).slice(0, 80), 'err');
+  } finally { showSpinner('ss-spinner', false); }
+}
+
+$('ss-render').addEventListener('click', renderStats);
+$('ss-dl').addEventListener('click', () => ssB64 && dlBlob(ssB64, `serverstats-${$('ss-name').value.trim().replace(/\s+/g,'-') || 'card'}.png`));
+$('ss-copy-cmd').addEventListener('click', () => { navigator.clipboard.writeText($('ss-cmd').textContent); showToast('✓ Command copied!'); });
+
+['ss-name','ss-members','ss-channels','ss-roles','ss-emoji','ss-boost-level','ss-boost-count','ss-age'].forEach(id =>
+  $(id).addEventListener('input', () => { updateSsCmd(); debounce(renderStats, 'ss')(); })
+);
+
+// ── Boot: auto-render all panels ──────────────────────────────────────────
+pingServer().then(() => {
+  if (serverAlive) {
+    renderWelcome();
+    renderRank();
+    renderStats();
+  }
+});
+</script>
+</body>
+</html>
