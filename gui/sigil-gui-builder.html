@@ -180,6 +180,7 @@
     .ai-status.ok  { display:block; color:var(--success); background:rgba(57,255,20,.08); border:1px solid rgba(57,255,20,.2); }
     .ai-status.err { display:block; color:var(--error);   background:rgba(255,68,68,.08);  border:1px solid rgba(255,68,68,.2); }
     .ai-status.inf { display:block; color:var(--muted);   background:var(--surface2);      border:1px solid var(--border); }
+    .ai-coming-soon { font-size:.75rem; color:var(--faint); text-align:center; margin-top:.5rem; padding:.35rem; border-radius:.4rem; background:var(--surface3); border:1px solid var(--border); }
 
     #toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(4rem); opacity:0; transition:all 320ms var(--ease); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:.55rem 1.1rem; font-size:.82rem; font-weight:700; pointer-events:none; z-index:200; white-space:nowrap; }
     #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
@@ -200,6 +201,7 @@
   <div class="nav-actions">
     <a class="nav-btn active" href="/brand">&#127912; Brand Builder</a>
     <a class="nav-btn" href="/community">&#127942; Community Tools</a>
+    <a class="nav-btn hide-xs" href="/developers">&#128279; Developers</a>
     <button class="nav-btn hide-xs" id="previewBtn">&#9889; Preview</button>
     <button class="nav-btn primary" id="generateBtn">&#10022; Generate</button>
     <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
@@ -281,8 +283,9 @@
       <div class="wizard-panel" id="panel-3">
         <div class="sh" style="margin-top:0">AI Generate</div>
         <div class="ai-box">
-          <div class="field" style="margin-bottom:.5rem"><label for="aiPrompt">Custom prompt <span>optional</span></label><textarea id="aiPrompt" class="inp" style="min-height:60px" placeholder="e.g. Make it feel ancient and mystical"></textarea></div>
-          <button class="abtn primary" id="aiGenBtn" style="width:100%">&#10024; AI Generate Brand</button>
+          <div class="field" style="margin-bottom:.5rem"><label for="aiPrompt">Custom prompt <span>optional</span></label><textarea id="aiPrompt" class="inp" style="min-height:60px" placeholder="e.g. Make it feel ancient and mystical" disabled></textarea></div>
+          <button class="abtn primary" id="aiGenBtn" style="width:100%" disabled title="AI features coming soon">&#10024; AI Generate Brand <span style="font-size:.68rem;opacity:.7;margin-left:.35rem">(Coming Soon)</span></button>
+          <div class="ai-coming-soon">&#128274; AI generation is temporarily disabled — coming in a future update.</div>
           <div class="ai-status" id="aiStatus"></div>
         </div>
         <div class="sh">Or generate manually</div>
@@ -328,7 +331,7 @@
       <!-- AI Image tab -->
       <div class="preview-panel" id="pp-ai">
         <div class="canvas-wrap" id="aiImgWrap" style="aspect-ratio:1;">
-          <div id="aiImgPlaceholder" style="color:var(--faint);font-size:.82rem;text-align:center;padding:2rem;">Click &#10024; AI Generate to create an image</div>
+          <div id="aiImgPlaceholder" style="color:var(--faint);font-size:.82rem;text-align:center;padding:2rem;">&#128274; AI image generation is coming soon. Use the manual renderer above to preview your brand kit.</div>
           <img id="aiImg" style="display:none;width:100%;border-radius:.6rem;" alt="AI generated brand image" />
         </div>
         <div class="action-row">
@@ -516,19 +519,16 @@ function renderIcon() {
   const W = 512, H = 512, cx = W/2, cy = H/2;
   canvas.width = W; canvas.height = H;
 
-  // Background
   const bgGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,W*0.7);
   bgGrad.addColorStop(0, getBgColor());
   bgGrad.addColorStop(1, '#000');
   ctx.fillStyle = bgGrad; ctx.fillRect(0,0,W,H);
 
-  // Shadow
   if (state.shadow > 0) {
     ctx.shadowColor = state.primary;
     ctx.shadowBlur  = state.shadow * 80;
   }
 
-  // Shape clip
   const r = Math.min(cx, cy) * 0.78;
   ctx.save(); ctx.beginPath();
   const rad = state.radius * r;
@@ -541,14 +541,12 @@ function renderIcon() {
   else ctx.arc(cx, cy, r, 0, Math.PI*2);
   ctx.clip();
 
-  // Fill gradient
   const grad = ctx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
   grad.addColorStop(0, state.primary);
   grad.addColorStop(1, state.secondary);
   ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
   ctx.restore();
 
-  // Border
   ctx.shadowBlur = 0;
   if (state.border !== 'none') {
     ctx.strokeStyle = state.border === 'neon' ? state.primary : 'rgba(255,255,255,0.3)';
@@ -567,7 +565,6 @@ function renderIcon() {
     ctx.shadowBlur = 0;
   }
 
-  // Text
   const txt = ($('iconText').value || state.name?.slice(0,2) || '??').toUpperCase();
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#fff';
@@ -668,38 +665,6 @@ $('copyKitBtn').addEventListener('click', () => {
   const kit = { name: state.name, tagline: state.tagline, primary: state.primary, secondary: state.secondary, background: state.bg, border: state.border, shape: state.shape, font: state.font, size: state.size };
   navigator.clipboard.writeText(JSON.stringify(kit, null, 2));
   showToast('✓ Kit JSON copied!');
-});
-
-// ── AI Generate ───────────────────────────────────────────────────────────
-$('aiGenBtn').addEventListener('click', async () => {
-  if (!serverAlive) { setAiStatus('⚠ Server offline', 'err'); return; }
-  setAiStatus('Generating…', 'inf');
-  $('aiGenBtn').disabled = true;
-  try {
-    const res = await fetch(`${SERVER}/ai-generate`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name: state.name, tagline: state.tagline, description: $('desc').value, prompt: $('aiPrompt').value }),
-      signal: AbortSignal.timeout(30000),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
-    if (data.primary)   state.primary   = data.primary;
-    if (data.secondary) state.secondary = data.secondary;
-    if (data.bg)        state.bg        = data.bg;
-    if (data.font)      state.font      = data.font;
-    if (data.shape)     state.shape     = data.shape;
-    if (data.border)    state.border    = data.border;
-    if (data.image_url) {
-      const img = $('aiImg');
-      img.src = data.image_url; img.style.display = 'block';
-      $('aiImgPlaceholder').style.display = 'none';
-      $('dlAiBtn').disabled = false;
-    }
-    syncUIFromState(); renderAll();
-    setAiStatus('✓ Brand generated!', 'ok');
-  } catch(e) {
-    setAiStatus('⚠ ' + String(e.message || e).slice(0,80), 'err');
-  } finally { $('aiGenBtn').disabled = false; }
 });
 
 $('manualGenBtn').addEventListener('click', () => { renderAll(); showToast('✓ Rendered!'); });
