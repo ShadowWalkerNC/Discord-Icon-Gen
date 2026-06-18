@@ -6,30 +6,33 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 
 ---
 
+## [1.12.0] — 2026-06-18
+
+### Added
+- **`/minecraft`** slash command — DiscordSRV setup guide for linking Discord to a Minecraft Java server
+  - `step` option: jump directly to any of the 5 steps (Install, Create Bot, Configure, Link Roles, Verify)
+  - Without `step`: returns full 5-step guide in a single ephemeral embed
+  - Links to `docs/MINECRAFT.md` for the full written guide
+  - Color-coded green (`#39FF14`) matching the Emerald Fang template palette
+- **`docs/MINECRAFT.md`** — full written DiscordSRV setup guide:
+  - Prerequisites, step-by-step instructions with copy-paste config snippets
+  - Role sync, account linking, troubleshooting table, and resource links
+  - Covers DiscordSRV v1.27+ on Paper/Spigot 1.17–1.21
+- `src/commands/minecraft.js` — new command file, auto-registered by `src/index.js` glob
+
+---
+
 ## [1.11.0] — 2026-06-18
 
 ### Added
-- **`/palette export`** slash command — export a brand palette in developer-ready formats
-  - `format` *(required)*: CSS Variables, Tailwind Config, or Hex List
-  - `primary` / `secondary` / `color3` / `color4` / `color5` \u2014 optional manual hex inputs with color autocomplete
-  - If no colors are provided, automatically loads primary + secondary + palette from the user’s last kit in history
-  - **CSS Variables** — outputs a `:root { }` block with `--primary`, `--secondary`, `--palette-N` custom properties
-  - **Tailwind Config** — outputs a `tailwind.config.js` `theme.extend.colors` block with kebab-case keys
-  - **Hex List** — one labeled `name: #HEX` line per color, plain text
-  - Result returned as ephemeral embed with syntax-highlighted code block
-  - Invalid hex inputs are silently skipped (non-fatal)
-- `src/commands/palette.js` — new command file, auto-registered by `src/index.js` glob
+- **`/palette export`** slash command — CSS Variables, Tailwind Config, Hex List formats; auto-loads last kit from history if no colors provided
 
 ---
 
 ## [1.10.0] — 2026-06-18
 
 ### Added
-- **`/brand share`** subcommand — generates a shareable GUI link pre-loaded with the user’s most recent kit from history
-  - Builds a base64 URL hash matching the GUI’s own `HASH_KEYS` encoding so the link restores state exactly
-  - Returns an ephemeral embed with a clickable **Open in Visual Builder** link and a summary of the loaded kit
-  - Falls back with a helpful error if no history entry exists yet
-- `/brand kit` and `/brand ai` footers now hint at `/brand share`
+- **`/brand share`** subcommand — shareable GUI link pre-loaded from last kit via base64 URL hash
 
 ---
 
@@ -43,18 +46,17 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 ## [1.8.0] — 2026-06-18
 
 ### Added
-- **Shape-aware borders** — `neon` and `rainbow` border styles added; all borders trace shape path
-- Total border styles: **8** (was 6)
+- Shape-aware borders; `neon` and `rainbow` border styles; total: **8**
 
 ---
 
 ## [1.7.0] — 2026-06-18
 
 ### Added
-- **12 missing named background presets** — total now **32** (was 20)
+- 12 missing named background presets; total: **32**
 
 ### Fixed
-- `bg-image-1` and `bg-image-2` now use fixed coordinate arrays (deterministic output)
+- `bg-image-1` / `bg-image-2` now deterministic (fixed coordinates)
 
 ---
 
@@ -104,17 +106,13 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 
 ### Added
 - `/brand ai`, `/brand kit`, `/mood`, `/compare`, `/random`, `/preview`, `/saveme`, `/history`, `/avatar`
-- Core utils: `gemini.js`, `history.js`, `backgrounds.js`, `borders.js`, `canvas.js`, `fonts.js`
 
 ---
 
 ## [1.1.0] — 2026-06-15
 
 ### Added
-- `/banner`, `/logo`
-
-### Changed
-- `/icon` — added font, glow, and opacity options
+- `/banner`, `/logo`, font/glow/opacity on `/icon`
 
 ---
 
