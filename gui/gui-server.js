@@ -1,225 +1,141 @@
-/**
- * Sigil GUI Bridge Server
- */
+// gui-server.js — Sigil GUI bridge server
+// Run with: node gui/gui-server.js
+// Requires: express, canvas (same deps as the bot)
 
-'use strict';
+const express = require('express');
+const path    = require('path');
+const fs      = require('fs');
+const { renderKit, registerAllFonts } = require('../src/utils/canvas.js');
+const { geminiRequest, geminiImageRequest, extractJson } = require('../src/utils/gemini.js');
+require('dotenv').config();
 
-const http = require('http');
-const path = require('path');
-const fs   = require('fs');
+registerAllFonts();
 
-const { geminiRequest, geminiImageRequest, extractJson } = require('../src/utils/gemini');
-const { renderKit }                                       = require('../src/utils/canvas');
+const app  = express();
+const PORT = Number(process.env.PORT) || 3420;
 
-const PORT    = Number(process.env.PORT) || Number(process.env.GUI_PORT) || 3420;
-const VERSION = '1.2.1';
-const START   = Date.now();
+app.use(express.json({ limit: '2mb' }));
 
-const webhooks = {};
-
-function cors(res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
-function json(res, status, data) {
-    cors(res);
-    const body = JSON.stringify(data);
-    res.writeHead(status, { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) });
-    res.end(body);
-}
-
-function readBody(req) {
-    return new Promise((resolve, reject) => {
-        let raw = '';
-        req.on('data', c => { raw += c; if (raw.length > 1_000_000) req.destroy(); });
-        req.on('end',  () => { try { resolve(JSON.parse(raw)); } catch { reject(new Error('Invalid JSON body')); } });
-        req.on('error', reject);
-    });
-}
-
-function configToRenderKitOpts(cfg) {
-    const b = cfg.brand   || {};
-    const v = cfg.visuals || {};
-    const BG_MAP = {
-        'midnight-gradient': 'midnight-gradient',
-        'deep-space':        'starfield',
-        'inferno':           'sunset',
-        'ocean-depth':       'cyberpunk-grid',
-        'forest-night':      'forest',
-        'twilight':          'midnight-gradient',
-        'aurora':            'bg-image-1',
-        'storm':             'carbon-fiber',
-        'sunset-fade':       'sunset',
-        'void':              'plain-black',
-        'neon-city':         'cyberpunk-grid',
-        'polar':             'bg-image-2',
-        'plain-black':       'plain-black',
-        'plain-white':       'plain-white',
-        'sunset':            'sunset',
-        'forest':            'forest',
-        'cyberpunk-grid':    'cyberpunk-grid',
-        'starfield':         'starfield',
-        'carbon-fiber':      'carbon-fiber',
-        'bg-image-1':        'bg-image-1',
-        'bg-image-2':        'bg-image-2',
-    };
-    return {
-        name:       (b.banner_text || b.name || 'Sigil').slice(0, 30),
-        initials:   (b.icon_text  || b.name || 'SG').slice(0, 4).toUpperCase(),
-        color:      v.primary_color   || '#8B0000',
-        color2:     v.secondary_color || null,
-        background: BG_MAP[v.background] || 'midnight-gradient',
-        border:     v.border            || 'none',
-        glow:       String(v.glow ?? 10),
-        tagline:    b.tagline           || null,
-        fontKey:    v.font              || 'another-danger',
-    };
-}
-
-function buildBrandPrompt(cfg) {
-    const v = cfg.visuals || {};
-    const b = cfg.brand   || {};
-    return [
-        `Generate a brand identity JSON for a Discord server named "${b.name || 'Untitled'}".`,
-        `Description: ${b.description || b.tagline || 'No description provided'}.`,
-        `Primary color: ${v.primary_color || '#8B0000'}, Secondary: ${v.secondary_color || '#4B0082'}.`,
-        `Return ONLY a JSON object with keys: name, tagline, palette (array of 3-6 hex strings),`,
-        `icon_prompt (image gen prompt for a 400x400 icon), banner_prompt (1024x320 banner prompt),`,
-        `description (1-2 sentence brand description).`,
-    ].join(' ');
-}
-
-async function notifyWebhook(channelId, payload) {
-    const url = webhooks[channelId];
-    if (!url) return;
-    const body = JSON.stringify({
-        username: 'Sigil GUI',
-        embeds: [{
-            title:       `✦ Brand Kit — ${payload.name || 'Generated'}`,
-            description: payload.description || payload.tagline || '',
-            color:       parseInt((payload.palette?.[0] || '#8B0000').replace('#', ''), 16),
-            fields: [
-                { name: 'Palette',  value: (payload.palette || []).join('  '), inline: false },
-                { name: 'Tagline',  value: payload.tagline || '—',             inline: false },
-            ],
-            footer: { text: 'Generated via Sigil GUI Builder' },
-        }],
-    });
-    try {
-        await new Promise((resolve, reject) => {
-            const u   = new URL(url);
-            const req = http.request(
-                { hostname: u.hostname, port: u.port || 443, path: u.pathname + u.search, method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
-                res => { res.resume(); resolve(res.statusCode); }
-            );
-            req.on('error', reject);
-            req.write(body); req.end();
-        });
-    } catch (e) { console.warn('[webhook] Failed to notify:', e.message); }
-}
-
-const server = http.createServer(async (req, res) => {
-    cors(res);
-    if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
-
-    const url = req.url.split('?')[0];
-
-    if (req.method === 'GET' && url === '/') {
-        const htmlPath = path.join(__dirname, 'sigil-gui-builder.html');
-        try {
-            const html = fs.readFileSync(htmlPath);
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            return res.end(html);
-        } catch {
-            return json(res, 500, { error: 'GUI HTML not found — check gui/sigil-gui-builder.html exists.' });
-        }
-    }
-
-    if (req.method === 'GET' && url === '/health') {
-        return json(res, 200, { ok: true, version: VERSION, uptime: Math.floor((Date.now() - START) / 1000) });
-    }
-
-    if (req.method === 'POST' && url === '/webhook-register') {
-        try {
-            const { channelId, webhookUrl } = await readBody(req);
-            if (!channelId || !webhookUrl) return json(res, 400, { error: 'channelId and webhookUrl required' });
-            webhooks[channelId] = webhookUrl;
-            console.log(`[webhook] Registered channel ${channelId}`);
-            return json(res, 200, { ok: true });
-        } catch (e) { return json(res, 400, { error: e.message }); }
-    }
-
-    if (req.method === 'POST' && url === '/preview') {
-        try {
-            const cfg  = await readBody(req);
-            const opts = configToRenderKitOpts(cfg);
-            const kit  = await renderKit(opts);
-            return json(res, 200, {
-                ok:         true,
-                icon_b64:   kit.icon?.toString('base64')   || null,
-                banner_b64: kit.banner?.toString('base64') || null,
-            });
-        } catch (e) {
-            console.error('[/preview]', e);
-            return json(res, 500, { error: e.message });
-        }
-    }
-
-    if (req.method === 'POST' && url === '/generate') {
-        try {
-            const cfg    = await readBody(req);
-            const apiKey = cfg.gemini_api_key || process.env.GEMINI_API_KEY;
-            if (!apiKey) return json(res, 400, { error: 'Gemini API key required — add it in the GUI or set GEMINI_API_KEY env var.' });
-
-            process.env.GEMINI_API_KEY = apiKey;
-
-            const prompt  = buildBrandPrompt(cfg);
-            const rawText = await geminiRequest(prompt, { temperature: 0.9, maxOutputTokens: 400 });
-            const brand   = extractJson(rawText);
-
-            const baseOpts  = configToRenderKitOpts(cfg);
-            const finalOpts = {
-                ...baseOpts,
-                name:    brand.name    || baseOpts.name,
-                tagline: brand.tagline || baseOpts.tagline,
-            };
-            const kit = await renderKit(finalOpts);
-
-            let ai_image_b64 = null;
-            const imgPrompt  = brand.icon_prompt || cfg.brand?.ai_prompt;
-            if (imgPrompt) {
-                try {
-                    const imgBuf = await geminiImageRequest(imgPrompt);
-                    ai_image_b64 = imgBuf?.toString('base64') || null;
-                } catch (imgErr) {
-                    console.warn('[/generate] AI image skipped:', imgErr.message);
-                }
-            }
-
-            const channelId = cfg.discord?.channel_id;
-            if (channelId) notifyWebhook(channelId, { ...brand, palette: brand.palette }).catch(() => {});
-
-            return json(res, 200, {
-                ok:          true,
-                brand,
-                icon_b64:    kit.icon?.toString('base64')    || null,
-                banner_b64:  kit.banner?.toString('base64')  || null,
-                palette_b64: kit.palette?.toString('base64') || null,
-                ai_image_b64,
-            });
-        } catch (e) {
-            console.error('[/generate]', e);
-            return json(res, 500, { error: e.message });
-        }
-    }
-
-    json(res, 404, { error: `No route for ${req.method} ${url}` });
+// Serve the GUI HTML
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'sigil-gui-builder.html'));
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n  ✦ Sigil GUI Server v${VERSION}`);
-    console.log(`  → http://0.0.0.0:${PORT}\n`);
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ ok: true, version: '1.3.0' });
+});
+
+// ── POST /preview ─────────────────────────────────────────────────────────
+// Fast canvas-only render (no Gemini). Returns base64 PNGs.
+app.post('/preview', async (req, res) => {
+    try {
+        const {
+            text       = 'SIGIL',
+            background = 'gradient-purple',
+            border     = 'none',
+            primary    = '#ffffff',
+            secondary  = '#aaaaaa',
+            font       = 'Another Danger',
+            glow       = 0,
+            opacity    = 1.0,
+            palette    = [],
+        } = req.body;
+
+        const { iconBuf, bannerBuf, paletteBuf } = await renderKit({
+            text, background, border, primary, secondary, font,
+            glow: Number(glow), opacity: Number(opacity), palette,
+        });
+
+        res.json({
+            icon_b64:    iconBuf.toString('base64'),
+            banner_b64:  bannerBuf.toString('base64'),
+            palette_b64: paletteBuf.toString('base64'),
+        });
+    } catch (err) {
+        console.error('[/preview]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── POST /generate ────────────────────────────────────────────────────────
+// Full brand kit generation: Gemini text + canvas + optional AI image.
+app.post('/generate', async (req, res) => {
+    try {
+        const {
+            description  = '',
+            image_prompt = '',
+            gemini_key   = '',
+        } = req.body;
+
+        if (!gemini_key && !process.env.GEMINI_API_KEY) {
+            return res.status(400).json({ error: 'Gemini API key required.' });
+        }
+
+        // Temporarily override env key if provided by GUI
+        const originalKey = process.env.GEMINI_API_KEY;
+        if (gemini_key) process.env.GEMINI_API_KEY = gemini_key;
+
+        const prompt = `
+You are a professional brand designer. Based on this server description, design a complete Discord server brand kit.
+
+Description: "${description}"
+
+Respond with ONLY valid JSON (no markdown, no explanation):
+{
+  "name": "<short brand name>",
+  "tagline": "<catchy tagline under 60 chars>",
+  "primary_color": "<hex>",
+  "secondary_color": "<hex>",
+  "background": "<one of: gradient-purple, gradient-blue, gradient-red, gradient-green, gradient-gold, gradient-teal, gradient-pink, gradient-orange, solid-black, solid-dark, noise-dark, grid-dark, dots-dark, radial-purple, radial-blue, bg-image-1, bg-image-2>",
+  "border": "<one of: none, solid, glow, gradient, double, dashed>",
+  "font": "<one of: Another Danger, Bebas Neue, Oswald, Playfair Display, Source Code Pro, Dancing Script>",
+  "glow": <number 0-25>,
+  "palette": ["<hex1>", "<hex2>", "<hex3>", "<hex4>", "<hex5>"],
+  "image_prompt": "<concise visual prompt for an icon/logo image>"
+}
+`.trim();
+
+        let brand;
+        try {
+            const raw = await geminiRequest(prompt);
+            brand = extractJson(raw);
+        } catch (err) {
+            if (gemini_key) process.env.GEMINI_API_KEY = originalKey;
+            return res.status(500).json({ error: 'Gemini returned unexpected response: ' + err.message });
+        }
+
+        const { name, tagline, primary_color, secondary_color, background, border, font, glow, palette, image_prompt: aiPrompt } = brand;
+
+        const { iconBuf, bannerBuf, paletteBuf } = await renderKit({
+            text: name, subtitle: tagline,
+            background, border,
+            primary: primary_color, secondary: secondary_color,
+            font, glow: Number(glow), palette,
+        });
+
+        // Try AI image
+        const finalPrompt = image_prompt || aiPrompt || `Minimalist logo for: ${name}`;
+        let ai_image_b64 = null;
+        try {
+            ai_image_b64 = await geminiImageRequest(finalPrompt);
+        } catch {}
+
+        if (gemini_key) process.env.GEMINI_API_KEY = originalKey;
+
+        res.json({
+            brand,
+            icon_b64:    iconBuf.toString('base64'),
+            banner_b64:  bannerBuf.toString('base64'),
+            palette_b64: paletteBuf.toString('base64'),
+            ai_image_b64,
+        });
+    } catch (err) {
+        console.error('[/generate]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[GUI] Sigil GUI server running on http://localhost:${PORT}`);
 });
