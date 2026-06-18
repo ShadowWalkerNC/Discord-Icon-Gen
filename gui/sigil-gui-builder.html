@@ -219,6 +219,25 @@
     /* Share toast */
     #shareToast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(4rem); opacity:0; transition:all 320ms var(--ease); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:.55rem 1.1rem; font-size:.82rem; font-weight:700; pointer-events:none; z-index:200; white-space:nowrap; }
     #shareToast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* Template cards */
+    .tpl-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:1rem; }
+    .tpl-card {
+      border-radius:.65rem; overflow:hidden; cursor:pointer;
+      border:2px solid transparent; transition:all 160ms var(--ease);
+      position:relative;
+    }
+    .tpl-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.2); }
+    .tpl-card.on { border-color:#fff; }
+    .tpl-card-bg { height:46px; }
+    .tpl-card-foot {
+      background:var(--surface2); padding:.3rem .5rem;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .tpl-card-name { font-size:.7rem; font-weight:800; }
+    .tpl-card-dots { display:flex; gap:3px; }
+    .tpl-card-dot { width:9px; height:9px; border-radius:50%; border:1px solid rgba(0,0,0,.2); }
+    .tpl-card-tag { font-size:.58rem; color:var(--faint); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
   </style>
 </head>
 <body>
@@ -252,7 +271,9 @@
 
         <!-- Step 1: Identity -->
         <fieldset class="wizard-panel active" id="panel-1">
-          <legend class="sh">Brand identity</legend>
+          <div class="sh" style="margin-top:0">Start from a template</div>
+          <div class="tpl-grid" id="tplGrid"></div>
+          <div class="sh">Brand identity</div>
           <div class="field"><label for="brandName">Brand name</label><input id="brandName" class="inp" value="Demonfall" /></div>
           <div class="field"><label for="tagline">Tagline</label><input id="tagline" class="inp" value="Unleash the Darkness. Fight the Demons." /></div>
           <div class="field">
@@ -306,7 +327,6 @@
             <label for="opacityRange">Overlay opacity</label>
             <div class="range-row"><input type="range" id="opacityRange" min="0" max="100" value="85" /><span class="range-val" id="opacityVal">85%</span></div>
           </div>
-          <!-- Output size presets -->
           <div class="sh">Output size</div>
           <div id="sizeChips" class="chip-wrap" style="margin-bottom:.85rem"></div>
         </fieldset>
@@ -447,6 +467,82 @@
   </dialog>
 
 <script>
+// ── Templates ─────────────────────────────────────────────────────────────
+const TEMPLATES = [
+  {
+    id:'demonfall', name:'Demonfall', tag:'Dark Fantasy',
+    primary:'#8B0000', secondary:'#4B0082',
+    background:'inferno', border:'glow', font:'Arial Black', glow:15, opacity:85, gradient:true,
+    brandName:'Demonfall', tagline:'Unleash the Darkness. Fight the Demons.',
+    description:'dark fantasy fighting guild with infernal magic and supernatural atmosphere',
+    iconText:'DF', bannerText:'Demonfall',
+    imagePrompt:'ancient demon sigil hovering over a ruined crimson fortress in a violet storm',
+  },
+  {
+    id:'cyber-nexus', name:'Cyber Nexus', tag:'Cyberpunk',
+    primary:'#00FFFF', secondary:'#FF00FF',
+    background:'neon-city', border:'solid', font:'Source Code Pro', glow:20, opacity:90, gradient:true,
+    brandName:'Cyber Nexus', tagline:'Jack In. Level Up. Own the Grid.',
+    description:'cyberpunk gaming community for hackers, netrunners and tech enthusiasts',
+    iconText:'CN', bannerText:'Cyber Nexus',
+    imagePrompt:'neon wireframe skull floating above a holographic city grid at night',
+  },
+  {
+    id:'arcane-order', name:'Arcane Order', tag:'Fantasy RPG',
+    primary:'#9966CC', secondary:'#FFD700',
+    background:'twilight', border:'gradient', font:'Playfair Display', glow:12, opacity:88, gradient:true,
+    brandName:'Arcane Order', tagline:'Knowledge is Power. Magic is Law.',
+    description:'high fantasy RPG server for wizards, scholars and arcane adventurers',
+    iconText:'AO', bannerText:'Arcane Order',
+    imagePrompt:'ancient spellbook surrounded by floating runes and golden arcane sigils',
+  },
+  {
+    id:'cozy-den', name:'Cozy Den', tag:'Community',
+    primary:'#FF6B35', secondary:'#FFD700',
+    background:'sunset-fade', border:'none', font:'Dancing Script', glow:5, opacity:80, gradient:false,
+    brandName:'Cozy Den', tagline:'Your Home Away From Home.',
+    description:'warm friendly community server for art, gaming and casual hangouts',
+    iconText:'CD', bannerText:'Cozy Den',
+    imagePrompt:'warm cozy fireplace with books and blankets in a soft golden light',
+  },
+  {
+    id:'neon-drift', name:'Neon Drift', tag:'Racing / Sports',
+    primary:'#FF4500', secondary:'#FFBF00',
+    background:'deep-space', border:'dashed', font:'Bebas Neue', glow:18, opacity:92, gradient:true,
+    brandName:'Neon Drift', tagline:'No Limits. Full Speed.',
+    description:'competitive racing and motorsport community with street racing vibes',
+    iconText:'ND', bannerText:'Neon Drift',
+    imagePrompt:'futuristic neon race car drifting through a glowing tunnel at full speed',
+  },
+  {
+    id:'polar-ops', name:'Polar Ops', tag:'Tactical FPS',
+    primary:'#7DF9FF', secondary:'#001F5B',
+    background:'polar', border:'double', font:'Impact', glow:8, opacity:95, gradient:true,
+    brandName:'Polar Ops', tagline:'Cold. Calculated. Lethal.',
+    description:'tactical FPS clan for competitive players who value discipline and precision',
+    iconText:'PO', bannerText:'Polar Ops',
+    imagePrompt:'arctic special forces soldier silhouette in a blizzard with ice-blue tactical HUD',
+  },
+  {
+    id:'emerald-fang', name:'Emerald Fang', tag:'Survival / RPG',
+    primary:'#39FF14', secondary:'#228B22',
+    background:'forest-night', border:'solid', font:'Oswald', glow:14, opacity:87, gradient:true,
+    brandName:'Emerald Fang', tagline:'Hunt or Be Hunted.',
+    description:'survival RPG guild focused on wilderness, monsters and open-world exploration',
+    iconText:'EF', bannerText:'Emerald Fang',
+    imagePrompt:'a glowing emerald serpent coiled around an ancient forest totem at midnight',
+  },
+  {
+    id:'void-protocol', name:'Void Protocol', tag:'Sci-Fi',
+    primary:'#C0C0C0', secondary:'#6600CC',
+    background:'void', border:'glow', font:'Bebas Neue', glow:10, opacity:100, gradient:false,
+    brandName:'Void Protocol', tagline:'Beyond the Event Horizon.',
+    description:'sci-fi space exploration server for astronomers, theorists and cosmic wanderers',
+    iconText:'VP', bannerText:'Void Protocol',
+    imagePrompt:'a lone astronaut floating near a black hole with violet accretion disk light',
+  },
+];
+
 const COLORS = {
   'Reds':     [{name:'Crimson',hex:'#DC143C'},{name:'Scarlet',hex:'#FF2400'},{name:'Ruby',hex:'#9B111E'},{name:'Blood Red',hex:'#8b0000'}],
   'Purples':  [{name:'Indigo',hex:'#4B0082'},{name:'Violet',hex:'#EE82EE'},{name:'Amethyst',hex:'#9966CC'},{name:'Deep Purple',hex:'#6600CC'}],
@@ -489,11 +585,12 @@ const state = {
   description:'dark fantasy fighting guild with infernal magic and supernatural atmosphere',
   iconText:'DF', bannerText:'Demonfall',
   primaryHex:'#8B0000', secondaryHex:'#4B0082',
-  background:'midnight-gradient', border:'glow', glow:15, font:'Arial Black',
+  background:'inferno', border:'glow', glow:15, font:'Arial Black',
   opacity:85, gradient:true,
   imagePrompt:'ancient demon sigil hovering over a ruined crimson fortress in a violet storm',
   apiKey:'', model:'gemini-2.0-flash', temperature:0.9,
   sizePreset:'discord-icon',
+  activeTemplate:'demonfall',
   step:1, totalSteps:4,
 };
 
@@ -512,10 +609,10 @@ function dlBlob(b64,name){
   const a=document.createElement('a'); a.href=`data:image/png;base64,${b64}`; a.download=name; a.click();
 }
 
-// ── URL hash state (share / restore) ────────────────────────────────────
+// ── URL hash state ───────────────────────────────────────────────────────────
 const HASH_KEYS = ['brandName','tagline','description','iconText','bannerText',
   'primaryHex','secondaryHex','background','border','glow','font','opacity',
-  'gradient','sizePreset'];
+  'gradient','sizePreset','activeTemplate'];
 
 function saveHash(){
   const obj={};
@@ -529,7 +626,6 @@ function loadHash(){
     const raw = decodeURIComponent(atob(window.location.hash.slice(1)));
     const obj = JSON.parse(raw);
     HASH_KEYS.forEach(k=>{ if(obj[k]!==undefined) state[k]=obj[k]; });
-    // push values into form fields
     $('brandName').value   = state.brandName;
     $('tagline').value     = state.tagline;
     $('description').value = state.description;
@@ -553,9 +649,67 @@ function shareLink(){
     const t=$('shareToast'); t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'),2200);
   }).catch(()=>{
-    // fallback: select the url bar (can't on mobile, just show toast)
     const t=$('shareToast'); t.textContent='\u2197 Copy the URL from your address bar';
     t.classList.add('show'); setTimeout(()=>{ t.classList.remove('show'); t.textContent='\u2713 Link copied to clipboard!'; },2400);
+  });
+}
+
+// ── Apply template ─────────────────────────────────────────────────────────
+function applyTemplate(tpl){
+  state.brandName    = tpl.brandName;
+  state.tagline      = tpl.tagline;
+  state.description  = tpl.description;
+  state.iconText     = tpl.iconText;
+  state.bannerText   = tpl.bannerText;
+  state.primaryHex   = tpl.primary;
+  state.secondaryHex = tpl.secondary;
+  state.background   = tpl.background;
+  state.border       = tpl.border;
+  state.font         = tpl.font;
+  state.glow         = tpl.glow;
+  state.opacity      = tpl.opacity;
+  state.gradient     = tpl.gradient;
+  state.imagePrompt  = tpl.imagePrompt;
+  state.activeTemplate = tpl.id;
+  // Push to form
+  $('brandName').value    = tpl.brandName;
+  $('tagline').value      = tpl.tagline;
+  $('description').value  = tpl.description;
+  $('iconText').value     = tpl.iconText;
+  $('bannerText').value   = tpl.bannerText;
+  $('primaryHex').value   = tpl.primary;
+  $('secondaryHex').value = tpl.secondary;
+  try{$('primaryPicker').value   = tpl.primary;}catch{}
+  try{$('secondaryPicker').value = tpl.secondary;}catch{}
+  $('glowRange').value    = tpl.glow;
+  $('opacityRange').value = tpl.opacity;
+  $('gradientToggle').checked = tpl.gradient;
+  $('imagePrompt').value  = tpl.imagePrompt;
+  try{$('fontSelect').value = tpl.font;}catch{}
+  buildTemplateGrid(); buildChips(); buildSizeChips(); buildColorLibrary(); updatePreview(); saveHash();
+}
+
+function buildTemplateGrid(){
+  const grid=$('tplGrid'); grid.innerHTML='';
+  TEMPLATES.forEach(tpl=>{
+    const bg=BACKGROUNDS.find(b=>b.k===tpl.background)||BACKGROUNDS[0];
+    const card=document.createElement('button');
+    card.className='tpl-card'+(state.activeTemplate===tpl.id?' on':'');
+    card.setAttribute('aria-label',`Load ${tpl.name} template`);
+    card.innerHTML=`
+      <div class="tpl-card-bg" style="background:${bg.css}"></div>
+      <div class="tpl-card-foot">
+        <div>
+          <div class="tpl-card-name">${tpl.name}</div>
+          <div class="tpl-card-tag">${tpl.tag}</div>
+        </div>
+        <div class="tpl-card-dots">
+          <span class="tpl-card-dot" style="background:${tpl.primary}"></span>
+          <span class="tpl-card-dot" style="background:${tpl.secondary}"></span>
+        </div>
+      </div>`;
+    card.addEventListener('click',()=>applyTemplate(tpl));
+    grid.appendChild(card);
   });
 }
 
@@ -569,7 +723,7 @@ function randomize(){
   state.font         = pick(FONTS);
   state.glow         = Math.floor(Math.random()*20);
   state.gradient     = Math.random()>.3;
-  // push to fields
+  state.activeTemplate = null;
   $('primaryHex').value   = state.primaryHex;
   $('secondaryHex').value = state.secondaryHex;
   try{$('primaryPicker').value   = state.primaryHex;}catch{}
@@ -577,10 +731,10 @@ function randomize(){
   $('glowRange').value    = state.glow;
   $('gradientToggle').checked = state.gradient;
   try{$('fontSelect').value = state.font;}catch{}
-  buildChips(); buildSizeChips(); buildColorLibrary(); updatePreview(); saveHash();
+  buildTemplateGrid(); buildChips(); buildSizeChips(); buildColorLibrary(); updatePreview(); saveHash();
 }
 
-// ── Error handling ───────────────────────────────────────────────────────
+// ── Error handling ────────────────────────────────────────────────────────
 function cleanError(raw){
   if(!raw) return '\u26a0 Something went wrong. Try again.';
   const s=String(raw);
@@ -665,6 +819,7 @@ function buildColorLibrary(){
       btn.addEventListener('click',e=>{
         if(e.shiftKey){state.secondaryHex=item.hex;$('secondaryHex').value=item.hex;$('secondaryPicker').value=item.hex;}
         else{state.primaryHex=item.hex;$('primaryHex').value=item.hex;$('primaryPicker').value=item.hex;}
+        state.activeTemplate=null; buildTemplateGrid();
         updatePreview(); buildColorLibrary();
       });
       grid.appendChild(btn);
@@ -679,14 +834,14 @@ function buildChips(){
     const b=document.createElement('button'); b.className='chip'+(state.background===bg.k?' on':'');
     b.style.cssText=`background:${bg.css};color:#fff;font-size:.72rem;`;
     b.textContent=bg.l;
-    b.addEventListener('click',()=>{state.background=bg.k;buildChips();updatePreview();saveHash();});
+    b.addEventListener('click',()=>{state.background=bg.k;state.activeTemplate=null;buildChips();buildTemplateGrid();updatePreview();saveHash();});
     bw.appendChild(b);
   });
   const bdw=$('borderChips'); bdw.innerHTML='';
   BORDERS.forEach(bdr=>{
     const b=document.createElement('button'); b.className='chip'+(state.border===bdr?' on':'');
     b.textContent=bdr.charAt(0).toUpperCase()+bdr.slice(1);
-    b.addEventListener('click',()=>{state.border=bdr;buildChips();updatePreview();saveHash();});
+    b.addEventListener('click',()=>{state.border=bdr;state.activeTemplate=null;buildChips();buildTemplateGrid();updatePreview();saveHash();});
     bdw.appendChild(b);
   });
 }
@@ -703,10 +858,10 @@ function buildSizeChips(){
 }
 
 // ── Picker sync ──────────────────────────────────────────────────────────
-$('primaryPicker').addEventListener('input',e=>{$('primaryHex').value=e.target.value.toUpperCase();updatePreview();});
-$('secondaryPicker').addEventListener('input',e=>{$('secondaryHex').value=e.target.value.toUpperCase();updatePreview();});
-$('primaryHex').addEventListener('input',e=>{try{$('primaryPicker').value=e.target.value;}catch{}updatePreview();});
-$('secondaryHex').addEventListener('input',e=>{try{$('secondaryPicker').value=e.target.value;}catch{}updatePreview();});
+$('primaryPicker').addEventListener('input',e=>{$('primaryHex').value=e.target.value.toUpperCase();state.activeTemplate=null;buildTemplateGrid();updatePreview();});
+$('secondaryPicker').addEventListener('input',e=>{$('secondaryHex').value=e.target.value.toUpperCase();state.activeTemplate=null;buildTemplateGrid();updatePreview();});
+$('primaryHex').addEventListener('input',e=>{try{$('primaryPicker').value=e.target.value;}catch{}state.activeTemplate=null;buildTemplateGrid();updatePreview();});
+$('secondaryHex').addEventListener('input',e=>{try{$('secondaryPicker').value=e.target.value;}catch{}state.activeTemplate=null;buildTemplateGrid();updatePreview();});
 
 // ── Read state ───────────────────────────────────────────────────────────
 function readState(){
@@ -837,10 +992,11 @@ async function runGenerate(){
       if(b.border)     state.border=b.border;
       if(b.font){state.font=b.font;try{$('fontSelect').value=b.font;}catch{}}
       if(b.glow!=null){state.glow=b.glow;$('glowRange').value=b.glow;}
+      state.activeTemplate=null;
     }
     showImages(data);
     if(data.ai_image_b64) showAiImage(data.ai_image_b64,data.brand?.name||state.brandName);
-    wireDownloads(data); updatePreview(); buildChips(); buildSizeChips(); buildColorLibrary();
+    wireDownloads(data); updatePreview(); buildChips(); buildSizeChips(); buildColorLibrary(); buildTemplateGrid();
     setProgress(100); setStatus(`\u2713 Brand kit generated${data.ai_image_b64?' + AI image':''}`, 'ok');
     saveHash();
   }catch(e){setStatus(e.message,'error');}
@@ -888,7 +1044,7 @@ $('apiKey').addEventListener('input',updatePreview);
 
 // ── Boot ─────────────────────────────────────────────────────────────────
 loadHash();
-buildStepper(); buildColorLibrary(); buildChips(); buildSizeChips(); updatePreview();
+buildStepper(); buildTemplateGrid(); buildColorLibrary(); buildChips(); buildSizeChips(); updatePreview();
 </script>
 </body>
 </html>
