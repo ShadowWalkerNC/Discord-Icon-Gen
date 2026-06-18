@@ -6,6 +6,28 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 
 ---
 
+## [1.4.0] — 2026-06-18
+
+### Added
+- **8 brand templates** in GUI Step 1 — Demonfall (Dark Fantasy), Cyber Nexus (Cyberpunk), Arcane Order (Fantasy RPG), Cozy Den (Community), Neon Drift (Racing), Polar Ops (Tactical FPS), Emerald Fang (Survival RPG), Void Protocol (Sci-Fi)
+  - Each template pre-loads brand name, tagline, description, icon text, colors, background, border, font, glow, opacity, gradient, and AI image prompt
+  - Active template highlighted with white border; deselects on any manual change
+- **7 output size presets** in GUI Step 3 — Discord Icon (512×512), Discord Banner (960×540), Twitch Panel (320×160), Twitch Banner (1200×480), YouTube Art (2560×1440), Reddit Banner (1920×384), Square (1024×1024)
+- **URL hash share/restore** — full brand state (including active template and size preset) encoded in URL hash; Share button copies link to clipboard
+- **Randomize button** — randomizes colors, background, border, and font; clears active template selection
+- **Light/dark theme toggle** in navbar
+- **Server health pill** in navbar — live online/offline indicator polling every 8 seconds
+- **Export dialog** — exports full config JSON compatible with `/brand ai` and `gemini.js`
+- **Copy JSON** button in Output & Palette tab
+
+### Changed
+- GUI wizard now shows **4 steps**: Identity (with templates), Colors, Style (with size presets), Generate
+- Template active state tracked in URL hash (`activeTemplate` key)
+- Randomize and manual color/border/background changes deselect active template
+- `state.background` default changed from `midnight-gradient` to `inferno` to match Demonfall default template
+
+---
+
 ## [1.3.0] — 2026-06-17
 
 ### Added
