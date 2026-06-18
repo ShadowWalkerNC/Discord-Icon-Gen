@@ -48,8 +48,7 @@ module.exports = {
                     value: [
                         'Load a built-in brand template and instantly render its full kit (icon + banner + palette)',
                         '`name` *(required)* \u2014 Demonfall, Cyber Nexus, Arcane Order, Cozy Den, Neon Drift, Polar Ops, Emerald Fang, Void Protocol',
-                        '`icon_text` \u2014 override the icon initials',
-                        '`brand_name` \u2014 override the brand name in the embed',
+                        '`icon_text` \u2014 override icon initials \u2022 `brand_name` \u2014 override brand name',
                     ].join('\n'),
                 },
                 {
@@ -59,6 +58,18 @@ module.exports = {
                 {
                     name: '\uD83D\uDCE6 `/brand kit`',
                     value: 'Manually specify brand name, tagline, colors, background, border, font, glow, shape',
+                },
+                {
+                    name: '\uD83D\uDD17 `/brand share`',
+                    value: 'Generate a shareable GUI link pre-loaded with your last kit \u2014 opens the Visual Builder with your exact settings',
+                },
+                {
+                    name: '\uD83C\uDFA8 `/palette export`',
+                    value: [
+                        'Export your palette in developer-ready formats',
+                        '`format` *(required)* \u2014 CSS Variables / Tailwind Config / Hex List',
+                        '`primary` / `secondary` / `color3\u20135` \u2014 manual hex inputs (optional, uses last kit if omitted)',
+                    ].join('\n'),
                 },
                 {
                     name: '\uD83C\uDFB2 `/random`',
@@ -101,7 +112,7 @@ module.exports = {
                     value: 'Show bot uptime and version',
                 },
             )
-            .setFooter({ text: 'Sigil v1.9.0 \u2022 /help \u2014 use /template for instant brand kits, /gui open for the visual builder' });
+            .setFooter({ text: 'Sigil v1.11.0 \u2022 /help \u2014 use /template for instant kits, /brand share for the GUI link, /palette export for dev assets' });
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     },
