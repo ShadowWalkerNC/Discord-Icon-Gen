@@ -1,7 +1,7 @@
 {
     "name": "sigil",
-    "version": "1.8.0",
-    "description": "Sigil — Your server's mark. Crafted by AI. A Discord bot for AI-powered server branding, icons, banners, badges, and full brand kit generation.",
+    "version": "2.0.0",
+    "description": "Sigil — The Discord God Mode Bot. Free branding, community tools, automation, and analytics for every Discord server.",
     "main": "src/index.js",
     "engines": {
         "node": ">=18 <19"
@@ -20,6 +20,7 @@
         "dotenv": "^16.4.5",
         "@google/generative-ai": "^0.24.0",
         "express": "^4.21.2",
-        "jszip": "^3.10.1"
+        "jszip": "^3.10.1",
+        "better-sqlite3": "^9.4.3"
     }
 }

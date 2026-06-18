@@ -1,18 +1,10 @@
-const { EmbedBuilder } = require('discord.js');
+const { handleMemberJoin }  = require('../automation/welcomeHandler.js');
+const { handleMilestoneCheck } = require('../automation/milestoneHandler.js');
 
 module.exports = {
     name: 'guildMemberAdd',
     async execute(member) {
-        const channel = member.guild.systemChannel;
-        if (!channel) return;
-
-        const embed = new EmbedBuilder()
-            .setTitle(`\uD83D\uDC4B Welcome, ${member.user.username}!`)
-            .setDescription(`You're member **#${member.guild.memberCount}** of **${member.guild.name}**. Check out our channels and enjoy your stay!`)
-            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-            .setColor('#39FF14')
-            .setTimestamp();
-
-        await channel.send({ embeds: [embed] }).catch(() => {});
+        try { await handleMemberJoin(member); }    catch (e) { console.error('[welcomeHandler]', e); }
+        try { await handleMilestoneCheck(member.guild); } catch (e) { console.error('[milestoneHandler]', e); }
     },
 };
