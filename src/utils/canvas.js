@@ -4,12 +4,11 @@ const { getBackgroundById } = require('./backgrounds.js');
 const { getBorderById } = require('./borders.js');
 const { registerAllFonts: _regFonts, getAllFontFamilies } = require('./fonts.js');
 
-// Default dimensions (used as fallbacks)
-const ICON_SIZE_DEFAULT   = 512;
-const BANNER_W_DEFAULT    = 1200;
-const BANNER_H_DEFAULT    = 400;
-const PALETTE_W   = 600;
-const PALETTE_H   = 100;
+const ICON_SIZE_DEFAULT = 512;
+const BANNER_W_DEFAULT  = 1200;
+const BANNER_H_DEFAULT  = 400;
+const PALETTE_W = 600;
+const PALETTE_H = 100;
 
 let _fontsRegistered = false;
 function registerAllFonts() {
@@ -29,6 +28,52 @@ function autoFontSize(ctx, text, maxWidth, startSize) {
 }
 
 /**
+ * Apply a shape clip path to a square canvas context.
+ * Must be called after ctx.save() and before drawing content.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} W  canvas width
+ * @param {number} H  canvas height
+ * @param {string} shape  'circle' | 'rounded' | 'hexagon' | 'diamond' | 'square' (default)
+ */
+function applyShapeClip(ctx, W, H, shape) {
+    ctx.beginPath();
+    switch (shape) {
+        case 'circle': {
+            const r = Math.min(W, H) / 2;
+            ctx.arc(W / 2, H / 2, r, 0, Math.PI * 2);
+            break;
+        }
+        case 'rounded': {
+            const r = Math.min(W, H) * 0.12;
+            ctx.roundRect(0, 0, W, H, r);
+            break;
+        }
+        case 'hexagon': {
+            // flat-top hexagon matching the CSS clip-path percentages
+            const pts = [
+                [0.50, 0.00], [0.93, 0.25], [0.93, 0.75],
+                [0.50, 1.00], [0.07, 0.75], [0.07, 0.25],
+            ];
+            ctx.moveTo(pts[0][0] * W, pts[0][1] * H);
+            for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * W, pts[i][1] * H);
+            ctx.closePath();
+            break;
+        }
+        case 'diamond': {
+            ctx.moveTo(W * 0.50, 0);
+            ctx.lineTo(W,        H * 0.50);
+            ctx.lineTo(W * 0.50, H);
+            ctx.lineTo(0,        H * 0.50);
+            ctx.closePath();
+            break;
+        }
+        default: // 'square' — full rectangle (no clip needed but keep path consistent)
+            ctx.rect(0, 0, W, H);
+    }
+    ctx.clip();
+}
+
+/**
  * Render a square (or custom-size) icon and return a PNG Buffer.
  */
 async function renderIcon(opts = {}) {
@@ -41,18 +86,21 @@ async function renderIcon(opts = {}) {
         font       = getAllFontFamilies()[0] ?? 'Arial',
         glow       = 0,
         opacity    = 1.0,
+        shape      = 'square',
         width,
         height,
     } = opts;
 
-    // If a preset is square or smaller than banner, treat it as an icon canvas.
-    // Fall back to default 512×512 if not supplied.
     const W = Number(width)  || ICON_SIZE_DEFAULT;
     const H = Number(height) || ICON_SIZE_DEFAULT;
 
     const canvas = createCanvas(W, H);
     const ctx    = canvas.getContext('2d');
     ctx.__fontFamily = font;
+
+    // Apply shape clip before drawing anything
+    ctx.save();
+    applyShapeClip(ctx, W, H, shape);
 
     ctx.globalAlpha = opacity;
     try { getBackgroundById(background).draw(ctx, W, H); } catch { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); }
@@ -70,6 +118,8 @@ async function renderIcon(opts = {}) {
     ctx.fillStyle = grad;
     ctx.fillText(text, W / 2, H / 2);
     ctx.shadowBlur = 0;
+
+    ctx.restore(); // release clip
 
     try { getBorderById(border).draw(ctx, W, H, primary, secondary, glow); } catch {}
 
@@ -95,7 +145,6 @@ async function renderBanner(opts = {}) {
         height,
     } = opts;
 
-    // Use preset dimensions when available; fall back to classic 1200×400.
     const W = Number(width)  || BANNER_W_DEFAULT;
     const H = Number(height) || BANNER_H_DEFAULT;
 
@@ -154,7 +203,7 @@ async function renderPalette(colors = []) {
 
 /**
  * Convenience: render icon + banner + palette in parallel.
- * opts.width / opts.height are forwarded to both renderIcon and renderBanner.
+ * opts.shape is forwarded to renderIcon only (banners are always rectangular).
  */
 async function renderKit(opts = {}) {
     const [iconBuf, bannerBuf, paletteBuf] = await Promise.all([
@@ -165,4 +214,4 @@ async function renderKit(opts = {}) {
     return { iconBuf, bannerBuf, paletteBuf };
 }
 
-module.exports = { registerAllFonts, getAllFontFamilies, autoFontSize, renderIcon, renderBanner, renderPalette, renderKit };
+module.exports = { registerAllFonts, getAllFontFamilies, autoFontSize, applyShapeClip, renderIcon, renderBanner, renderPalette, renderKit };

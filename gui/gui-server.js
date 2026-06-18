@@ -16,38 +16,35 @@ app.use(express.json({ limit: '2mb' }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-/** Serve the GUI HTML */
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'sigil-gui-builder.html'));
 });
 
-/** Health check */
 app.get('/health', (req, res) => {
-    res.json({ ok: true, version: '1.5.0' });
+    res.json({ ok: true, version: '1.5.1' });
 });
 
-/** Clamp a number to [min, max] */
 function clamp(n, min, max) {
     const v = Number(n);
     return isNaN(v) ? min : Math.min(max, Math.max(min, v));
 }
 
-/** Basic hex validation — returns fallback if invalid */
 function safeHex(hex, fallback = '#ffffff') {
     return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(hex).trim()) ? String(hex).trim() : fallback;
 }
 
-/**
- * Parse width/height from body.
- * Accepts numeric values; clamps to sane range to avoid OOM on huge canvases.
- */
 function parseDimensions(b) {
     const w = clamp(b.width,  64, 3840);
     const h = clamp(b.height, 64, 2160);
     return { width: w || undefined, height: h || undefined };
 }
 
-/** Turn raw errors into short user-friendly strings */
+const VALID_SHAPES = new Set(['circle', 'rounded', 'hexagon', 'diamond', 'square']);
+function safeShape(s) {
+    const v = String(s || 'square').toLowerCase().trim();
+    return VALID_SHAPES.has(v) ? v : 'square';
+}
+
 function classifyError(err) {
     const msg = String(err?.message || err);
     if (msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('Quota exceeded'))
@@ -66,7 +63,6 @@ function classifyError(err) {
 }
 
 // ── POST /preview ─────────────────────────────────────────────────────────
-// Fast canvas-only render. GUI sends visuals object — field names normalised here.
 app.post('/preview', async (req, res) => {
     try {
         const b = req.body || {};
@@ -80,12 +76,13 @@ app.post('/preview', async (req, res) => {
         const font       = String(b.font       || 'Arial Black');
         const glow       = clamp(b.glow,    0,  25);
         const opacity    = clamp(b.opacity,  0,   1);
+        const shape      = safeShape(b.shape);
         const palette    = Array.isArray(b.palette) ? b.palette.map(h => safeHex(h, primary)) : [];
         const { width, height } = parseDimensions(b);
 
         const { iconBuf, bannerBuf, paletteBuf } = await renderKit({
             text, bannerText, background, border, primary, secondary,
-            font, glow, opacity, palette,
+            font, glow, opacity, shape, palette,
             width, height,
         });
 
@@ -102,7 +99,6 @@ app.post('/preview', async (req, res) => {
 });
 
 // ── POST /generate ────────────────────────────────────────────────────────
-// Full AI brand kit: Gemini text + canvas render + optional AI image.
 app.post('/generate', async (req, res) => {
     const b = req.body || {};
     const gemini_key   = String(b.gemini_key   || '').trim();
@@ -134,6 +130,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
   "background": "<one of: midnight-gradient, deep-space, inferno, ocean-depth, twilight, aurora, storm, void, neon-city, sunset-fade, forest-night, polar>",
   "border": "<one of: none, solid, glow, gradient, double, dashed>",
   "font": "<one of: Arial Black, Impact, Bebas Neue, Oswald, Playfair Display, Source Code Pro, Dancing Script>",
+  "shape": "<one of: circle, rounded, square, hexagon, diamond>",
   "glow": <number 0-25>,
   "palette": ["<hex1>", "<hex2>", "<hex3>", "<hex4>", "<hex5>"],
   "image_prompt": "<concise visual prompt for an icon/logo image>"
@@ -151,6 +148,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
         const primary    = safeHex(brand.primary_color,   '#8B0000');
         const secondary  = safeHex(brand.secondary_color, '#4B0082');
         const glow       = clamp(brand.glow, 0, 25);
+        const shape      = safeShape(brand.shape);
         const palette    = Array.isArray(brand.palette) ? brand.palette.map(h => safeHex(h, primary)) : [];
         const background = String(brand.background || 'midnight-gradient');
         const border     = String(brand.border     || 'none');
@@ -161,7 +159,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
             bannerText: brand.name     || 'SIGIL',
             subtitle:   brand.tagline  || '',
             background, border, primary, secondary,
-            font, glow, palette,
+            font, glow, shape, palette,
             width, height,
         });
 
@@ -173,7 +171,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
 
         res.json({
             ok: true,
-            brand: { ...brand, primary_color: primary, secondary_color: secondary, glow, palette },
+            brand: { ...brand, primary_color: primary, secondary_color: secondary, glow, shape, palette },
             icon_b64:    iconBuf.toString('base64'),
             banner_b64:  bannerBuf.toString('base64'),
             palette_b64: paletteBuf.toString('base64'),
@@ -188,5 +186,5 @@ Respond with ONLY valid JSON (no markdown, no explanation):
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[GUI] Sigil GUI server v1.5.0 on http://localhost:${PORT}`);
+    console.log(`[GUI] Sigil GUI server v1.5.1 on http://localhost:${PORT}`);
 });
