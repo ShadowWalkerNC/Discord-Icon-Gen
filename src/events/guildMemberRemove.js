@@ -1,23 +1,18 @@
-import { EmbedBuilder } from 'discord.js';
-import { db } from '../utils/database.js';
+const { EmbedBuilder } = require('discord.js');
 
-export default {
-  name: 'guildMemberRemove',
-  async execute(client, member) {
-    const settings = db.prepare('SELECT * FROM server_settings WHERE guild_id = ?').get(member.guild.id);
-    if (!settings || settings.automation_mode === 'off') return;
-    const profile = db.prepare('SELECT * FROM server_profiles WHERE guild_id = ?').get(member.guild.id) || {};
-    const channel = settings.welcome_channel_id
-      ? member.guild.channels.cache.get(settings.welcome_channel_id)
-      : member.guild.systemChannel;
-    if (!channel) return;
-    await channel.send({ embeds: [
-      new EmbedBuilder()
-        .setColor(profile.primary_color || '#FF0000')
-        .setTitle('\uD83D\uDC4B Member Left')
-        .setDescription(`**${member.user.username}** has left the server.`)
-        .setThumbnail(member.user.displayAvatarURL())
-        .setTimestamp()
-    ]});
-  }
+module.exports = {
+    name: 'guildMemberRemove',
+    async execute(member) {
+        const channel = member.guild.systemChannel;
+        if (!channel) return;
+
+        const embed = new EmbedBuilder()
+            .setTitle(`\uD83D\uDEAA ${member.user.username} has left the server`)
+            .setDescription(`We're down to **${member.guild.memberCount}** members.`)
+            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+            .setColor('#FF4444')
+            .setTimestamp();
+
+        await channel.send({ embeds: [embed] }).catch(() => {});
+    },
 };

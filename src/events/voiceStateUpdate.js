@@ -1,34 +1,32 @@
-import { EmbedBuilder } from 'discord.js';
-import { db } from '../utils/database.js';
+const { EmbedBuilder } = require('discord.js');
 
-export default {
-  name: 'voiceStateUpdate',
-  async execute(client, oldState, newState) {
-    const guild    = newState.guild || oldState.guild;
-    const settings = db.prepare('SELECT * FROM server_settings WHERE guild_id = ?').get(guild.id);
-    if (!settings || settings.automation_mode === 'off') return;
-    const profile = db.prepare('SELECT * FROM server_profiles WHERE guild_id = ?').get(guild.id) || {};
-    const channel = settings.welcome_channel_id
-      ? guild.channels.cache.get(settings.welcome_channel_id)
-      : guild.systemChannel;
-    if (!channel) return;
-    const member = newState.member || oldState.member;
-    if (!member || member.user.bot) return;
-    if (!oldState.channelId && newState.channelId) {
-      await channel.send({ embeds: [
-        new EmbedBuilder()
-          .setColor(profile.primary_color || '#00BFFF')
-          .setDescription(`\uD83C\uDF99\uFE0F **${member.user.username}** joined **${newState.channel?.name || 'voice'}**`)
-          .setTimestamp()
-      ]}).catch(() => {});
-    }
-    if (oldState.channelId && !newState.channelId) {
-      await channel.send({ embeds: [
-        new EmbedBuilder()
-          .setColor(profile.secondary_color || '#666666')
-          .setDescription(`\uD83D\uDD07 **${member.user.username}** left **${oldState.channel?.name || 'voice'}**`)
-          .setTimestamp()
-      ]}).catch(() => {});
-    }
-  }
+module.exports = {
+    name: 'voiceStateUpdate',
+    async execute(oldState, newState) {
+        const member = newState.member ?? oldState.member;
+        if (!member || member.user.bot) return;
+
+        const logChannel = newState.guild.channels.cache.find(
+            c => c.name === 'voice-log' || c.name === 'logs'
+        );
+        if (!logChannel) return;
+
+        let description;
+        if (!oldState.channelId && newState.channelId) {
+            description = `\uD83D\uDD0A **${member.user.username}** joined **${newState.channel.name}**`;
+        } else if (oldState.channelId && !newState.channelId) {
+            description = `\uD83D\uDD07 **${member.user.username}** left **${oldState.channel.name}**`;
+        } else if (oldState.channelId !== newState.channelId) {
+            description = `\uD83D\uDD00 **${member.user.username}** moved from **${oldState.channel.name}** \u2192 **${newState.channel.name}**`;
+        } else {
+            return;
+        }
+
+        const embed = new EmbedBuilder()
+            .setDescription(description)
+            .setColor('#5865F2')
+            .setTimestamp();
+
+        await logChannel.send({ embeds: [embed] }).catch(() => {});
+    },
 };
