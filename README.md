@@ -1,13 +1,16 @@
-# Sigil — Discord Server Branding Bot
+# Sigil — Discord Branding & Nitro-Free Tools Bot
 
-**Sigil** is an AI-powered Discord bot that generates custom server icons, banners, logos, and full brand kits — all from slash commands. It also includes a browser-based **Visual Brand Builder** GUI with live preview, 8 brand templates, shape selector, and optional AI generation.
+**Sigil** gives every Discord server premium-quality branding and Nitro-style features — completely free. Generate server icons, banners, stickers, custom emoji, profile cards, splash screens, role badges, text effects, reaction packs, and more — all from slash commands. No Nitro required. No paywall. Power back to the user.
 
-> **Current version: v1.9.0**
+Also includes a browser-based **Visual Brand Builder** GUI with live preview, 8 brand templates, shape selector, and optional AI generation.
+
+> **Current version: v1.8.0** — 29 commands
 
 ---
 
-## Features
+## Commands
 
+### 🎨 Branding & Icons
 | Command | Description |
 |---|---|
 | `/icon` | Generate a server icon with shape, background, border, colors, font, glow |
@@ -16,13 +19,31 @@
 | `/avatar` | Generate a server avatar with optional overlay image |
 | `/brand kit` | Build a full brand kit (icon + banner + palette) manually |
 | `/brand ai` | AI-designed brand kit from a plain-text description |
-| `/mood` | AI color palette from a mood description |
 | `/compare` | Side-by-side comparison of two icon designs |
-| `/random` | Fully randomized icon (random shape, colors, background, font…) |
-| `/template` | Load a built-in brand template and instantly render its full kit |
+
+### 🚀 Nitro-Free Features
+| Command | Description |
+|---|---|
+| `/sticker` | Generate a Discord-format sticker (320×320 PNG) — upload free to any server |
+| `/emote` | Generate a custom emoji (128×128 PNG) — upload free to any server |
+| `/rolebadge` | Generate a styled role badge graphic (pill, rounded, hex, diamond) |
+| `/resize` | Resize any image URL to Discord-optimal dimensions (8 presets) |
+| `/namecard` | Shareable identity card with username, tagline, roles, and avatar |
+| `/splash` | Full-size invite splash or discovery banner (up to 1920×1080) |
+| `/servercard` | Shareable server preview card with icon, description, and member count |
+| `/texteffect` | Stylised text PNG — neon, chrome, fire, glitch, ice, gold, shadow, outline |
+| `/reactionpack` | Generate 5 themed reaction emojis + ZIP download |
+| `/profilecard` | Nitro-style profile card mockup with banner, avatar, bio, and badge |
+| `/themepreview` | Full Discord UI mockup showing your color scheme applied to a server |
+
+### 🧠 AI & Utilities
+| Command | Description |
+|---|---|
+| `/mood` | AI color palette from a mood description |
+| `/random` | Fully randomized icon |
+| `/template` | Load a built-in brand template and render its full kit |
 | `/preview` | Grid preview of all available backgrounds |
-| `/saveme` | Save your most recent design as a named kit |
-| `/history` | View recent command history with copy-paste commands |
+| `/history` | View recent command history |
 | `/gui open` | Get the link to the visual GUI builder |
 | `/gui status` | Check if the GUI server is online |
 | `/status` | Bot uptime and version |
@@ -30,9 +51,24 @@
 
 ---
 
+## Nitro-Free Features Explained
+
+Discord locks many visual features behind a Nitro paywall. Sigil works around this by generating downloadable assets you upload yourself — no subscription ever needed.
+
+| Discord Nitro Feature | Sigil Workaround |
+|---|---|
+| Custom animated stickers | `/sticker` — generate PNG, upload to Server Settings → Stickers |
+| Extra emoji slots (Nitro Boost) | `/emote` — generate 128×128 PNG, upload to Server Settings → Emoji |
+| Custom profile banner | `/profilecard` — full Nitro-style card mockup as a shareable PNG |
+| Animated server icon | `/icon` + `/texteffect` — high-quality static alternatives |
+| Server invite splash | `/splash` — 1920×1080 PNG ready to upload |
+| Reaction packs | `/reactionpack` — 5-emoji themed pack as ZIP |
+
+---
+
 ## Built-in Brand Templates
 
-Use `/template name:<template>` to instantly generate a full kit from any of the 8 built-in templates. Each template includes a pre-tuned color palette, background, border, font, glow, and icon shape.
+Use `/template name:<template>` to instantly generate a full kit from any of the 8 built-in templates.
 
 | Template | Genre | Shape | Primary |
 |---|---|---|---|
@@ -45,68 +81,27 @@ Use `/template name:<template>` to instantly generate a full kit from any of the
 | Emerald Fang | Survival / RPG | Hexagon | `#39FF14` |
 | Void Protocol | Sci-Fi | Circle | `#C0C0C0` |
 
-```
-/template name:Demonfall
-/template name:Cyber Nexus icon_text:YO brand_name:YourServer
-```
-
 ---
 
-## Icon Shape Option
+## Icon Shapes
 
-All icon-generating commands (`/icon`, `/logo`, `/avatar`, `/compare`, `/random`, `/template`) support a **`shape`** option:
-
-| Shape | Effect |
-|---|---|
-| `circle` | Circular crop |
-| `rounded` | Rounded rectangle (12% radius) |
-| `square` | Full square (default) |
-| `hexagon` | Flat-top hexagon |
-| `diamond` | Rotated-square diamond |
-
-```
-/icon text:SW shape:Hexagon background:aurora primary_color:#00ffcc
-/avatar text:NX shape:Circle overlay:https://example.com/logo.png
-/compare text_a:SW shape_a:Hexagon text_b:NX shape_b:Diamond
-```
+All icon commands support a **`shape`** option: `circle`, `rounded`, `square`, `hexagon`, `diamond`.
 
 ---
 
 ## Backgrounds
 
-Sigil includes **32 background presets** across five categories:
-
-| Category | Presets |
-|---|---|
-| Gradients | Purple, Blue, Red, Green, Gold, Teal, Pink, Orange |
-| Solids | Black, White, Dark |
-| Patterns | Noise Dark, Dark Grid, Dark Dots, Radial Purple, Radial Blue, Diagonal Purple, Diagonal Blue, Abstract Mesh, Neon Lines |
-| Named (templates) | Midnight, Deep Space, Inferno, Ocean Depth, Twilight, Aurora, Storm, Void, Neon City, Sunset Fade, Forest Night, Polar |
+**32 background presets** across five categories: Gradients, Solids, Patterns, Named (templates).
 
 ---
 
 ## GUI Visual Brand Builder
 
-The GUI (`gui/sigil-gui-builder.html`) is a browser-based 4-step wizard for building brand kits visually, with no slash commands required. Served by `gui/gui-server.js`.
+A browser-based 4-step wizard for building brand kits visually with no slash commands required.
 
-### GUI Steps
-1. **Identity** — Brand name, tagline, icon text, description; choose from 8 templates
-2. **Colors** — Primary/secondary color pickers with 28-swatch library; 5-color palette
-3. **Style** — Icon shape, background, border, glow, font, opacity, output size preset
-4. **Generate** — AI Generate (Gemini), manual Preview, download outputs
+**Steps:** Identity → Colors → Style → Generate
 
-### GUI Features
-- **8 built-in brand templates** — Demonfall, Cyber Nexus, Arcane Order, Cozy Den, Neon Drift, Polar Ops, Emerald Fang, Void Protocol
-- **Icon Shape Selector** — Circle, Rounded, Square, Hexagon, Diamond with live preview thumbnails
-- **Live preview** — icon, banner, and palette re-render in real time
-- **32 background presets** available in the background picker
-- **8 border styles** — None, Solid, Glow, Gradient, Double, Dashed, Neon, Rainbow
-- **7 output size presets** — Discord Icon (512×512), Discord Banner (960×540), Twitch Panel, Twitch Banner, YouTube Art, Reddit Banner, Square
-- **Shareable links** — full brand state (including shape) encoded in URL hash
-- **Randomize** — randomizes shape, colors, background, border, and font
-- **Light/dark theme toggle**
-- **Export config JSON** — compatible with `/brand ai` and `gemini.js`
-- **AI Generate** — requires your own Gemini API key; AI picks brand name, colors, background, shape, font + generates an icon image overlay
+**Features:** 8 templates, shape selector, 32 backgrounds, 8 borders, 7 output presets, shareable links, randomizer, light/dark theme, AI generate (Gemini), export config JSON.
 
 ---
 
@@ -114,8 +109,8 @@ The GUI (`gui/sigil-gui-builder.html`) is a browser-based 4-step wizard for buil
 
 ### Prerequisites
 - Node.js 18
-- A Discord bot token — [Discord Developer Portal](https://discord.com/developers/applications)
-- A Google Gemini API key — [Google AI Studio](https://aistudio.google.com/app/apikey) *(optional — only needed for AI commands and GUI AI Generate)*
+- Discord bot token — [Discord Developer Portal](https://discord.com/developers/applications)
+- Google Gemini API key — [Google AI Studio](https://aistudio.google.com/app/apikey) *(optional — AI commands only)*
 
 ### Installation
 
@@ -136,7 +131,7 @@ node gui/gui-server.js
 # Open http://localhost:8080
 ```
 
-Set `GUI_URL` in `.env` to your public URL if hosting remotely so `/gui open` links work correctly.
+Set `GUI_URL` in `.env` to your public URL if hosting remotely.
 
 ---
 
@@ -145,10 +140,10 @@ Set `GUI_URL` in `.env` to your public URL if hosting remotely so `/gui open` li
 1. Push to GitHub.
 2. Create a new Railway project from your repo.
 3. Add environment variables: `DISCORD_TOKEN`, `CLIENT_ID`, `GEMINI_API_KEY` (optional), `GUI_URL` (optional).
-4. Railway auto-detects `railpack.json` and builds with the required native canvas dependencies.
-5. Start command: `node src/index.js` (defined in `railway.toml`).
+4. Railway auto-detects `railpack.json` and builds with native canvas dependencies.
+5. Start command: `node src/index.js`.
 
-To also run the GUI server, create a second Railway service pointed at the same repo with start command `node gui/gui-server.js`.
+To run the GUI server, create a second Railway service with start command `node gui/gui-server.js`.
 
 ---
 
@@ -157,26 +152,22 @@ To also run the GUI server, create a second Railway service pointed at the same 
 ```
 Sigil/
 ├── gui/
-│   ├── gui-server.js          # Express server (/preview, /generate endpoints)
-│   └── sigil-gui-builder.html # Single-page GUI builder
+│   ├── gui-server.js
+│   └── sigil-gui-builder.html
 ├── src/
-│   ├── commands/              # All slash command handlers
+│   ├── commands/              # 29 slash command handlers
 │   ├── events/                # Discord.js event handlers
 │   ├── fonts/                 # Bundled font files
 │   ├── utils/
 │   │   ├── backgrounds.js     # 32 background presets
 │   │   ├── borders.js         # 8 border styles
-│   │   ├── canvas.js          # renderIcon, renderBanner, renderKit, applyShapeClip
+│   │   ├── canvas.js          # renderIcon, renderBanner, renderKit
 │   │   ├── fonts.js           # Font registration
 │   │   ├── gemini.js          # Gemini API helpers
 │   │   ├── history.js         # Per-user command history
 │   │   └── colors.js          # Color autocomplete
-│   ├── deploy-commands.js     # Register slash commands
-│   └── index.js               # Bot entry point
-├── docs/
-│   ├── CONTEXT.md
-│   ├── ROADMAP.md
-│   └── FONTS.md
+│   ├── deploy-commands.js
+│   └── index.js
 ├── .env.example
 ├── railpack.json
 ├── railway.toml
@@ -187,7 +178,7 @@ Sigil/
 
 ## Credits
 
-Sigil was inspired by and built upon the original concept from [**NoVa-Gh0ul/Discord-Icon-Gen**](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen) — a simple Discord bot for generating customized icons. Sigil has since evolved into a full brand kit platform, but credit goes to NoVa-Gh0ul for the original idea.
+Sigil was inspired by and built upon the original concept from [**NoVa-Gh0ul/Discord-Icon-Gen**](https://github.com/NoVa-Gh0ul/Discord-Icon-Gen). Sigil has since evolved into a full branding and Nitro-free tools platform.
 
 ---
 
