@@ -1,67 +1,107 @@
-import 'dotenv/config';
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
-import { readdirSync } from 'fs';
-import { pathToFileURL } from 'url';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { initDatabase } from './utils/database.js';
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { readdirSync } = require('fs');
+const { join } = require('path');
+require('dotenv').config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { TOKEN, CLIENT_ID } = process.env;
+if (!TOKEN || !CLIENT_ID) {
+    console.error('\x1b[31m\x1b[1m[FATAL] TOKEN and CLIENT_ID must be set in your .env file. Exiting.\x1b[0m');
+    process.exit(1);
+}
 
-export const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildEmojisAndStickers,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildScheduledEvents,
-  ]
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+    ],
 });
 
 client.commands = new Collection();
+client.cooldowns = new Collection();
 
-// Load commands
-const cmdDir = path.join(__dirname, 'commands');
-for (const file of readdirSync(cmdDir).filter(f => f.endsWith('.js'))) {
-  const cmd = await import(pathToFileURL(path.join(cmdDir, file)).href);
-  const mod = cmd.default || cmd;
-  if (mod.data && mod.execute) {
-    client.commands.set(mod.data.name, mod);
-  }
-}
-
-// Load events
-const evtDir = path.join(__dirname, 'events');
-for (const file of readdirSync(evtDir).filter(f => f.endsWith('.js'))) {
-  const evt = await import(pathToFileURL(path.join(evtDir, file)).href);
-  const mod = evt.default || evt;
-  if (mod.name === 'interactionCreate') continue;
-  client.on(mod.name, (...args) => mod.execute(client, ...args));
-}
-
-client.on('interactionCreate', async interaction => {
-  if (interaction.isChatInputCommand()) {
-    const cmd = client.commands.get(interaction.commandName);
-    if (!cmd) return;
-    try {
-      await cmd.execute(client, interaction);
-    } catch (err) {
-      console.error(`Command error [${interaction.commandName}]:`, err);
-      const msg = { content: '\u274C An error occurred.', ephemeral: true };
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(msg).catch(() => {});
-      } else {
-        await interaction.reply(msg).catch(() => {});
-      }
+const commandFiles = readdirSync(join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+for (const file of commandFiles) {
+    const command = require(join(__dirname, 'commands', file));
+    if (command.data && command.execute) {
+        client.commands.set(command.data.name, command);
+    } else {
+        console.warn(`[WARNING] Command file ${file} is missing 'data' or 'execute'. Skipping.`);
     }
-    return;
-  }
+}
 
-  if (interaction.isButton()) {
-    const mod = await import(pathToFileURL(path.join(evtDir, 'interactionCreate.js')).href);
-    await (mod.default || mod).execute(client, interaction);
-  }
+const eventFiles = readdirSync(join(__dirname, 'events')).filter(file => file.endsWith('.js'));
+for (const file of eventFiles) {
+    const event = require(join(__dirname, 'events', file));
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args, client));
+    }
+}
+
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command) {
+        console.error(`[ERROR] No command found for: ${interaction.commandName}`);
+        await interaction.reply({ content: 'Unknown command.', ephemeral: true });
+        return;
+    }
+
+    const { cooldowns } = client;
+    if (!cooldowns.has(command.data.name)) {
+        cooldowns.set(command.data.name, new Collection());
+    }
+
+    const now = Date.now();
+    const timestamps = cooldowns.get(command.data.name);
+    const cooldownMs = (command.cooldown ?? 3) * 1000;
+
+    if (timestamps.has(interaction.user.id)) {
+        const expiresAt = timestamps.get(interaction.user.id) + cooldownMs;
+        if (now < expiresAt) {
+            const remaining = ((expiresAt - now) / 1000).toFixed(1);
+            return interaction.reply({
+                content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
+                ephemeral: true,
+            });
+        }
+    }
+
+    timestamps.set(interaction.user.id, now);
+    setTimeout(() => timestamps.delete(interaction.user.id), cooldownMs);
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(`[ERROR] Failed to execute command '${interaction.commandName}':`, error);
+        const reply = { content: 'Something went wrong while running that command.', ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(reply);
+        } else {
+            await interaction.reply(reply);
+        }
+    }
 });
 
-initDatabase();
-client.login(process.env.TOKEN);
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isAutocomplete()) return;
+
+    const command = client.commands.get(interaction.commandName);
+    if (!command?.autocomplete) return;
+
+    try {
+        await command.autocomplete(interaction);
+    } catch (error) {
+        console.error(`[ERROR] Autocomplete failed for '${interaction.commandName}':`, error);
+        try { await interaction.respond([]); } catch (_) {}
+    }
+});
+
+process.on('unhandledRejection', (error) => {
+    console.error('[ERROR] Unhandled Rejection:', error);
+});
+
+client.login(TOKEN);
+console.log('\x1b[32m\x1b[1m Sigil v2.0.0 starting...\x1b[0m');
