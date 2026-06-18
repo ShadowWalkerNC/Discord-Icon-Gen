@@ -226,4 +226,9 @@ app.post('/generate', (req, res) => {
     res.status(503).json({ ok: false, coming_soon: true, error: '✨ AI Generate is coming soon. Stay tuned!' });
 });
 
+// ── 404 Catch-all — must be after all other routes ────────────────────────
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => console.log(`[GUI] Sigil GUI server v2.0.0 on http://localhost:${PORT}`));
