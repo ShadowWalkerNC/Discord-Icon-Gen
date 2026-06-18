@@ -1,14 +1,9 @@
-import 'dotenv/config';
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
-import { readdirSync, readFileSync } from 'fs';
-import { pathToFileURL, fileURLToPath } from 'url';
-import path from 'path';
-import { createRequire } from 'module';
-import { initDatabase } from './utils/database.js';
-
-const require   = createRequire(import.meta.url);
-const express   = require('express');
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+require('dotenv/config');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { readdirSync, readFileSync } = require('fs');
+const path = require('path');
+const { initDatabase } = require('./utils/database.js');
+const express = require('express');
 
 // ── GUI Web Server ──────────────────────────────────
 const app  = express();
@@ -35,7 +30,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // ── Discord Bot ──────────────────────────────────
-export const client = new Client({
+const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
@@ -45,21 +40,23 @@ export const client = new Client({
     ]
 });
 
+module.exports = { client };
+
 client.commands = new Collection();
 
 const cmdDir = path.join(__dirname, 'commands');
 for (const file of readdirSync(cmdDir).filter(f => f.endsWith('.js'))) {
-    const cmd = await import(pathToFileURL(path.join(cmdDir, file)).href);
+    const cmd = require(path.join(cmdDir, file));
     const mod = cmd.default || cmd;
     if (mod.data && mod.execute) client.commands.set(mod.data.name, mod);
 }
 
 const evtDir = path.join(__dirname, 'events');
 for (const file of readdirSync(evtDir).filter(f => f.endsWith('.js'))) {
-    const evt = await import(pathToFileURL(path.join(evtDir, file)).href);
-    const mod = evt.default || evt;
-    if (mod.name === 'interactionCreate') continue;
-    client.on(mod.name, (...args) => mod.execute(client, ...args));
+    const mod = require(path.join(evtDir, file));
+    const evt = mod.default || mod;
+    if (evt.name === 'interactionCreate') continue;
+    client.on(evt.name, (...args) => evt.execute(client, ...args));
 }
 
 client.on('interactionCreate', async interaction => {
@@ -80,8 +77,8 @@ client.on('interactionCreate', async interaction => {
         return;
     }
     if (interaction.isButton()) {
-        const mod = await import(pathToFileURL(path.join(evtDir, 'interactionCreate.js')).href);
-        await (mod.default || mod).execute(client, interaction);
+        const handler = require(path.join(evtDir, 'interactionCreate.js'));
+        await (handler.default || handler).execute(client, interaction);
     }
 });
 

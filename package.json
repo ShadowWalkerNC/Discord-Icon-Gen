@@ -1,11 +1,10 @@
 {
   "name": "sigil",
   "version": "4.0.0",
-  "type": "module",
   "description": "Discord branding bot",
   "main": "src/index.js",
   "scripts": {
-    "start": "node gui/gui-server.cjs & node src/index.js",
+    "start": "node src/index.js",
     "deploy": "node src/deploy-commands.js",
     "gui": "node gui/gui-server.cjs",
     "worker": "node src/worker.js"
