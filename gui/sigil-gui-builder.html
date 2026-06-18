@@ -69,13 +69,12 @@
     }
     .nav-btn:hover { background:var(--surface3); }
     .nav-btn.primary { background:linear-gradient(135deg,var(--primary),var(--secondary)); border:none; color:#fff; }
-    /* hide less-critical nav buttons on very small screens */
     @media(max-width:480px) {
       .nav-subtitle, .nav-sep { display:none; }
       .nav-btn.hide-xs { display:none; }
     }
 
-    /* ── Page body: sidebar + main stacked on mobile, side-by-side on desktop ── */
+    /* ── Page body ── */
     .page { display:flex; flex-direction:column; }
     @media(min-width:900px) {
       .page { flex-direction:row; min-height:calc(100dvh - 52px); }
@@ -98,7 +97,6 @@
     .wizard-header { padding:1rem 1.25rem 0; }
     .wizard-title { font-family:var(--fontd); font-size:.9rem; font-weight:700; margin-bottom:.85rem; }
 
-    /* Stepper */
     .stepper { display:flex; }
     .step {
       flex:1; display:flex; flex-direction:column; align-items:center;
@@ -130,14 +128,12 @@
     .prog-bar { height:3px; background:var(--surface2); margin:.75rem 0 0; }
     .prog-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--secondary)); transition:width 380ms var(--ease); }
 
-    /* Sidebar scrollable body */
     .sidebar-body { padding:1rem 1.25rem; overflow-y:auto; }
     @media(min-width:900px) { .sidebar-body { flex:1; } }
 
     .wizard-panel { display:none; }
     .wizard-panel.active { display:block; }
 
-    /* Fields */
     .field { margin-bottom:1rem; }
     .field > label {
       display:flex; justify-content:space-between; align-items:center;
@@ -158,7 +154,6 @@
     }
     .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
 
-    /* Color picker row */
     .color-row { display:flex; gap:.45rem; align-items:center; }
     .color-row input[type=color] {
       width:38px; height:36px; border-radius:.4rem;
@@ -166,12 +161,10 @@
     }
     .color-row .inp { flex:1; }
 
-    /* Range */
     .range-row { display:grid; grid-template-columns:1fr 42px; gap:.65rem; align-items:center; }
     input[type=range] { width:100%; accent-color:var(--primary); cursor:pointer; }
     .range-val { font-size:.85rem; font-weight:800; text-align:right; }
 
-    /* Chips */
     .chip-wrap { display:flex; flex-wrap:wrap; gap:.4rem; }
     .chip {
       padding:.35rem .75rem; border-radius:999px; font-size:.75rem; font-weight:700;
@@ -180,7 +173,6 @@
     }
     .chip.on { background:linear-gradient(135deg,rgba(139,0,0,.4),rgba(75,0,130,.4)); border-color:rgba(255,255,255,.28); color:#fff; }
 
-    /* Swatch grid */
     .swatch-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
     .swatch { border-radius:.5rem; overflow:hidden; border:2px solid transparent; cursor:pointer; transition:all 140ms; }
     .swatch:hover { transform:scale(1.05); }
@@ -188,11 +180,9 @@
     .swatch-color { height:34px; }
     .swatch-name { font-size:.6rem; font-weight:700; padding:3px 4px; background:var(--surface2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* Section heading */
     .sh { font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--faint); margin:.85rem 0 .4rem; }
     .sh:first-child { margin-top:0; }
 
-    /* Accordion */
     details.acc { border:1px solid var(--border); border-radius:var(--radius); margin-bottom:.55rem; overflow:hidden; }
     details.acc summary {
       padding:.7rem .9rem; font-size:.8rem; font-weight:700; cursor:pointer;
@@ -203,7 +193,6 @@
     details.acc[open] summary::after { transform:rotate(180deg); }
     details.acc .acc-body { padding:.8rem .9rem; }
 
-    /* Wizard footer */
     .wizard-footer {
       padding:.85rem 1.25rem; border-top:1px solid var(--divider);
       display:flex; justify-content:space-between; align-items:center; gap:.5rem;
@@ -239,7 +228,6 @@
     .mpanel { display:none; }
     .mpanel.on { display:block; }
 
-    /* Preview mocks */
     .preview-grid { display:grid; grid-template-columns:1fr; gap:1rem; margin-bottom:1rem; }
     @media(min-width:600px) { .preview-grid { grid-template-columns:1.2fr .8fr; } }
     .mock { border-radius:1.1rem; overflow:hidden; position:relative; box-shadow:0 10px 36px rgba(0,0,0,.45); }
@@ -253,7 +241,6 @@
     .img-overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .4s var(--ease); display:none; }
     .img-overlay.show { display:block; opacity:1; }
 
-    /* Embed */
     .embed { background:#0e1018; border:1px solid var(--border); border-left:5px solid var(--primary); border-radius:.9rem; padding:1rem 1.25rem; }
     .embed-title { font-size:1.25rem; font-weight:800; margin-bottom:.4rem; }
     .embed-tag { font-style:italic; color:var(--muted); margin-bottom:.75rem; font-size:.9rem; }
@@ -261,36 +248,37 @@
     .embed-specs dt { color:var(--faint); font-weight:600; }
     .embed-specs dd { color:var(--text); font-weight:700; word-break:break-all; }
 
-    /* AI image */
     #aiImageWrap { border-radius:.9rem; overflow:hidden; border:1px solid var(--border); display:none; }
     #aiImageWrap img { width:100%; display:block; }
 
-    /* Output panel */
     .palette-table { width:100%; border-collapse:collapse; font-size:.82rem; }
     .palette-table th { text-align:left; padding:.45rem .7rem; font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); border-bottom:1px solid var(--border); }
     .palette-table td { padding:.55rem .7rem; border-bottom:1px solid var(--divider); }
     .palette-table tr:last-child td { border-bottom:none; }
     .color-chip-sm { width:18px; height:18px; border-radius:.22rem; display:inline-block; vertical-align:middle; border:1px solid var(--border); }
 
-    /* Status */
-    .gen-status { display:none; padding:.6rem .9rem; border-radius:.6rem; background:var(--surface2); border-left:4px solid var(--primary); font-size:.82rem; margin-bottom:.75rem; }
+    /* Status bar — single line, never overflows */
+    .gen-status {
+      display:none; padding:.6rem .9rem; border-radius:.6rem;
+      background:var(--surface2); border-left:4px solid var(--primary);
+      font-size:.82rem; margin-bottom:.75rem;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width:100%;
+    }
     progress.gen-prog { width:100%; height:4px; border-radius:999px; border:none; appearance:none; margin-bottom:.65rem; display:none; }
     progress.gen-prog::-webkit-progress-bar { background:var(--surface2); border-radius:999px; }
     progress.gen-prog::-webkit-progress-value { background:linear-gradient(90deg,var(--primary),var(--secondary)); border-radius:999px; }
 
-    /* Download bar */
     .dl-bar { display:none; flex-wrap:wrap; gap:.4rem; margin-bottom:.75rem; }
     .dl-btn { padding:.4rem .85rem; border-radius:.45rem; font-size:.78rem; font-weight:700; border:1px solid var(--border); background:var(--surface2); transition:background 140ms; }
     .dl-btn:hover { background:var(--surface3); }
 
-    /* Panel card */
     .panel-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radiuslg); padding:1rem 1.1rem; margin-bottom:1rem; }
     .panel-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.85rem; }
     .panel-card-head h3 { font-size:.92rem; font-weight:800; }
     code { font-family:monospace; font-size:.83em; background:var(--surface2); padding:.1em .35em; border-radius:.28em; }
     .tag { display:inline-flex; align-items:center; gap:4px; padding:.22rem .55rem; border-radius:999px; background:var(--surface2); border:1px solid var(--border); font-size:.72rem; font-weight:700; }
 
-    /* Dialog */
     dialog { border:1px solid var(--border); border-radius:var(--radiuslg); background:var(--surface); color:var(--text); padding:0; max-width:660px; width:94vw; box-shadow:0 20px 70px rgba(0,0,0,.6); }
     dialog::backdrop { background:rgba(0,0,0,.72); backdrop-filter:blur(4px); }
     .dialog-head { padding:1.1rem 1.35rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
@@ -334,7 +322,7 @@
           <div class="field"><label for="brandName">Brand name</label><input id="brandName" class="inp" value="Demonfall" /></div>
           <div class="field"><label for="tagline">Tagline</label><input id="tagline" class="inp" value="Unleash the Darkness. Fight the Demons." /></div>
           <div class="field">
-            <label for="description">AI prompt <span>Used by Gemini Generate</span></label>
+            <label for="description">Description <span>Also used by AI Generate</span></label>
             <textarea id="description" class="inp">dark fantasy fighting guild with infernal magic and supernatural atmosphere</textarea>
           </div>
           <div class="grid2">
@@ -354,7 +342,7 @@
             <label for="secondaryHex">Secondary</label>
             <div class="color-row"><input type="color" id="secondaryPicker" value="#4b0082" /><input id="secondaryHex" class="inp" value="#4B0082" /></div>
           </div>
-          <div class="sh">Library <span style="font-weight:400;font-size:.68rem;">(tap = primary &nbsp;&bull;&nbsp; long-press/shift+tap = secondary)</span></div>
+          <div class="sh">Library <span style="font-weight:400;font-size:.68rem;">(tap = primary &nbsp;&bull;&nbsp; long-press / shift+tap = secondary)</span></div>
           <div id="colorLibrary"></div>
         </fieldset>
 
@@ -378,8 +366,16 @@
         <!-- Step 4: Generate -->
         <fieldset class="wizard-panel" id="panel-4">
           <legend class="sh">Generate</legend>
+          <div style="margin-bottom:1rem;padding:.85rem;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);font-size:.8rem;color:var(--muted);line-height:1.6">
+            <strong style="color:var(--text);display:block;margin-bottom:.3rem">&#9889; Manual build (stable)</strong>
+            Use <strong>Preview</strong> to render your current settings as icon + banner PNGs. No API key needed.
+          </div>
+          <div style="margin-bottom:1rem;padding:.85rem;background:var(--surface2);border-radius:var(--radius);border:1px solid rgba(255,191,0,.25);font-size:.8rem;color:var(--muted);line-height:1.6">
+            <strong style="color:var(--warning);display:block;margin-bottom:.3rem">&#9888; AI Generate (beta)</strong>
+            Requires your own Gemini API key. Self-hosted only — the hosted demo has limited quota.
+          </div>
           <div class="field">
-            <label for="apiKey">Gemini API key <span>Optional</span></label>
+            <label for="apiKey">Gemini API key <span>Beta — optional</span></label>
             <input id="apiKey" class="inp" type="password" placeholder="AIza…" autocomplete="off" />
           </div>
           <div class="field">
@@ -401,9 +397,6 @@
               </div>
             </div>
           </details>
-          <div style="margin-top:.85rem;padding:.8rem;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);font-size:.8rem;color:var(--muted)">
-            <strong style="color:var(--text)">Ready!</strong> Use <strong>&#9889; Preview</strong> for a fast canvas render, or <strong>&#10022; Generate</strong> for a full Gemini AI brand kit.
-          </div>
         </fieldset>
 
       </div><!-- /sidebar-body -->
@@ -452,7 +445,7 @@
             </div>
           </div>
           <div class="embed" id="embedCard">
-            <div class="embed-title" id="embedTitle">✦ AI Brand Kit — Demonfall</div>
+            <div class="embed-title" id="embedTitle">✦ Brand Kit — Demonfall</div>
             <div class="embed-tag" id="embedTag">&ldquo;Unleash the Darkness. Fight the Demons.&rdquo;</div>
             <dl class="embed-specs">
               <dt>Icon</dt>       <dd id="s-icon">DF</dd>
@@ -546,20 +539,51 @@ const SERVER = window.location.origin;
 const $ = id => document.getElementById(id);
 const $$ = s => document.querySelectorAll(s);
 
-function hexToRgba(hex,a) {
+function hexToRgba(hex,a){
   const c=hex.replace('#','');
   const n=parseInt(c.length===3?c.split('').map(x=>x+x).join(''):c,16);
   return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
 }
-function dlBlob(b64,name) {
+function dlBlob(b64,name){
   const a=document.createElement('a'); a.href=`data:image/png;base64,${b64}`; a.download=name; a.click();
 }
-function setStatus(msg,type='info') {
-  const el=$('genStatus'); el.style.display='block';
-  el.style.borderLeftColor=type==='ok'?'var(--success)':type==='error'?'var(--error)':'var(--primary)';
-  el.textContent=msg;
+
+/**
+ * cleanError — always returns a short single-line human-readable string.
+ * Never lets a raw API JSON blob or stack trace reach the status bar.
+ */
+function cleanError(raw) {
+  if (!raw) return '\u26a0 Something went wrong. Try again.';
+  const s = String(raw);
+  // Already a friendly message from server classifyError()
+  if (s.startsWith('\u26a0')) return s.split('\n')[0].slice(0, 120);
+  // Quota / rate limit
+  if (s.includes('429') || s.includes('quota') || s.includes('RESOURCE_EXHAUSTED') || s.includes('Too Many Requests'))
+    return '\u26a0 Gemini quota exceeded. Wait a moment or use your own API key.';
+  // Bad key
+  if (s.includes('API_KEY_INVALID') || s.includes('400') && s.includes('key'))
+    return '\u26a0 Invalid Gemini API key. Check the key in Step 4.';
+  // Network
+  if (s.includes('fetch') || s.includes('ENOTFOUND') || s.includes('Failed to fetch'))
+    return '\u26a0 Could not reach the server. Check your connection.';
+  // Timeout
+  if (s.includes('timeout') || s.includes('TimeoutError'))
+    return '\u26a0 Request timed out. Try Preview instead.';
+  // JSON parse
+  if (s.includes('JSON') || s.includes('Unexpected token'))
+    return '\u26a0 Server returned an unreadable response. Try again.';
+  // Fallback: first line only, max 120 chars
+  return (s.split('\n')[0] || s).slice(0, 120);
 }
-function setProgress(v) {
+
+function setStatus(msg, type='info'){
+  const el=$('genStatus');
+  el.style.display='block';
+  el.style.borderLeftColor = type==='ok' ? 'var(--success)' : type==='error' ? 'var(--error)' : 'var(--primary)';
+  // Always display one clean line — never raw blobs
+  el.textContent = type==='error' ? cleanError(msg) : msg;
+}
+function setProgress(v){
   const p=$('genProg');
   if(v<0){p.style.display='none';return;}
   p.style.display='block'; p.value=v;
@@ -567,7 +591,7 @@ function setProgress(v) {
 
 // Wizard
 const LABELS=['Identity','Colors','Style','Generate'];
-function buildStepper() {
+function buildStepper(){
   const nav=$('stepper'); nav.innerHTML='';
   LABELS.forEach((l,i)=>{
     const n=i+1, btn=document.createElement('button');
@@ -584,19 +608,21 @@ function buildStepper() {
     sd.appendChild(d);
   }
   $('prevBtn').disabled=state.step===1;
-  $('nextBtn').innerHTML=state.step===state.totalSteps?'&#10022; Generate':'Next &#8594;';
+  $('nextBtn').innerHTML=state.step===state.totalSteps?'&#9889; Build':'Next &#8594;';
 }
 function goStep(n){
   if(n<1||n>state.totalSteps) return;
   $$('.wizard-panel').forEach(p=>p.classList.remove('active'));
   $(`panel-${n}`).classList.add('active');
   state.step=n; buildStepper();
-  // scroll sidebar to top on step change (mobile)
   const sb=document.querySelector('.sidebar-body');
   if(sb) sb.scrollTop=0;
 }
 $('prevBtn').addEventListener('click',()=>goStep(state.step-1));
-$('nextBtn').addEventListener('click',()=>{ if(state.step===state.totalSteps) runGenerate(); else goStep(state.step+1); });
+$('nextBtn').addEventListener('click',()=>{
+  if(state.step===state.totalSteps) runPreview(); // Final step = Build (manual)
+  else goStep(state.step+1);
+});
 
 // Tabs
 $$('[role=tab]').forEach(t=>{
@@ -618,7 +644,6 @@ function buildColorLibrary(){
       if(item.hex.toLowerCase()===state.primaryHex.toLowerCase()) btn.classList.add('on');
       btn.title=`${item.name} ${item.hex}`;
       btn.innerHTML=`<div class="swatch-color" style="background:${item.hex}"></div><div class="swatch-name">${item.name}</div>`;
-      // Long-press for secondary on touch devices
       let pressTimer;
       btn.addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ state.secondaryHex=item.hex;$('secondaryHex').value=item.hex;$('secondaryPicker').value=item.hex;updatePreview();buildColorLibrary(); },500); },{passive:true});
       btn.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
@@ -686,11 +711,11 @@ function buildBg(){
 function applyBorder(el){
   el.style.outline=''; el.style.boxShadow='0 10px 36px rgba(0,0,0,.45)';
   const p=state.primaryHex,g=state.glow;
-  if(state.border==='solid')    el.style.outline=`3px solid ${p}`;
-  else if(state.border==='glow')    el.style.boxShadow=`0 0 ${10+g*1.5}px ${hexToRgba(p,.7)},0 10px 36px rgba(0,0,0,.45)`;
-  else if(state.border==='double')  el.style.outline=`4px double ${p}`;
-  else if(state.border==='dashed')  el.style.outline=`3px dashed ${p}`;
-  else if(state.border==='gradient')el.style.outline=`3px solid ${p}`;
+  if(state.border==='solid')     el.style.outline=`3px solid ${p}`;
+  else if(state.border==='glow')     el.style.boxShadow=`0 0 ${10+g*1.5}px ${hexToRgba(p,.7)},0 10px 36px rgba(0,0,0,.45)`;
+  else if(state.border==='double')   el.style.outline=`4px double ${p}`;
+  else if(state.border==='dashed')   el.style.outline=`3px dashed ${p}`;
+  else if(state.border==='gradient') el.style.outline=`3px solid ${p}`;
 }
 
 function updatePreview(){
@@ -710,7 +735,7 @@ function updatePreview(){
   $('palSecondary').style.background=state.secondaryHex;
   $('palSecondary').querySelector('strong').textContent=state.secondaryHex;
   $('embedCard').style.borderLeftColor=state.primaryHex;
-  $('embedTitle').textContent=`\u2726 AI Brand Kit \u2014 ${state.brandName}`;
+  $('embedTitle').textContent=`\u2726 Brand Kit \u2014 ${state.brandName}`;
   $('embedTag').textContent=`\u201C${state.tagline}\u201D`;
   $('s-icon').textContent=state.iconText; $('s-banner').textContent=state.bannerText;
   $('s-primary').textContent=state.primaryHex; $('s-secondary').textContent=state.secondaryHex;
@@ -746,7 +771,7 @@ async function pingServer(){
 }
 pingServer(); setInterval(pingServer,8000);
 
-// Preview
+// ── Preview (manual — stable) ──
 async function runPreview(){
   if(!serverAlive){setStatus('\u26a0 Server offline','error');return;}
   updatePreview(); setProgress(30); setStatus('Rendering canvas\u2026','info');
@@ -754,17 +779,17 @@ async function runPreview(){
   try{
     const res=await fetch(`${SERVER}/preview`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(getConfig().visuals),signal:AbortSignal.timeout(20000)});
     const data=await res.json();
-    if(data.error) throw new Error(data.error);
+    if(!data.ok) throw new Error(data.error||'Preview failed');
     setProgress(100); showImages(data); wireDownloads(data);
-    setStatus('\u2713 Canvas preview rendered','ok');
-  }catch(e){setStatus(`\u2717 ${e.message}`,'error');}
+    setStatus('\u2713 Preview rendered','ok');
+  }catch(e){setStatus(e.message,'error');}
   finally{setProgress(-1);btn.disabled=false;btn.textContent='\u26a1 Preview';}
 }
 
-// Generate
+// ── Generate (AI beta) ──
 async function runGenerate(){
   if(!serverAlive){setStatus('\u26a0 Server offline','error');return;}
-  if(!state.apiKey){goStep(4);setStatus('\u26a0 Enter your Gemini API key in Step 4 first','error');return;}
+  if(!state.apiKey){goStep(4);setStatus('\u26a0 AI Generate requires a Gemini API key in Step 4','error');return;}
   updatePreview(); setProgress(20); setStatus('Calling Gemini AI\u2026','info');
   const btn=$('generateBtn'); btn.disabled=true; btn.textContent='\u27f3 Generating\u2026';
   try{
@@ -772,7 +797,7 @@ async function runGenerate(){
     const res=await fetch(`${SERVER}/generate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({description:state.description,image_prompt:state.imagePrompt,gemini_key:state.apiKey}),signal:AbortSignal.timeout(90000)});
     setProgress(80);
     const data=await res.json();
-    if(data.error) throw new Error(data.error);
+    if(!data.ok) throw new Error(data.error||'Generate failed');
     if(data.brand){
       const b=data.brand;
       if(b.name){$('brandName').value=b.name;state.brandName=b.name;}
@@ -787,7 +812,7 @@ async function runGenerate(){
     if(data.ai_image_b64) showAiImage(data.ai_image_b64,data.brand?.name||state.brandName);
     wireDownloads(data); updatePreview(); buildChips(); buildColorLibrary();
     setProgress(100); setStatus(`\u2713 Brand kit generated${data.ai_image_b64?' + AI image':''}`, 'ok');
-  }catch(e){setStatus(`\u2717 ${e.message}`,'error');}
+  }catch(e){setStatus(e.message,'error');}
   finally{setProgress(-1);btn.disabled=false;btn.textContent='\u2726 Generate';}
 }
 
@@ -820,10 +845,8 @@ $('dialogClose2').addEventListener('click',()=>$('exportDialog').close());
 $('dialogCopyBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText($('dialogJson').value);$('dialogCopyBtn').textContent='\u2713 Copied!';setTimeout(()=>$('dialogCopyBtn').textContent='Copy',1600);});
 $('copyJsonBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText($('jsonOutput').value);$('copyJsonBtn').textContent='\u2713 Copied!';setTimeout(()=>$('copyJsonBtn').textContent='\u10063 Copy',1600);});
 
-// Theme
 $('themeBtn').addEventListener('click',()=>{const r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');});
 
-// Wire inputs
 ['brandName','tagline','description','iconText','bannerText','apiKey','imagePrompt','fontSelect','modelSelect'].forEach(id=>$(id).addEventListener('input',updatePreview));
 ['glowRange','opacityRange','tempRange','gradientToggle'].forEach(id=>$(id).addEventListener('input',updatePreview));
 $('previewBtn').addEventListener('click',runPreview);
