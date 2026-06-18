@@ -14,13 +14,17 @@ if (!TOKEN || !CLIENT_ID) {
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,      // Required for guildMemberAdd / Remove / Update
+        GatewayIntentBits.GuildPresences,    // Required for online member counts
+        GatewayIntentBits.GuildMessages,     // Required for future message-based features
     ],
 });
 
 client.commands = new Collection();
 client.cooldowns = new Collection();
 
-const commandFiles = readdirSync(join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+// Load commands
+const commandFiles = readdirSync(join(__dirname, 'commands')).filter(f => f.endsWith('.js'));
 for (const file of commandFiles) {
     const command = require(join(__dirname, 'commands', file));
     if (command.data && command.execute) {
@@ -30,7 +34,8 @@ for (const file of commandFiles) {
     }
 }
 
-const eventFiles = readdirSync(join(__dirname, 'events')).filter(file => file.endsWith('.js'));
+// Load events
+const eventFiles = readdirSync(join(__dirname, 'events')).filter(f => f.endsWith('.js'));
 for (const file of eventFiles) {
     const event = require(join(__dirname, 'events', file));
     if (event.once) {
@@ -40,11 +45,11 @@ for (const file of eventFiles) {
     }
 }
 
+// Slash command handler
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
-
     if (!command) {
         console.error(`[ERROR] No command found for: ${interaction.commandName}`);
         await interaction.reply({ content: 'Unknown command.', ephemeral: true });
@@ -52,11 +57,9 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     const { cooldowns } = client;
-    if (!cooldowns.has(command.data.name)) {
-        cooldowns.set(command.data.name, new Collection());
-    }
+    if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Collection());
 
-    const now = Date.now();
+    const now        = Date.now();
     const timestamps = cooldowns.get(command.data.name);
     const cooldownMs = (command.cooldown ?? 3) * 1000;
 
@@ -77,25 +80,20 @@ client.on('interactionCreate', async (interaction) => {
     try {
         await command.execute(interaction);
     } catch (error) {
-        console.error(`[ERROR] Failed to execute command '${interaction.commandName}':`, error);
+        console.error(`[ERROR] Failed to execute '${interaction.commandName}':`, error);
         const reply = { content: 'Something went wrong while running that command.', ephemeral: true };
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(reply);
-        } else {
-            await interaction.reply(reply);
-        }
+        if (interaction.replied || interaction.deferred) await interaction.followUp(reply);
+        else await interaction.reply(reply);
     }
 });
 
+// Autocomplete handler
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isAutocomplete()) return;
-
     const command = client.commands.get(interaction.commandName);
     if (!command?.autocomplete) return;
-
-    try {
-        await command.autocomplete(interaction);
-    } catch (error) {
+    try { await command.autocomplete(interaction); }
+    catch (error) {
         console.error(`[ERROR] Autocomplete failed for '${interaction.commandName}':`, error);
         try { await interaction.respond([]); } catch (_) {}
     }
