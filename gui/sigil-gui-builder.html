@@ -65,8 +65,10 @@
       padding:.35rem .8rem; border-radius:.5rem; font-size:.8rem; font-weight:600;
       border:1px solid var(--border); background:var(--surface2);
       transition:background 150ms; white-space:nowrap;
+      text-decoration:none; display:inline-flex; align-items:center;
     }
     .nav-btn:hover { background:var(--surface3); }
+    .nav-btn.active { background:linear-gradient(135deg,rgba(139,0,0,.3),rgba(75,0,130,.3)); border-color:rgba(255,255,255,.2); color:var(--text); }
     .nav-btn.primary { background:linear-gradient(135deg,var(--primary),var(--secondary)); border:none; color:#fff; }
     @media(max-width:480px) {
       .nav-subtitle, .nav-sep { display:none; }
@@ -142,951 +144,586 @@
     .sh:first-child { margin-top:0; }
 
     details.acc { border:1px solid var(--border); border-radius:var(--radius); margin-bottom:.55rem; overflow:hidden; }
-    details.acc summary { padding:.7rem .9rem; font-size:.8rem; font-weight:700; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; background:var(--surface2); }
-    details.acc summary::after { content:'\25BE'; font-size:.68rem; color:var(--faint); transition:transform 180ms; }
-    details.acc[open] summary::after { transform:rotate(180deg); }
-    details.acc .acc-body { padding:.8rem .9rem; }
+    details.acc summary { padding:.7rem .9rem; font-size:.8rem; font-weight:700; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+    details.acc summary::after { content:'›'; transform:rotate(90deg); display:inline-block; transition:transform 200ms; }
+    details.acc[open] summary::after { transform:rotate(270deg); }
+    details.acc .acc-body { padding:.5rem .9rem .85rem; border-top:1px solid var(--border); }
 
-    .wizard-footer { padding:.85rem 1.25rem; border-top:1px solid var(--divider); display:flex; justify-content:space-between; align-items:center; gap:.5rem; background:var(--surface); flex-shrink:0; }
-    .wbtn { padding:.55rem 1.1rem; border-radius:var(--radius); font-size:.82rem; font-weight:700; border:1px solid var(--border); background:var(--surface2); transition:background 150ms; white-space:nowrap; }
-    .wbtn:hover { background:var(--surface3); }
-    .wbtn.next { background:linear-gradient(135deg,var(--primary),var(--secondary)); border:none; color:#fff; }
-    .wbtn:disabled { opacity:.4; cursor:not-allowed; }
+    .preview-pane { flex:1; display:flex; flex-direction:column; }
+    .preview-tabs { display:flex; border-bottom:1px solid var(--border); padding:0 1rem; background:var(--surface); overflow-x:auto; }
+    .preview-tabs::-webkit-scrollbar { display:none; }
+    .ptab { padding:.7rem 1rem; font-size:.82rem; font-weight:700; color:var(--faint); border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 150ms; }
+    .ptab.on { color:var(--text); border-bottom-color:var(--primary); }
+    .preview-body { flex:1; padding:1.25rem; overflow-y:auto; }
+    .preview-panel { display:none; }
+    .preview-panel.on { display:block; }
 
-    .main { flex:1; min-width:0; display:flex; flex-direction:column; }
-    .main-tabs { display:flex; border-bottom:1px solid var(--border); padding:0 1rem; background:var(--surface); flex-shrink:0; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    .main-tabs::-webkit-scrollbar { display:none; }
-    .mtab { padding:.65rem .9rem; font-size:.8rem; font-weight:700; color:var(--faint); border-bottom:2px solid transparent; transition:all 150ms; cursor:pointer; white-space:nowrap; flex-shrink:0; }
-    .mtab.on { color:var(--text); border-bottom-color:var(--primary); }
+    .canvas-wrap { border-radius:var(--radiuslg); overflow:hidden; border:1px solid var(--border); background:#000; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
+    canvas { max-width:100%; max-height:100%; display:block; }
 
-    .main-body { padding:1rem; }
-    @media(min-width:600px) { .main-body { padding:1.25rem 1.5rem; } }
-    .mpanel { display:none; }
-    .mpanel.on { display:block; }
+    .palette-strip { display:flex; gap:.5rem; margin-top:.75rem; }
+    .pal-swatch { flex:1; height:48px; border-radius:.5rem; display:flex; align-items:flex-end; padding:4px 6px; }
+    .pal-swatch span { font-size:.6rem; font-weight:800; color:rgba(255,255,255,.7); text-shadow:0 1px 3px rgba(0,0,0,.8); }
 
-    .preview-grid { display:grid; grid-template-columns:1fr; gap:1rem; margin-bottom:1rem; }
-    @media(min-width:600px) { .preview-grid { grid-template-columns:1.2fr .8fr; } }
-    .mock { border-radius:1.1rem; overflow:hidden; position:relative; box-shadow:0 10px 36px rgba(0,0,0,.45); }
-    .mock-icon { aspect-ratio:1; min-height:180px; display:grid; place-items:center; transition:border-radius 300ms var(--ease), clip-path 300ms var(--ease); }
-    .mock-text { font-family:var(--fontd); font-size:3.5rem; font-weight:900; z-index:1; }
-    .mock-stack { display:flex; flex-direction:column; gap:1rem; }
-    .mock-banner { min-height:100px; display:flex; align-items:flex-end; padding:.85rem 1rem; font-family:var(--fontd); font-size:1.4rem; font-weight:900; }
-    .mock-palette { display:grid; grid-template-columns:1fr 1fr; min-height:80px; }
-    .palette-cell { display:flex; flex-direction:column; justify-content:flex-end; padding:.65rem; font-size:.7rem; font-weight:700; }
-    .palette-cell strong { font-size:.82rem; }
-    .img-overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .4s var(--ease); display:none; }
-    .img-overlay.show { display:block; opacity:1; }
+    .kit-table { width:100%; border-collapse:collapse; font-size:.8rem; margin-top:.75rem; }
+    .kit-table td { padding:.45rem .5rem; border-bottom:1px solid var(--divider); color:var(--muted); }
+    .kit-table td:first-child { color:var(--faint); font-weight:700; text-transform:uppercase; font-size:.68rem; letter-spacing:.06em; width:38%; }
 
-    /* Shape selector */
-    .shape-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.4rem; margin-bottom:.85rem; }
-    .shape-btn {
-      display:flex; flex-direction:column; align-items:center; gap:.3rem;
-      padding:.45rem .25rem; border-radius:.5rem; border:1px solid var(--border);
-      background:var(--surface2); font-size:.62rem; font-weight:700; color:var(--muted);
-      transition:all 150ms var(--ease); cursor:pointer;
-    }
-    .shape-btn:hover { background:var(--surface3); color:var(--text); }
-    .shape-btn.on { background:linear-gradient(135deg,rgba(139,0,0,.35),rgba(75,0,130,.35)); border-color:rgba(255,255,255,.28); color:#fff; }
-    .shape-preview {
-      width:32px; height:32px;
-      background:linear-gradient(135deg,var(--primary),var(--secondary));
-      transition:border-radius 200ms, clip-path 200ms;
-    }
+    .action-row { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
+    .abtn { padding:.42rem .9rem; border-radius:.45rem; font-size:.78rem; font-weight:700; border:1px solid var(--border); background:var(--surface2); transition:background 140ms; display:inline-flex; align-items:center; gap:.35rem; }
+    .abtn:hover { background:var(--surface3); }
+    .abtn.primary { background:linear-gradient(135deg,var(--primary),var(--secondary)); border:none; color:#fff; }
+    .abtn:disabled { opacity:.4; cursor:not-allowed; }
 
-    .embed { background:#0e1018; border:1px solid var(--border); border-left:5px solid var(--primary); border-radius:.9rem; padding:1rem 1.25rem; }
-    .embed-title { font-size:1.25rem; font-weight:800; margin-bottom:.4rem; }
-    .embed-tag { font-style:italic; color:var(--muted); margin-bottom:.75rem; font-size:.9rem; }
-    .embed-specs { display:grid; grid-template-columns:1fr 1fr; gap:.35rem .65rem; margin-bottom:.75rem; font-size:.82rem; }
-    .embed-specs dt { color:var(--faint); font-weight:600; }
-    .embed-specs dd { color:var(--text); font-weight:700; word-break:break-all; }
+    .ai-box { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:.75rem; margin-top:.5rem; }
+    .ai-status { font-size:.78rem; padding:.4rem .7rem; border-radius:.4rem; display:none; margin-top:.5rem; }
+    .ai-status.ok  { display:block; color:var(--success); background:rgba(57,255,20,.08); border:1px solid rgba(57,255,20,.2); }
+    .ai-status.err { display:block; color:var(--error);   background:rgba(255,68,68,.08);  border:1px solid rgba(255,68,68,.2); }
+    .ai-status.inf { display:block; color:var(--muted);   background:var(--surface2);      border:1px solid var(--border); }
 
-    #aiImageWrap { border-radius:.9rem; overflow:hidden; border:1px solid var(--border); display:none; }
-    #aiImageWrap img { width:100%; display:block; }
+    #toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(4rem); opacity:0; transition:all 320ms var(--ease); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:.55rem 1.1rem; font-size:.82rem; font-weight:700; pointer-events:none; z-index:200; white-space:nowrap; }
+    #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
-    .palette-table { width:100%; border-collapse:collapse; font-size:.82rem; }
-    .palette-table th { text-align:left; padding:.45rem .7rem; font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); border-bottom:1px solid var(--border); }
-    .palette-table td { padding:.55rem .7rem; border-bottom:1px solid var(--divider); }
-    .palette-table tr:last-child td { border-bottom:none; }
-    .color-chip-sm { width:18px; height:18px; border-radius:.22rem; display:inline-block; vertical-align:middle; border:1px solid var(--border); }
-
-    .gen-status { display:none; padding:.6rem .9rem; border-radius:.6rem; background:var(--surface2); border-left:4px solid var(--primary); font-size:.82rem; margin-bottom:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
-    progress.gen-prog { width:100%; height:4px; border-radius:999px; border:none; appearance:none; margin-bottom:.65rem; display:none; }
-    progress.gen-prog::-webkit-progress-bar { background:var(--surface2); border-radius:999px; }
-    progress.gen-prog::-webkit-progress-value { background:linear-gradient(90deg,var(--primary),var(--secondary)); border-radius:999px; }
-
-    .dl-bar { display:none; flex-wrap:wrap; gap:.4rem; margin-bottom:.75rem; }
-    .dl-btn { padding:.4rem .85rem; border-radius:.45rem; font-size:.78rem; font-weight:700; border:1px solid var(--border); background:var(--surface2); transition:background 140ms; }
-    .dl-btn:hover { background:var(--surface3); }
-
-    .panel-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radiuslg); padding:1rem 1.1rem; margin-bottom:1rem; }
-    .panel-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.85rem; }
-    .panel-card-head h3 { font-size:.92rem; font-weight:800; }
-    code { font-family:monospace; font-size:.83em; background:var(--surface2); padding:.1em .35em; border-radius:.28em; }
-    .tag { display:inline-flex; align-items:center; gap:4px; padding:.22rem .55rem; border-radius:999px; background:var(--surface2); border:1px solid var(--border); font-size:.72rem; font-weight:700; }
-
-    dialog { border:1px solid var(--border); border-radius:var(--radiuslg); background:var(--surface); color:var(--text); padding:0; max-width:660px; width:94vw; box-shadow:0 20px 70px rgba(0,0,0,.6); }
-    dialog::backdrop { background:rgba(0,0,0,.72); backdrop-filter:blur(4px); }
-    .dialog-head { padding:1.1rem 1.35rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-    .dialog-head h3 { font-size:.95rem; font-weight:800; }
-    .dialog-close { width:30px; height:30px; border-radius:.4rem; background:var(--surface2); display:grid; place-items:center; font-size:1rem; border:1px solid var(--border); }
-    .dialog-body { padding:1.25rem 1.35rem; }
-    .dialog-foot { padding:.9rem 1.35rem; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:.45rem; flex-wrap:wrap; }
-
-    #shareToast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(4rem); opacity:0; transition:all 320ms var(--ease); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:.55rem 1.1rem; font-size:.82rem; font-weight:700; pointer-events:none; z-index:200; white-space:nowrap; }
-    #shareToast.show { transform:translateX(-50%) translateY(0); opacity:1; }
-
-    .tpl-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:1rem; }
-    .tpl-card { border-radius:.65rem; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:all 160ms var(--ease); position:relative; }
-    .tpl-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.2); }
-    .tpl-card.on { border-color:#fff; }
-    .tpl-card-bg { height:46px; }
-    .tpl-card-foot { background:var(--surface2); padding:.3rem .5rem; display:flex; justify-content:space-between; align-items:center; }
-    .tpl-card-name { font-size:.7rem; font-weight:800; }
-    .tpl-card-dots { display:flex; gap:3px; }
-    .tpl-card-dot { width:9px; height:9px; border-radius:50%; border:1px solid rgba(0,0,0,.2); }
-    .tpl-card-tag { font-size:.58rem; color:var(--faint); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+    .wizard-nav { display:flex; justify-content:space-between; align-items:center; padding:.85rem 1.25rem; border-top:1px solid var(--border); gap:.5rem; }
+    .step-dots { display:flex; gap:5px; }
+    .step-dot-sm { width:7px; height:7px; border-radius:50%; background:var(--faint); transition:background 200ms; }
+    .step-dot-sm.on { background:var(--primary); }
   </style>
 </head>
 <body>
 
-  <nav class="navbar">
-    <span class="nav-logo">SIGIL</span>
-    <div class="nav-sep"></div>
-    <span class="nav-subtitle">Brand Builder</span>
-    <div id="serverPill" class="nav-pill"><span class="dot"></span><span id="serverLabel">Offline</span></div>
-    <div class="nav-actions">
-      <button class="nav-btn hide-xs" id="themeBtn">&#9680; Theme</button>
-      <button class="nav-btn hide-xs" id="randomBtn">&#9861; Randomize</button>
-      <button class="nav-btn hide-xs" id="shareBtn">&#128279; Share</button>
-      <button class="nav-btn hide-xs" id="exportBtn">&#10515; Export</button>
-      <button class="nav-btn" id="previewBtn">&#9889; Preview</button>
-      <button class="nav-btn primary" id="generateBtn">&#10022; Generate</button>
-    </div>
-  </nav>
-
-  <div id="shareToast">&#10003; Link copied to clipboard!</div>
-
-  <div class="page">
-    <aside class="sidebar">
-      <div class="wizard-header">
-        <div class="wizard-title">Setup Wizard</div>
-        <nav class="stepper" id="stepper" aria-label="Setup steps"></nav>
-        <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:25%"></div></div>
-      </div>
-
-      <div class="sidebar-body">
-
-        <!-- Step 1: Identity -->
-        <fieldset class="wizard-panel active" id="panel-1">
-          <div class="sh" style="margin-top:0">Start from a template</div>
-          <div class="tpl-grid" id="tplGrid"></div>
-          <div class="sh">Brand identity</div>
-          <div class="field"><label for="brandName">Brand name</label><input id="brandName" class="inp" value="Demonfall" /></div>
-          <div class="field"><label for="tagline">Tagline</label><input id="tagline" class="inp" value="Unleash the Darkness. Fight the Demons." /></div>
-          <div class="field">
-            <label for="description">Description <span>Also used by AI Generate</span></label>
-            <textarea id="description" class="inp">dark fantasy fighting guild with infernal magic and supernatural atmosphere</textarea>
-          </div>
-          <div class="grid2">
-            <div class="field"><label for="iconText">Icon text</label><input id="iconText" class="inp" value="DF" /></div>
-            <div class="field"><label for="bannerText">Banner text</label><input id="bannerText" class="inp" value="Demonfall" /></div>
-          </div>
-        </fieldset>
-
-        <!-- Step 2: Colors -->
-        <fieldset class="wizard-panel" id="panel-2">
-          <legend class="sh">Colors</legend>
-          <div class="field">
-            <label for="primaryHex">Primary</label>
-            <div class="color-row"><input type="color" id="primaryPicker" value="#8b0000" /><input id="primaryHex" class="inp" value="#8B0000" /></div>
-          </div>
-          <div class="field">
-            <label for="secondaryHex">Secondary</label>
-            <div class="color-row"><input type="color" id="secondaryPicker" value="#4b0082" /><input id="secondaryHex" class="inp" value="#4B0082" /></div>
-          </div>
-          <div class="sh">Library <span style="font-weight:400;font-size:.68rem;">(tap = primary &nbsp;&bull;&nbsp; long-press / shift+tap = secondary)</span></div>
-          <div id="colorLibrary"></div>
-        </fieldset>
-
-        <!-- Step 3: Style -->
-        <fieldset class="wizard-panel" id="panel-3">
-          <legend class="sh">Icon shape</legend>
-          <div class="shape-grid" id="shapeGrid"></div>
-          <div class="sh">Background</div>
-          <div id="bgChips" class="chip-wrap" style="margin-bottom:.85rem"></div>
-          <div class="sh">Border</div>
-          <div id="borderChips" class="chip-wrap" style="margin-bottom:.85rem"></div>
-          <div class="field">
-            <label for="glowRange">Glow</label>
-            <div class="range-row"><input type="range" id="glowRange" min="0" max="25" value="15" /><span class="range-val" id="glowVal">15</span></div>
-          </div>
-          <div class="field"><label for="fontSelect">Font</label>
-            <select id="fontSelect" class="inp">
-              <option value="Arial Black">Arial Black</option>
-              <option value="Impact">Impact</option>
-              <option value="Another Danger">Another Danger</option>
-              <option value="Bebas Neue">Bebas Neue</option>
-              <option value="Oswald">Oswald</option>
-              <option value="Playfair Display">Playfair Display</option>
-              <option value="Source Code Pro">Source Code Pro</option>
-              <option value="Dancing Script">Dancing Script</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="opacityRange">Overlay opacity</label>
-            <div class="range-row"><input type="range" id="opacityRange" min="0" max="100" value="85" /><span class="range-val" id="opacityVal">85%</span></div>
-          </div>
-          <div class="sh">Output size</div>
-          <div id="sizeChips" class="chip-wrap" style="margin-bottom:.85rem"></div>
-        </fieldset>
-
-        <!-- Step 4: Generate -->
-        <fieldset class="wizard-panel" id="panel-4">
-          <legend class="sh">Generate</legend>
-          <div style="margin-bottom:1rem;padding:.85rem;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);font-size:.8rem;color:var(--muted);line-height:1.6">
-            <strong style="color:var(--text);display:block;margin-bottom:.3rem">&#9889; Manual build (stable)</strong>
-            Use <strong>Preview</strong> to render your current settings. No API key needed.
-          </div>
-          <div style="margin-bottom:1rem;padding:.85rem;background:var(--surface2);border-radius:var(--radius);border:1px solid rgba(255,191,0,.25);font-size:.8rem;color:var(--muted);line-height:1.6">
-            <strong style="color:var(--warning);display:block;margin-bottom:.3rem">&#9888; AI Generate (beta)</strong>
-            Requires your own Gemini API key. Self-hosted only.
-          </div>
-          <div class="field">
-            <label for="apiKey">Gemini API key <span>Beta — optional</span></label>
-            <input id="apiKey" class="inp" type="password" placeholder="AIza…" autocomplete="off" />
-          </div>
-          <div class="field">
-            <label for="imagePrompt">Image prompt <span>AI icon overlay</span></label>
-            <textarea id="imagePrompt" class="inp">ancient demon sigil hovering over a ruined crimson fortress in a violet storm</textarea>
-          </div>
-          <details class="acc">
-            <summary>Advanced options</summary>
-            <div class="acc-body">
-              <div class="field"><label for="modelSelect">Model</label>
-                <select id="modelSelect" class="inp">
-                  <option value="gemini-2.0-flash">gemini-2.0-flash (default)</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="tempRange">Temperature &nbsp;<span id="tempLbl">0.9</span></label>
-                <input type="range" id="tempRange" min="0" max="20" value="9" style="width:100%" />
-              </div>
-              <div class="field">
-                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;color:var(--muted);font-weight:600">
-                  <input type="checkbox" id="gradientToggle" checked style="width:15px;height:15px" /> Gradient overlay
-                </label>
-              </div>
-            </div>
-          </details>
-        </fieldset>
-
-      </div>
-
-      <div class="wizard-footer">
-        <button class="wbtn" id="prevBtn" disabled>&#8592; Back</button>
-        <div id="stepDots" style="display:flex;gap:.4rem;align-items:center" aria-live="polite"></div>
-        <button class="wbtn next" id="nextBtn">Next &#8594;</button>
-      </div>
-    </aside>
-
-    <main class="main">
-      <div class="main-tabs" role="tablist">
-        <button class="mtab on" role="tab" data-tab="preview">Preview</button>
-        <button class="mtab" role="tab" data-tab="output">Output &amp; Palette</button>
-        <button class="mtab" role="tab" data-tab="ai">AI Image</button>
-      </div>
-
-      <div class="main-body">
-        <progress class="gen-prog" id="genProg" max="100" value="0"></progress>
-        <div class="gen-status" id="genStatus"></div>
-        <div class="dl-bar" id="dlBar">
-          <button class="dl-btn" id="dlIcon">&#8595; Icon</button>
-          <button class="dl-btn" id="dlBanner">&#8595; Banner</button>
-          <button class="dl-btn" id="dlPalette">&#8595; Palette</button>
-          <button class="dl-btn" id="dlAi" style="display:none">&#8595; AI Image</button>
-        </div>
-
-        <div class="mpanel on" id="tab-preview">
-          <div class="preview-grid">
-            <div class="mock mock-icon" id="iconCard">
-              <span class="mock-text" id="iconText2">DF</span>
-              <img class="img-overlay" id="iconImg" alt="icon" />
-            </div>
-            <div class="mock-stack">
-              <div class="mock mock-banner" id="bannerCard">
-                <span id="bannerText2">Demonfall</span>
-                <img class="img-overlay" id="bannerImg" alt="banner" />
-              </div>
-              <div class="mock mock-palette" id="paletteCard">
-                <div class="palette-cell" id="palPrimary"><strong>#8B0000</strong><span>Primary</span></div>
-                <div class="palette-cell" id="palSecondary"><strong>#4B0082</strong><span>Secondary</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="embed" id="embedCard">
-            <div class="embed-title" id="embedTitle">✦ Brand Kit — Demonfall</div>
-            <div class="embed-tag" id="embedTag">&ldquo;Unleash the Darkness. Fight the Demons.&rdquo;</div>
-            <dl class="embed-specs">
-              <dt>Icon</dt>       <dd id="s-icon">DF</dd>
-              <dt>Banner</dt>     <dd id="s-banner">Demonfall</dd>
-              <dt>Primary</dt>    <dd id="s-primary">#8B0000</dd>
-              <dt>Secondary</dt>  <dd id="s-secondary">#4B0082</dd>
-              <dt>Background</dt> <dd id="s-bg">inferno</dd>
-              <dt>Border</dt>     <dd id="s-border">glow</dd>
-              <dt>Shape</dt>      <dd id="s-shape">Circle</dd>
-              <dt>Font</dt>       <dd id="s-font">Arial Black</dd>
-              <dt>Size</dt>       <dd id="s-size">Discord Icon</dd>
-            </dl>
-          </div>
-        </div>
-
-        <div class="mpanel" id="tab-output">
-          <div class="panel-card">
-            <div class="panel-card-head"><h3>Color palette</h3><span class="tag">Live</span></div>
-            <div style="overflow-x:auto">
-              <table class="palette-table"><thead><tr><th></th><th>Name</th><th>Hex</th><th>Role</th></tr></thead><tbody id="paletteTbody"></tbody></table>
-            </div>
-          </div>
-          <div class="panel-card">
-            <div class="panel-card-head"><h3>Config JSON</h3><button class="dl-btn" id="copyJsonBtn">&#10063; Copy</button></div>
-            <textarea class="inp" id="jsonOutput" style="min-height:320px;font-family:monospace;font-size:.75rem" readonly></textarea>
-          </div>
-        </div>
-
-        <div class="mpanel" id="tab-ai">
-          <div id="aiImageWrap"><img id="aiImageEl" alt="AI generated image" /></div>
-          <p id="aiPlaceholder" style="color:var(--faint);font-size:.85rem;margin-top:2rem;text-align:center">AI image appears here after <strong>&#10022; Generate</strong> with a Gemini API key.</p>
-        </div>
-      </div>
-    </main>
+<nav class="navbar">
+  <span class="nav-logo">SIGIL</span>
+  <div class="nav-sep"></div>
+  <span class="nav-subtitle">Brand Builder</span>
+  <div id="serverPill" class="nav-pill"><span class="dot"></span><span id="serverLabel">Offline</span></div>
+  <div class="nav-actions">
+    <a class="nav-btn active" href="/brand">&#127912; Brand Builder</a>
+    <a class="nav-btn" href="/community">&#127942; Community Tools</a>
+    <button class="nav-btn hide-xs" id="previewBtn">&#9889; Preview</button>
+    <button class="nav-btn primary" id="generateBtn">&#10022; Generate</button>
+    <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
   </div>
+</nav>
 
-  <dialog id="exportDialog">
-    <div class="dialog-head"><h3>✦ Export brand config</h3><button class="dialog-close" id="dialogClose">&#10005;</button></div>
-    <div class="dialog-body">
-      <p style="color:var(--muted);font-size:.82rem;margin-bottom:.9rem">Compatible with <code>/brand ai</code> and <code>gemini.js</code>.</p>
-      <textarea class="inp" id="dialogJson" style="min-height:280px;font-family:monospace;font-size:.75rem" readonly></textarea>
+<div id="toast">&#10003; Copied!</div>
+
+<div class="page">
+
+  <!-- ═══════════════ SIDEBAR / WIZARD ═══════════════ -->
+  <aside class="sidebar">
+    <div class="wizard-header">
+      <p class="wizard-title">Setup Wizard</p>
+      <div class="stepper" id="stepper">
+        <div class="step active" data-step="0"><div class="step-dot">1</div><div class="step-label">Identity</div></div>
+        <div class="step"        data-step="1"><div class="step-dot">2</div><div class="step-label">Colors</div></div>
+        <div class="step"        data-step="2"><div class="step-dot">3</div><div class="step-label">Style</div></div>
+        <div class="step"        data-step="3"><div class="step-dot">4</div><div class="step-label">Generate</div></div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
     </div>
-    <div class="dialog-foot">
-      <button class="wbtn" id="dialogCopyBtn">&#10063; Copy</button>
-      <button class="wbtn next" id="dialogClose2">Done</button>
+
+    <div class="sidebar-body">
+
+      <!-- Step 0: Identity -->
+      <div class="wizard-panel active" id="panel-0">
+        <div class="sh" style="margin-top:0">Start from a template</div>
+        <div class="swatch-grid" id="templateGrid"></div>
+
+        <div class="sh">Brand Identity</div>
+        <div class="field"><label for="brandName">Brand name</label><input id="brandName" class="inp" placeholder="e.g. Demonfall" /></div>
+        <div class="field"><label for="tagline">Tagline</label><input id="tagline" class="inp" placeholder="Your server's motto" /></div>
+        <div class="field"><label for="desc">Description <span>Also used by AI Generate</span></label><textarea id="desc" class="inp" placeholder="Describe your server in a sentence or two"></textarea></div>
+        <div class="grid2">
+          <div class="field"><label for="iconText">Icon text</label><input id="iconText" class="inp" maxlength="3" placeholder="DF" /></div>
+          <div class="field"><label for="bannerText">Banner text</label><input id="bannerText" class="inp" placeholder="Demonfall" /></div>
+        </div>
+      </div>
+
+      <!-- Step 1: Colors -->
+      <div class="wizard-panel" id="panel-1">
+        <div class="sh" style="margin-top:0">Primary &amp; Secondary</div>
+        <div class="field">
+          <label for="colorPrimary">Primary color</label>
+          <div class="color-row"><input type="color" id="colorPrimaryPicker" value="#8B0000" /><input id="colorPrimary" class="inp" value="#8B0000" /></div>
+        </div>
+        <div class="field">
+          <label for="colorSecondary">Secondary color</label>
+          <div class="color-row"><input type="color" id="colorSecondaryPicker" value="#4B0082" /><input id="colorSecondary" class="inp" value="#4B0082" /></div>
+        </div>
+        <div class="sh">Background style</div>
+        <div class="chip-wrap" id="bgChips"></div>
+        <div class="sh">Border glow</div>
+        <div class="chip-wrap" id="borderChips"></div>
+      </div>
+
+      <!-- Step 2: Style -->
+      <div class="wizard-panel" id="panel-2">
+        <div class="sh" style="margin-top:0">Icon shape</div>
+        <div class="chip-wrap" id="shapeChips"></div>
+        <div class="sh">Font</div>
+        <div class="chip-wrap" id="fontChips"></div>
+        <div class="sh">Output size</div>
+        <div class="chip-wrap" id="sizeChips"></div>
+        <div class="sh">Corner radius <span id="radiusVal">0.5</span></div>
+        <div class="range-row">
+          <input type="range" id="radiusRange" min="0" max="1" step="0.05" value="0.5" />
+          <div class="range-val" id="radiusDisplay">0.5</div>
+        </div>
+        <div class="sh">Shadow intensity <span id="shadowVal">0.6</span></div>
+        <div class="range-row">
+          <input type="range" id="shadowRange" min="0" max="1" step="0.05" value="0.6" />
+          <div class="range-val" id="shadowDisplay">0.6</div>
+        </div>
+      </div>
+
+      <!-- Step 3: Generate -->
+      <div class="wizard-panel" id="panel-3">
+        <div class="sh" style="margin-top:0">AI Generate</div>
+        <div class="ai-box">
+          <div class="field" style="margin-bottom:.5rem"><label for="aiPrompt">Custom prompt <span>optional</span></label><textarea id="aiPrompt" class="inp" style="min-height:60px" placeholder="e.g. Make it feel ancient and mystical"></textarea></div>
+          <button class="abtn primary" id="aiGenBtn" style="width:100%">&#10024; AI Generate Brand</button>
+          <div class="ai-status" id="aiStatus"></div>
+        </div>
+        <div class="sh">Or generate manually</div>
+        <button class="abtn" id="manualGenBtn" style="width:100%">&#9889; Render with current settings</button>
+      </div>
     </div>
-  </dialog>
+
+    <div class="wizard-nav">
+      <button class="abtn" id="backBtn">&#8592; Back</button>
+      <div class="step-dots" id="stepDots"></div>
+      <button class="abtn primary" id="nextBtn">Next &#8594;</button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════ PREVIEW PANE ═══════════════ -->
+  <main class="preview-pane">
+    <div class="preview-tabs">
+      <button class="ptab on" data-panel="preview">Preview</button>
+      <button class="ptab" data-panel="palette">Output &amp; Palette</button>
+      <button class="ptab" data-panel="ai">AI Image</button>
+    </div>
+    <div class="preview-body">
+
+      <!-- Preview tab -->
+      <div class="preview-panel on" id="pp-preview">
+        <div class="canvas-wrap"><canvas id="iconCanvas" width="512" height="512"></canvas></div>
+        <div style="margin-top:.85rem; border-radius:var(--radiuslg); overflow:hidden; border:1px solid var(--border);">
+          <canvas id="bannerCanvas" width="960" height="240" style="width:100%;display:block;"></canvas>
+        </div>
+      </div>
+
+      <!-- Output & Palette tab -->
+      <div class="preview-panel" id="pp-palette">
+        <div class="palette-strip" id="paletteStrip"></div>
+        <table class="kit-table" id="kitTable"></table>
+        <div class="action-row">
+          <button class="abtn primary" id="dlIconBtn">&#8595; Download Icon</button>
+          <button class="abtn" id="dlBannerBtn">&#8595; Download Banner</button>
+          <button class="abtn" id="copyKitBtn">&#128203; Copy Kit JSON</button>
+        </div>
+      </div>
+
+      <!-- AI Image tab -->
+      <div class="preview-panel" id="pp-ai">
+        <div class="canvas-wrap" id="aiImgWrap" style="aspect-ratio:1;">
+          <div id="aiImgPlaceholder" style="color:var(--faint);font-size:.82rem;text-align:center;padding:2rem;">Click &#10024; AI Generate to create an image</div>
+          <img id="aiImg" style="display:none;width:100%;border-radius:.6rem;" alt="AI generated brand image" />
+        </div>
+        <div class="action-row">
+          <button class="abtn" id="dlAiBtn" disabled>&#8595; Download AI Image</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
 
 <script>
-// ── Shapes ────────────────────────────────────────────────────────────────
-const SHAPES = [
-  { k:'circle',   l:'Circle',   borderRadius:'50%',   clip:'none' },
-  { k:'rounded',  l:'Rounded',  borderRadius:'1.5rem', clip:'none' },
-  { k:'square',   l:'Square',   borderRadius:'0',      clip:'none' },
-  { k:'hexagon',  l:'Hexagon',  borderRadius:'0',      clip:'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)' },
-  { k:'diamond',  l:'Diamond',  borderRadius:'0',      clip:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' },
-];
-
-// ── Templates ─────────────────────────────────────────────────────────────
-const TEMPLATES = [
-  {
-    id:'demonfall', name:'Demonfall', tag:'Dark Fantasy',
-    primary:'#8B0000', secondary:'#4B0082',
-    background:'inferno', border:'glow', font:'Arial Black', glow:15, opacity:85, gradient:true, shape:'circle',
-    brandName:'Demonfall', tagline:'Unleash the Darkness. Fight the Demons.',
-    description:'dark fantasy fighting guild with infernal magic and supernatural atmosphere',
-    iconText:'DF', bannerText:'Demonfall',
-    imagePrompt:'ancient demon sigil hovering over a ruined crimson fortress in a violet storm',
-  },
-  {
-    id:'cyber-nexus', name:'Cyber Nexus', tag:'Cyberpunk',
-    primary:'#00FFFF', secondary:'#FF00FF',
-    background:'neon-city', border:'solid', font:'Source Code Pro', glow:20, opacity:90, gradient:true, shape:'square',
-    brandName:'Cyber Nexus', tagline:'Jack In. Level Up. Own the Grid.',
-    description:'cyberpunk gaming community for hackers, netrunners and tech enthusiasts',
-    iconText:'CN', bannerText:'Cyber Nexus',
-    imagePrompt:'neon wireframe skull floating above a holographic city grid at night',
-  },
-  {
-    id:'arcane-order', name:'Arcane Order', tag:'Fantasy RPG',
-    primary:'#9966CC', secondary:'#FFD700',
-    background:'twilight', border:'gradient', font:'Playfair Display', glow:12, opacity:88, gradient:true, shape:'hexagon',
-    brandName:'Arcane Order', tagline:'Knowledge is Power. Magic is Law.',
-    description:'high fantasy RPG server for wizards, scholars and arcane adventurers',
-    iconText:'AO', bannerText:'Arcane Order',
-    imagePrompt:'ancient spellbook surrounded by floating runes and golden arcane sigils',
-  },
-  {
-    id:'cozy-den', name:'Cozy Den', tag:'Community',
-    primary:'#FF6B35', secondary:'#FFD700',
-    background:'sunset-fade', border:'none', font:'Dancing Script', glow:5, opacity:80, gradient:false, shape:'rounded',
-    brandName:'Cozy Den', tagline:'Your Home Away From Home.',
-    description:'warm friendly community server for art, gaming and casual hangouts',
-    iconText:'CD', bannerText:'Cozy Den',
-    imagePrompt:'warm cozy fireplace with books and blankets in a soft golden light',
-  },
-  {
-    id:'neon-drift', name:'Neon Drift', tag:'Racing / Sports',
-    primary:'#FF4500', secondary:'#FFBF00',
-    background:'deep-space', border:'dashed', font:'Bebas Neue', glow:18, opacity:92, gradient:true, shape:'diamond',
-    brandName:'Neon Drift', tagline:'No Limits. Full Speed.',
-    description:'competitive racing and motorsport community with street racing vibes',
-    iconText:'ND', bannerText:'Neon Drift',
-    imagePrompt:'futuristic neon race car drifting through a glowing tunnel at full speed',
-  },
-  {
-    id:'polar-ops', name:'Polar Ops', tag:'Tactical FPS',
-    primary:'#7DF9FF', secondary:'#001F5B',
-    background:'polar', border:'double', font:'Impact', glow:8, opacity:95, gradient:true, shape:'square',
-    brandName:'Polar Ops', tagline:'Cold. Calculated. Lethal.',
-    description:'tactical FPS clan for competitive players who value discipline and precision',
-    iconText:'PO', bannerText:'Polar Ops',
-    imagePrompt:'arctic special forces soldier silhouette in a blizzard with ice-blue tactical HUD',
-  },
-  {
-    id:'emerald-fang', name:'Emerald Fang', tag:'Survival / RPG',
-    primary:'#39FF14', secondary:'#228B22',
-    background:'forest-night', border:'solid', font:'Oswald', glow:14, opacity:87, gradient:true, shape:'hexagon',
-    brandName:'Emerald Fang', tagline:'Hunt or Be Hunted.',
-    description:'survival RPG guild focused on wilderness, monsters and open-world exploration',
-    iconText:'EF', bannerText:'Emerald Fang',
-    imagePrompt:'a glowing emerald serpent coiled around an ancient forest totem at midnight',
-  },
-  {
-    id:'void-protocol', name:'Void Protocol', tag:'Sci-Fi',
-    primary:'#C0C0C0', secondary:'#6600CC',
-    background:'void', border:'glow', font:'Bebas Neue', glow:10, opacity:100, gradient:false, shape:'circle',
-    brandName:'Void Protocol', tagline:'Beyond the Event Horizon.',
-    description:'sci-fi space exploration server for astronomers, theorists and cosmic wanderers',
-    iconText:'VP', bannerText:'Void Protocol',
-    imagePrompt:'a lone astronaut floating near a black hole with violet accretion disk light',
-  },
-];
-
-const COLORS = {
-  'Reds':     [{name:'Crimson',hex:'#DC143C'},{name:'Scarlet',hex:'#FF2400'},{name:'Ruby',hex:'#9B111E'},{name:'Blood Red',hex:'#8b0000'}],
-  'Purples':  [{name:'Indigo',hex:'#4B0082'},{name:'Violet',hex:'#EE82EE'},{name:'Amethyst',hex:'#9966CC'},{name:'Deep Purple',hex:'#6600CC'}],
-  'Blues':    [{name:'Electric',hex:'#7DF9FF'},{name:'Sapphire',hex:'#0F52BA'},{name:'Navy',hex:'#001F5B'},{name:'Cobalt',hex:'#0047AB'}],
-  'Greens':   [{name:'Neon',hex:'#39FF14'},{name:'Emerald',hex:'#50C878'},{name:'Forest',hex:'#228B22'},{name:'Lime',hex:'#ADFF2F'}],
-  'Oranges':  [{name:'Inferno',hex:'#FF4500'},{name:'Amber',hex:'#FFBF00'},{name:'Gold',hex:'#FFD700'},{name:'Ember',hex:'#FF6B35'}],
-  'Cyans':    [{name:'Cyan',hex:'#00FFFF'},{name:'Teal',hex:'#008080'},{name:'Turquoise',hex:'#40E0D0'},{name:'Seafoam',hex:'#93E9BE'}],
-  'Neutrals': [{name:'White',hex:'#FFFFFF'},{name:'Silver',hex:'#C0C0C0'},{name:'Charcoal',hex:'#36454F'},{name:'Black',hex:'#000000'}],
-};
-const BACKGROUNDS = [
-  {k:'midnight-gradient',l:'Midnight',  css:'linear-gradient(135deg,#0a0a1a,#1a0a2e,#0a1a2e)'},
-  {k:'deep-space',       l:'Deep Space',css:'linear-gradient(135deg,#000010,#0a0020,#000510)'},
-  {k:'inferno',          l:'Inferno',   css:'linear-gradient(135deg,#1a0000,#3d0000,#1a0500)'},
-  {k:'ocean-depth',      l:'Ocean',     css:'linear-gradient(135deg,#001020,#002040,#001530)'},
-  {k:'twilight',         l:'Twilight',  css:'linear-gradient(135deg,#1a0a1a,#2a0a3a,#1a1a2a)'},
-  {k:'aurora',           l:'Aurora',    css:'linear-gradient(135deg,#001a10,#001a20,#0a0015,#001510)'},
-  {k:'storm',            l:'Storm',     css:'linear-gradient(135deg,#0a0a0a,#1a1a2a,#0a0a1a)'},
-  {k:'void',             l:'Void',      css:'linear-gradient(135deg,#000,#050005,#000)'},
-  {k:'neon-city',        l:'Neon City', css:'linear-gradient(135deg,#000010,#0a0020,#100005,#000010)'},
-  {k:'sunset-fade',      l:'Sunset',    css:'linear-gradient(135deg,#1a0a00,#2a0a0a,#1a0510)'},
-  {k:'forest-night',     l:'Forest',    css:'linear-gradient(135deg,#001008,#002010,#001508)'},
-  {k:'polar',            l:'Polar',     css:'linear-gradient(135deg,#0a1520,#0a2030,#051525)'},
-];
-const BORDERS = ['none','solid','glow','gradient','double','dashed'];
-const FONTS   = ['Arial Black','Impact','Another Danger','Bebas Neue','Oswald','Playfair Display','Source Code Pro','Dancing Script'];
-const SIZES = [
-  {k:'discord-icon',   l:'Discord Icon',   w:512,  h:512,  note:'512×512'},
-  {k:'discord-banner', l:'Discord Banner', w:960,  h:540,  note:'960×540'},
-  {k:'twitch-panel',   l:'Twitch Panel',   w:320,  h:160,  note:'320×160'},
-  {k:'twitch-banner',  l:'Twitch Banner',  w:1200, h:480,  note:'1200×480'},
-  {k:'youtube-art',    l:'YouTube Art',    w:2560, h:1440, note:'2560×1440'},
-  {k:'reddit-banner',  l:'Reddit Banner',  w:1920, h:384,  note:'1920×384'},
-  {k:'square',         l:'Square',         w:1024, h:1024, note:'1024×1024'},
-];
-
-const state = {
-  brandName:'Demonfall', tagline:'Unleash the Darkness. Fight the Demons.',
-  description:'dark fantasy fighting guild with infernal magic and supernatural atmosphere',
-  iconText:'DF', bannerText:'Demonfall',
-  primaryHex:'#8B0000', secondaryHex:'#4B0082',
-  background:'inferno', border:'glow', glow:15, font:'Arial Black',
-  opacity:85, gradient:true, shape:'circle',
-  imagePrompt:'ancient demon sigil hovering over a ruined crimson fortress in a violet storm',
-  apiKey:'', model:'gemini-2.0-flash', temperature:0.9,
-  sizePreset:'discord-icon',
-  activeTemplate:'demonfall',
-  step:1, totalSteps:4,
-};
-
-let lastRender=null, serverAlive=false;
 const SERVER = window.location.origin;
 const $ = id => document.getElementById(id);
-const $$ = s => document.querySelectorAll(s);
-const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+let serverAlive = false;
 
-function hexToRgba(hex,a){
-  const c=hex.replace('#','');
-  const n=parseInt(c.length===3?c.split('').map(x=>x+x).join(''):c,16);
-  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+// ── Server health ─────────────────────────────────────────────────────────
+async function pingServer() {
+  try { const r = await fetch(`${SERVER}/health`, { signal: AbortSignal.timeout(2500) }); serverAlive = r.ok; } catch { serverAlive = false; }
+  const pill = $('serverPill'), lbl = $('serverLabel');
+  pill.classList.toggle('online', serverAlive);
+  lbl.textContent = serverAlive ? 'Online' : 'Offline';
 }
-function dlBlob(b64,name){
-  const a=document.createElement('a'); a.href=`data:image/png;base64,${b64}`; a.download=name; a.click();
-}
+pingServer(); setInterval(pingServer, 9000);
 
-// ── URL hash state ────────────────────────────────────────────────────────
-const HASH_KEYS = ['brandName','tagline','description','iconText','bannerText',
-  'primaryHex','secondaryHex','background','border','glow','font','opacity',
-  'gradient','sizePreset','activeTemplate','shape'];
+// ── Theme ─────────────────────────────────────────────────────────────────
+$('themeBtn').addEventListener('click', () => {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
 
-function saveHash(){
-  const obj={};
-  HASH_KEYS.forEach(k=>obj[k]=state[k]);
-  try{ window.location.replace('#'+btoa(encodeURIComponent(JSON.stringify(obj)))); }catch{}
-}
-
-function loadHash(){
-  try{
-    if(!window.location.hash) return false;
-    const raw = decodeURIComponent(atob(window.location.hash.slice(1)));
-    const obj = JSON.parse(raw);
-    HASH_KEYS.forEach(k=>{ if(obj[k]!==undefined) state[k]=obj[k]; });
-    $('brandName').value   = state.brandName;
-    $('tagline').value     = state.tagline;
-    $('description').value = state.description;
-    $('iconText').value    = state.iconText;
-    $('bannerText').value  = state.bannerText;
-    $('primaryHex').value  = state.primaryHex;
-    $('secondaryHex').value= state.secondaryHex;
-    try{$('primaryPicker').value  = state.primaryHex;}catch{}
-    try{$('secondaryPicker').value= state.secondaryHex;}catch{}
-    $('glowRange').value   = state.glow;
-    $('opacityRange').value= state.opacity;
-    $('gradientToggle').checked = !!state.gradient;
-    try{$('fontSelect').value = state.font;}catch{}
-    return true;
-  }catch{ return false; }
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg = '✓ Copied!') {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-function shareLink(){
-  saveHash();
-  navigator.clipboard.writeText(window.location.href).then(()=>{
-    const t=$('shareToast'); t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),2200);
-  }).catch(()=>{
-    const t=$('shareToast'); t.textContent='↗ Copy the URL from your address bar';
-    t.classList.add('show'); setTimeout(()=>{ t.classList.remove('show'); t.textContent='✓ Link copied to clipboard!'; },2400);
+// ── Preview tabs ──────────────────────────────────────────────────────────
+document.querySelectorAll('.ptab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.preview-panel').forEach(p => p.classList.remove('on'));
+    tab.classList.add('on');
+    $('pp-' + tab.dataset.panel).classList.add('on');
   });
-}
+});
 
-// ── Apply shape to icon card ──────────────────────────────────────────────
-function applyShape(el){
-  const s = SHAPES.find(x=>x.k===state.shape)||SHAPES[0];
-  el.style.borderRadius = s.borderRadius;
-  el.style.clipPath     = s.clip === 'none' ? '' : s.clip;
-  el.style.overflow     = 'hidden';
-}
+// ── Wizard state ──────────────────────────────────────────────────────────
+let currentStep = 0;
+const TOTAL_STEPS = 4;
 
-// ── Build shape selector ──────────────────────────────────────────────────
-function buildShapeGrid(){
-  const grid=$('shapeGrid'); grid.innerHTML='';
-  SHAPES.forEach(s=>{
-    const btn=document.createElement('button');
-    btn.className='shape-btn'+(state.shape===s.k?' on':'');
-    btn.title=s.l;
-    const preview=document.createElement('div');
-    preview.className='shape-preview';
-    preview.style.borderRadius=s.borderRadius;
-    preview.style.clipPath=s.clip==='none'?'':s.clip;
-    const label=document.createElement('span');
-    label.textContent=s.l;
-    btn.appendChild(preview); btn.appendChild(label);
-    btn.addEventListener('click',()=>{
-      state.shape=s.k;
-      buildShapeGrid(); applyShape($('iconCard')); updatePreview(); saveHash();
-    });
+const TEMPLATES = [
+  { id:'demonfall',    name:'Demonfall',     sub:'Dark Fantasy',   primary:'#8B0000', secondary:'#4B0082', bg:'inferno',         border:'glow',   shape:'circle',   font:'Arial Black' },
+  { id:'cyber-nexus',  name:'Cyber Nexus',   sub:'Cyberpunk',      primary:'#00FFFF', secondary:'#FF00FF', bg:'neon-city',       border:'neon',   shape:'square',   font:'Impact' },
+  { id:'arcane-order', name:'Arcane Order',  sub:'Fantasy RPG',    primary:'#9B59B6', secondary:'#F39C12', bg:'gradient-purple', border:'glow',   shape:'hexagon',  font:'Playfair Display' },
+  { id:'cozy-den',     name:'Cozy Den',      sub:'Community',      primary:'#E67E22', secondary:'#F1C40F', bg:'solid-dark',      border:'none',   shape:'rounded',  font:'Arial' },
+  { id:'neon-drift',   name:'Neon Drift',    sub:'Racing / Sports',primary:'#FF6B35', secondary:'#F7C59F', bg:'neon-city',       border:'neon',   shape:'diamond',  font:'Impact' },
+  { id:'polar-ops',    name:'Polar Ops',     sub:'Tactical FPS',   primary:'#ADB5BD', secondary:'#495057', bg:'polar',           border:'subtle', shape:'square',   font:'Arial Black' },
+  { id:'emerald-fang', name:'Emerald Fang',  sub:'Survival / RPG', primary:'#39FF14', secondary:'#1A5C2A', bg:'forest-night',    border:'glow',   shape:'shield',   shape2:'shield', font:'Oswald' },
+  { id:'void-protocol',name:'Void Protocol', sub:'Sci-Fi',         primary:'#7B8CDE', secondary:'#DE7B9B', bg:'deep-space',      border:'subtle', shape:'circle',   font:'Source Code Pro' },
+];
+
+const BACKGROUNDS = [
+  { k:'gradient-purple', l:'Purple' }, { k:'midnight-gradient', l:'Midnight' },
+  { k:'inferno', l:'Inferno' }, { k:'ocean-depth', l:'Ocean' },
+  { k:'neon-city', l:'Neon City' }, { k:'forest-night', l:'Forest' },
+  { k:'deep-space', l:'Deep Space' }, { k:'solid-dark', l:'Dark' },
+  { k:'storm', l:'Storm' }, { k:'polar', l:'Polar' },
+];
+const BORDERS  = ['none','subtle','glow','neon','double'];
+const SHAPES   = ['circle','square','rounded','hexagon','diamond','shield'];
+const FONTS    = ['Arial','Arial Black','Impact','Bebas Neue','Oswald','Playfair Display','Source Code Pro','Dancing Script'];
+const SIZES    = ['Discord Icon (512×512)','Discord Banner (960×240)','Square (1024×1024)','Wide (1200×400)'];
+
+let state = { ...TEMPLATES[0], size: SIZES[0], radius: 0.5, shadow: 0.6 };
+
+// ── Build template grid ───────────────────────────────────────────────────
+function buildTemplates() {
+  const grid = $('templateGrid'); grid.innerHTML = '';
+  TEMPLATES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'swatch' + (state.id === t.id ? ' on' : '');
+    btn.innerHTML = `<div class="swatch-color" style="background:linear-gradient(135deg,${t.primary},${t.secondary})"></div><div class="swatch-name">${t.name}<br><span style="font-weight:400;color:var(--faint);font-size:.55rem">${t.sub}</span></div>`;
+    btn.addEventListener('click', () => { Object.assign(state, t); syncUIFromState(); renderAll(); buildTemplates(); });
     grid.appendChild(btn);
   });
 }
 
-// ── Apply template ────────────────────────────────────────────────────────
-function applyTemplate(tpl){
-  state.brandName    = tpl.brandName;
-  state.tagline      = tpl.tagline;
-  state.description  = tpl.description;
-  state.iconText     = tpl.iconText;
-  state.bannerText   = tpl.bannerText;
-  state.primaryHex   = tpl.primary;
-  state.secondaryHex = tpl.secondary;
-  state.background   = tpl.background;
-  state.border       = tpl.border;
-  state.font         = tpl.font;
-  state.glow         = tpl.glow;
-  state.opacity      = tpl.opacity;
-  state.gradient     = tpl.gradient;
-  state.shape        = tpl.shape || 'circle';
-  state.imagePrompt  = tpl.imagePrompt;
-  state.activeTemplate = tpl.id;
-  $('brandName').value    = tpl.brandName;
-  $('tagline').value      = tpl.tagline;
-  $('description').value  = tpl.description;
-  $('iconText').value     = tpl.iconText;
-  $('bannerText').value   = tpl.bannerText;
-  $('primaryHex').value   = tpl.primary;
-  $('secondaryHex').value = tpl.secondary;
-  try{$('primaryPicker').value   = tpl.primary;}catch{}
-  try{$('secondaryPicker').value = tpl.secondary;}catch{}
-  $('glowRange').value    = tpl.glow;
-  $('opacityRange').value = tpl.opacity;
-  $('gradientToggle').checked = tpl.gradient;
-  $('imagePrompt').value  = tpl.imagePrompt;
-  try{$('fontSelect').value = tpl.font;}catch{}
-  buildTemplateGrid(); buildShapeGrid(); buildChips(); buildSizeChips(); buildColorLibrary();
-  applyShape($('iconCard')); updatePreview(); saveHash();
-}
-
-function buildTemplateGrid(){
-  const grid=$('tplGrid'); grid.innerHTML='';
-  TEMPLATES.forEach(tpl=>{
-    const bg=BACKGROUNDS.find(b=>b.k===tpl.background)||BACKGROUNDS[0];
-    const card=document.createElement('button');
-    card.className='tpl-card'+(state.activeTemplate===tpl.id?' on':'');
-    card.setAttribute('aria-label',`Load ${tpl.name} template`);
-    card.innerHTML=`
-      <div class="tpl-card-bg" style="background:${bg.css}"></div>
-      <div class="tpl-card-foot">
-        <div>
-          <div class="tpl-card-name">${tpl.name}</div>
-          <div class="tpl-card-tag">${tpl.tag}</div>
-        </div>
-        <div class="tpl-card-dots">
-          <span class="tpl-card-dot" style="background:${tpl.primary}"></span>
-          <span class="tpl-card-dot" style="background:${tpl.secondary}"></span>
-        </div>
-      </div>`;
-    card.addEventListener('click',()=>applyTemplate(tpl));
-    grid.appendChild(card);
+// ── Build chip groups ─────────────────────────────────────────────────────
+function buildChips(containerId, items, stateKey, labelFn) {
+  const wrap = $(containerId); wrap.innerHTML = '';
+  items.forEach(item => {
+    const k = typeof item === 'string' ? item : item.k;
+    const l = typeof item === 'string' ? item : item.l;
+    const btn = document.createElement('button');
+    btn.className = 'chip' + (state[stateKey] === k ? ' on' : '');
+    btn.textContent = labelFn ? labelFn(l) : l;
+    btn.addEventListener('click', () => { state[stateKey] = k; buildChips(containerId, items, stateKey, labelFn); renderAll(); });
+    wrap.appendChild(btn);
   });
 }
 
-// ── Randomize ─────────────────────────────────────────────────────────────
-function randomize(){
-  const allColors = Object.values(COLORS).flat().map(c=>c.hex);
-  state.primaryHex   = pick(allColors);
-  state.secondaryHex = pick(allColors.filter(h=>h!==state.primaryHex));
-  state.background   = pick(BACKGROUNDS).k;
-  state.border       = pick(BORDERS);
-  state.font         = pick(FONTS);
-  state.shape        = pick(SHAPES).k;
-  state.glow         = Math.floor(Math.random()*20);
-  state.gradient     = Math.random()>.3;
-  state.activeTemplate = null;
-  $('primaryHex').value   = state.primaryHex;
-  $('secondaryHex').value = state.secondaryHex;
-  try{$('primaryPicker').value   = state.primaryHex;}catch{}
-  try{$('secondaryPicker').value = state.secondaryHex;}catch{}
-  $('glowRange').value    = state.glow;
-  $('gradientToggle').checked = state.gradient;
-  try{$('fontSelect').value = state.font;}catch{}
-  buildTemplateGrid(); buildShapeGrid(); buildChips(); buildSizeChips(); buildColorLibrary();
-  applyShape($('iconCard')); updatePreview(); saveHash();
+function buildAllChips() {
+  buildChips('bgChips',     BACKGROUNDS, 'bg');
+  buildChips('borderChips', BORDERS,     'border');
+  buildChips('shapeChips',  SHAPES,      'shape');
+  buildChips('fontChips',   FONTS,       'font');
+  buildChips('sizeChips',   SIZES,       'size');
 }
 
-function cleanError(raw){
-  if(!raw) return '⚠ Something went wrong. Try again.';
-  const s=String(raw);
-  if(s.startsWith('⚠')) return s.split('\n')[0].slice(0,120);
-  if(s.includes('429')||s.includes('quota')||s.includes('RESOURCE_EXHAUSTED')||s.includes('Too Many Requests'))
-    return '⚠ Gemini quota exceeded. Wait a moment or use your own API key.';
-  if(s.includes('API_KEY_INVALID')||(s.includes('400')&&s.includes('key')))
-    return '⚠ Invalid Gemini API key. Check the key in Step 4.';
-  if(s.includes('fetch')||s.includes('ENOTFOUND')||s.includes('Failed to fetch'))
-    return '⚠ Could not reach the server. Check your connection.';
-  if(s.includes('timeout')||s.includes('TimeoutError'))
-    return '⚠ Request timed out. Try Preview instead.';
-  if(s.includes('JSON')||s.includes('Unexpected token'))
-    return '⚠ Server returned an unreadable response. Try again.';
-  return (s.split('\n')[0]||s).slice(0,120);
-}
-function setStatus(msg,type='info'){
-  const el=$('genStatus'); el.style.display='block';
-  el.style.borderLeftColor=type==='ok'?'var(--success)':type==='error'?'var(--error)':'var(--primary)';
-  el.textContent=type==='error'?cleanError(msg):msg;
-}
-function setProgress(v){
-  const p=$('genProg');
-  if(v<0){p.style.display='none';return;}
-  p.style.display='block'; p.value=v;
+// ── Sync color pickers & inputs ───────────────────────────────────────────
+function syncUIFromState() {
+  $('brandName').value         = state.name        || '';
+  $('tagline').value           = state.tagline      || '';
+  $('desc').value              = state.desc         || '';
+  $('iconText').value          = state.iconText     || state.name?.slice(0,2).toUpperCase() || '';
+  $('bannerText').value        = state.bannerText   || state.name || '';
+  $('colorPrimary').value      = state.primary      || '#8B0000';
+  $('colorPrimaryPicker').value= state.primary      || '#8B0000';
+  $('colorSecondary').value    = state.secondary    || '#4B0082';
+  $('colorSecondaryPicker').value = state.secondary || '#4B0082';
+  $('radiusRange').value       = state.radius;
+  $('radiusDisplay').textContent = state.radius;
+  $('shadowRange').value       = state.shadow;
+  $('shadowDisplay').textContent = state.shadow;
+  buildAllChips();
 }
 
-// ── Wizard ────────────────────────────────────────────────────────────────
-const LABELS=['Identity','Colors','Style','Generate'];
-function buildStepper(){
-  const nav=$('stepper'); nav.innerHTML='';
-  LABELS.forEach((l,i)=>{
-    const n=i+1,btn=document.createElement('button');
-    btn.className='step'+(n<state.step?' done':n===state.step?' active':'');
-    btn.setAttribute('aria-label',`Step ${n}: ${l}`);
-    btn.innerHTML=`<span class="step-dot">${n<state.step?'&#10003;':n}</span><span class="step-label">${l}</span>`;
-    btn.onclick=()=>goStep(n); nav.appendChild(btn);
-  });
-  $('progFill').style.width=(state.step/state.totalSteps*100)+'%';
-  const sd=$('stepDots'); sd.innerHTML='';
-  for(let i=1;i<=state.totalSteps;i++){
-    const d=document.createElement('span');
-    d.style.cssText=`width:6px;height:6px;border-radius:50%;background:${i===state.step?'var(--primary)':'var(--border)'};display:inline-block;transition:background 200ms;`;
-    sd.appendChild(d);
-  }
-  $('prevBtn').disabled=state.step===1;
-  $('nextBtn').innerHTML=state.step===state.totalSteps?'&#9889; Build':'Next &#8594;';
+function syncColor(pickerId, hexId, stateKey) {
+  const picker = $(pickerId), hex = $(hexId);
+  picker.addEventListener('input', e => { state[stateKey] = e.target.value.toUpperCase(); hex.value = state[stateKey]; renderAll(); });
+  hex.addEventListener('input',   e => { try { picker.value = e.target.value; } catch {} state[stateKey] = e.target.value; renderAll(); });
 }
-function goStep(n){
-  if(n<1||n>state.totalSteps) return;
-  $$('.wizard-panel').forEach(p=>p.classList.remove('active'));
-  $(`panel-${n}`).classList.add('active');
-  state.step=n; buildStepper();
-  const sb=document.querySelector('.sidebar-body'); if(sb) sb.scrollTop=0;
-}
-$('prevBtn').addEventListener('click',()=>goStep(state.step-1));
-$('nextBtn').addEventListener('click',()=>{ if(state.step===state.totalSteps) runPreview(); else goStep(state.step+1); });
+syncColor('colorPrimaryPicker',   'colorPrimary',   'primary');
+syncColor('colorSecondaryPicker', 'colorSecondary', 'secondary');
 
-$$('[role=tab]').forEach(t=>{
-  t.addEventListener('click',()=>{
-    $$('[role=tab]').forEach(x=>x.classList.remove('on'));
-    $$('.mpanel').forEach(x=>x.classList.remove('on'));
-    t.classList.add('on'); $('tab-'+t.dataset.tab).classList.add('on');
-  });
+['brandName','tagline','desc','iconText','bannerText'].forEach(id => {
+  $(id).addEventListener('input', e => { state[id === 'brandName' ? 'name' : id] = e.target.value; renderAll(); });
 });
 
-function buildColorLibrary(){
-  const lib=$('colorLibrary'); lib.innerHTML='';
-  Object.entries(COLORS).forEach(([group,items])=>{
-    const h=document.createElement('div'); h.className='sh'; h.style.marginTop='.65rem'; h.textContent=group; lib.appendChild(h);
-    const grid=document.createElement('div'); grid.className='swatch-grid';
-    items.forEach(item=>{
-      const btn=document.createElement('button'); btn.className='swatch';
-      if(item.hex.toLowerCase()===state.primaryHex.toLowerCase()) btn.classList.add('on');
-      btn.title=`${item.name} ${item.hex}`;
-      btn.innerHTML=`<div class="swatch-color" style="background:${item.hex}"></div><div class="swatch-name">${item.name}</div>`;
-      let pressTimer;
-      btn.addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ state.secondaryHex=item.hex;$('secondaryHex').value=item.hex;$('secondaryPicker').value=item.hex;updatePreview();buildColorLibrary(); },500); },{passive:true});
-      btn.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
-      btn.addEventListener('click',e=>{
-        if(e.shiftKey){state.secondaryHex=item.hex;$('secondaryHex').value=item.hex;$('secondaryPicker').value=item.hex;}
-        else{state.primaryHex=item.hex;$('primaryHex').value=item.hex;$('primaryPicker').value=item.hex;}
-        state.activeTemplate=null; buildTemplateGrid();
-        updatePreview(); buildColorLibrary();
-      });
-      grid.appendChild(btn);
-    }); lib.appendChild(grid);
+$('radiusRange').addEventListener('input', e => { state.radius = parseFloat(e.target.value); $('radiusDisplay').textContent = state.radius; renderAll(); });
+$('shadowRange').addEventListener('input', e => { state.shadow = parseFloat(e.target.value); $('shadowDisplay').textContent = state.shadow; renderAll(); });
+
+// ── Wizard navigation ─────────────────────────────────────────────────────
+function goToStep(n) {
+  currentStep = Math.max(0, Math.min(TOTAL_STEPS - 1, n));
+  document.querySelectorAll('.wizard-panel').forEach((p,i) => p.classList.toggle('active', i === currentStep));
+  document.querySelectorAll('.step').forEach((s,i) => {
+    s.classList.toggle('active', i === currentStep);
+    s.classList.toggle('done',   i < currentStep);
   });
+  $('progFill').style.width = (currentStep / (TOTAL_STEPS - 1) * 100) + '%';
+  $('backBtn').disabled = currentStep === 0;
+  $('nextBtn').textContent = currentStep === TOTAL_STEPS - 1 ? '✓ Finish' : 'Next →';
+  document.querySelectorAll('.step-dot-sm').forEach((d,i) => d.classList.toggle('on', i === currentStep));
 }
 
-function buildChips(){
-  const bw=$('bgChips'); bw.innerHTML='';
-  BACKGROUNDS.forEach(bg=>{
-    const b=document.createElement('button'); b.className='chip'+(state.background===bg.k?' on':'');
-    b.style.cssText=`background:${bg.css};color:#fff;font-size:.72rem;`;
-    b.textContent=bg.l;
-    b.addEventListener('click',()=>{state.background=bg.k;state.activeTemplate=null;buildChips();buildTemplateGrid();updatePreview();saveHash();});
-    bw.appendChild(b);
-  });
-  const bdw=$('borderChips'); bdw.innerHTML='';
-  BORDERS.forEach(bdr=>{
-    const b=document.createElement('button'); b.className='chip'+(state.border===bdr?' on':'');
-    b.textContent=bdr.charAt(0).toUpperCase()+bdr.slice(1);
-    b.addEventListener('click',()=>{state.border=bdr;state.activeTemplate=null;buildChips();buildTemplateGrid();updatePreview();saveHash();});
-    bdw.appendChild(b);
-  });
+function buildStepDots() {
+  const wrap = $('stepDots'); wrap.innerHTML = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const d = document.createElement('div');
+    d.className = 'step-dot-sm' + (i === 0 ? ' on' : '');
+    wrap.appendChild(d);
+  }
 }
 
-function buildSizeChips(){
-  const sw=$('sizeChips'); sw.innerHTML='';
-  SIZES.forEach(sz=>{
-    const b=document.createElement('button'); b.className='chip'+(state.sizePreset===sz.k?' on':'');
-    b.title=sz.note; b.textContent=sz.l;
-    b.addEventListener('click',()=>{state.sizePreset=sz.k;buildSizeChips();updatePreview();saveHash();});
-    sw.appendChild(b);
-  });
-}
+$('nextBtn').addEventListener('click', () => goToStep(currentStep + 1));
+$('backBtn').addEventListener('click', () => goToStep(currentStep - 1));
+document.querySelectorAll('.step[data-step]').forEach(s => s.addEventListener('click', () => goToStep(+s.dataset.step)));
+$('previewBtn').addEventListener('click', () => { renderAll(); showToast('Preview refreshed'); });
+$('generateBtn').addEventListener('click', () => goToStep(TOTAL_STEPS - 1));
 
-$('primaryPicker').addEventListener('input',e=>{$('primaryHex').value=e.target.value.toUpperCase();state.activeTemplate=null;buildTemplateGrid();updatePreview();});
-$('secondaryPicker').addEventListener('input',e=>{$('secondaryHex').value=e.target.value.toUpperCase();state.activeTemplate=null;buildTemplateGrid();updatePreview();});
-$('primaryHex').addEventListener('input',e=>{try{$('primaryPicker').value=e.target.value;}catch{}state.activeTemplate=null;buildTemplateGrid();updatePreview();});
-$('secondaryHex').addEventListener('input',e=>{try{$('secondaryPicker').value=e.target.value;}catch{}state.activeTemplate=null;buildTemplateGrid();updatePreview();});
-
-function readState(){
-  state.brandName   =$('brandName').value.trim()||'Untitled';
-  state.tagline     =$('tagline').value.trim();
-  state.description =$('description').value.trim();
-  state.iconText    =($('iconText').value.trim()||'S').slice(0,4).toUpperCase();
-  state.bannerText  =$('bannerText').value.trim()||state.brandName;
-  state.primaryHex  =$('primaryHex').value.trim()||'#8B0000';
-  state.secondaryHex=$('secondaryHex').value.trim()||'#4B0082';
-  state.glow        =Number($('glowRange').value);
-  state.opacity     =Number($('opacityRange').value);
-  state.gradient    =$('gradientToggle').checked;
-  state.apiKey      =$('apiKey').value.trim();
-  state.imagePrompt =$('imagePrompt').value.trim();
-  state.font        =$('fontSelect').value;
-  state.model       =$('modelSelect').value;
-  state.temperature =Number($('tempRange').value)/10;
-  $('glowVal').textContent    =state.glow;
-  $('opacityVal').textContent =state.opacity+'%';
-  $('tempLbl').textContent    =state.temperature.toFixed(1);
-}
-
-function buildBg(){
-  const bg=BACKGROUNDS.find(b=>b.k===state.background)||BACKGROUNDS[0];
-  return state.gradient?`linear-gradient(135deg,${hexToRgba(state.primaryHex,.22)},${hexToRgba(state.secondaryHex,.18)}),${bg.css}`:bg.css;
-}
-function applyBorder(el){
-  el.style.outline=''; el.style.boxShadow='0 10px 36px rgba(0,0,0,.45)';
-  const p=state.primaryHex,g=state.glow;
-  if(state.border==='solid')     el.style.outline=`3px solid ${p}`;
-  else if(state.border==='glow')     el.style.boxShadow=`0 0 ${10+g*1.5}px ${hexToRgba(p,.7)},0 10px 36px rgba(0,0,0,.45)`;
-  else if(state.border==='double')   el.style.outline=`4px double ${p}`;
-  else if(state.border==='dashed')   el.style.outline=`3px dashed ${p}`;
-  else if(state.border==='gradient') el.style.outline=`3px solid ${p}`;
-}
-
-function updatePreview(){
-  readState();
-  document.documentElement.style.setProperty('--primary',state.primaryHex);
-  document.documentElement.style.setProperty('--secondary',state.secondaryHex);
-  const bg=buildBg();
-  const ic=$('iconCard'),bc=$('bannerCard');
-  ic.style.background=bg; bc.style.background=bg;
-  applyBorder(ic); applyBorder(bc); applyShape(ic);
-  $('iconText2').textContent=state.iconText;
-  $('iconText2').style.cssText=`color:${state.primaryHex};font-family:'${state.font}',sans-serif;font-size:3.5rem;font-weight:900;z-index:1;text-shadow:0 0 40px ${hexToRgba(state.primaryHex,.5)};`;
-  $('bannerText2').textContent=state.bannerText;
-  $('bannerText2').style.fontFamily=`'${state.font}',sans-serif`;
-  $('palPrimary').style.background=state.primaryHex;
-  $('palPrimary').querySelector('strong').textContent=state.primaryHex;
-  $('palSecondary').style.background=state.secondaryHex;
-  $('palSecondary').querySelector('strong').textContent=state.secondaryHex;
-  $('embedCard').style.borderLeftColor=state.primaryHex;
-  $('embedTitle').textContent=`✦ Brand Kit — ${state.brandName}`;
-  $('embedTag').textContent=`“${state.tagline}”`;
-  $('s-icon').textContent=state.iconText; $('s-banner').textContent=state.bannerText;
-  $('s-primary').textContent=state.primaryHex; $('s-secondary').textContent=state.secondaryHex;
-  $('s-bg').textContent=state.background; $('s-border').textContent=state.border;
-  const shp=SHAPES.find(s=>s.k===state.shape)||SHAPES[0];
-  $('s-shape').textContent=shp.l;
-  $('s-font').textContent=state.font;
-  const sz=SIZES.find(s=>s.k===state.sizePreset)||SIZES[0];
-  $('s-size').textContent=`${sz.l} (${sz.note})`;
-  updatePaletteTable();
-  $('jsonOutput').value=JSON.stringify(getConfig(),null,2);
-}
-
-function updatePaletteTable(){
-  const tb=$('paletteTbody'); tb.innerHTML='';
-  [{hex:state.primaryHex,name:'Primary',role:'Main brand color'},{hex:state.secondaryHex,name:'Secondary',role:'Accent / gradient end'},{hex:'#ffffff',name:'White',role:'Text on dark bg'},{hex:'#000000',name:'Black',role:'Text on light bg'}].forEach(e=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td><span class="color-chip-sm" style="background:${e.hex}"></span></td><td>${e.name}</td><td><code>${e.hex}</code></td><td style="color:var(--faint);font-size:.75rem">${e.role}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-function getConfig(){
-  const sz=SIZES.find(s=>s.k===state.sizePreset)||SIZES[0];
-  const shp=SHAPES.find(s=>s.k===state.shape)||SHAPES[0];
-  return {
-    brand:{name:state.brandName,tagline:state.tagline,description:state.description,image_prompt:state.imagePrompt},
-    visuals:{icon_text:state.iconText,banner_text:state.bannerText,primary_color:state.primaryHex,secondary_color:state.secondaryHex,background:state.background,border:state.border,glow:state.glow,font:state.font,opacity:state.opacity/100,gradient:state.gradient,shape:shp.k,width:sz.w,height:sz.h},
-    ai:{model:state.model,temperature:state.temperature},
+// ── Canvas rendering ──────────────────────────────────────────────────────
+function getBgColor() {
+  const map = {
+    'gradient-purple':'#1a0a2e','midnight-gradient':'#0a0a1a','inferno':'#1a0000',
+    'ocean-depth':'#001020','neon-city':'#000010','forest-night':'#001008',
+    'deep-space':'#000010','solid-dark':'#1e1f22','storm':'#0a0a0a','polar':'#0a1520',
   };
+  return map[state.bg] || '#111118';
 }
 
-async function pingServer(){
-  try{const r=await fetch(`${SERVER}/health`,{signal:AbortSignal.timeout(2000)});serverAlive=r.ok;}catch{serverAlive=false;}
-  const pill=$('serverPill'),lbl=$('serverLabel');
-  pill.classList.toggle('online',serverAlive);
-  lbl.textContent=serverAlive?'Online':'Offline';
-}
-pingServer(); setInterval(pingServer,8000);
+function renderIcon() {
+  const canvas = $('iconCanvas'), ctx = canvas.getContext('2d');
+  const W = 512, H = 512, cx = W/2, cy = H/2;
+  canvas.width = W; canvas.height = H;
 
-async function runPreview(){
-  if(!serverAlive){setStatus('⚠ Server offline','error');return;}
-  updatePreview(); setProgress(30); setStatus('Rendering canvas…','info');
-  const btn=$('previewBtn'); btn.disabled=true; btn.textContent='⟳ Rendering…';
-  try{
-    const res=await fetch(`${SERVER}/preview`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(getConfig().visuals),signal:AbortSignal.timeout(20000)});
-    const data=await res.json();
-    if(!data.ok) throw new Error(data.error||'Preview failed');
-    setProgress(100); showImages(data); wireDownloads(data);
-    setStatus('✓ Preview rendered','ok'); saveHash();
-  }catch(e){setStatus(e.message,'error');}
-  finally{setProgress(-1);btn.disabled=false;btn.textContent='⚡ Preview';}
+  // Background
+  const bgGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,W*0.7);
+  bgGrad.addColorStop(0, getBgColor());
+  bgGrad.addColorStop(1, '#000');
+  ctx.fillStyle = bgGrad; ctx.fillRect(0,0,W,H);
+
+  // Shadow
+  if (state.shadow > 0) {
+    ctx.shadowColor = state.primary;
+    ctx.shadowBlur  = state.shadow * 80;
+  }
+
+  // Shape clip
+  const r = Math.min(cx, cy) * 0.78;
+  ctx.save(); ctx.beginPath();
+  const rad = state.radius * r;
+  if (state.shape === 'circle')  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  else if (state.shape === 'square')  roundRect(ctx, cx-r, cy-r, r*2, r*2, rad * 0.1);
+  else if (state.shape === 'rounded') roundRect(ctx, cx-r, cy-r, r*2, r*2, rad);
+  else if (state.shape === 'hexagon') hexPath(ctx, cx, cy, r);
+  else if (state.shape === 'diamond') diamondPath(ctx, cx, cy, r);
+  else if (state.shape === 'shield')  shieldPath(ctx, cx, cy, r);
+  else ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.clip();
+
+  // Fill gradient
+  const grad = ctx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
+  grad.addColorStop(0, state.primary);
+  grad.addColorStop(1, state.secondary);
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+  ctx.restore();
+
+  // Border
+  ctx.shadowBlur = 0;
+  if (state.border !== 'none') {
+    ctx.strokeStyle = state.border === 'neon' ? state.primary : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth   = state.border === 'double' ? 6 : 3;
+    ctx.shadowColor = state.primary;
+    ctx.shadowBlur  = state.border === 'glow' ? 24 : state.border === 'neon' ? 40 : 0;
+    ctx.beginPath();
+    if (state.shape === 'circle')  ctx.arc(cx, cy, r, 0, Math.PI*2);
+    else if (state.shape === 'square')  roundRect(ctx, cx-r, cy-r, r*2, r*2, rad * 0.1);
+    else if (state.shape === 'rounded') roundRect(ctx, cx-r, cy-r, r*2, r*2, rad);
+    else if (state.shape === 'hexagon') hexPath(ctx, cx, cy, r);
+    else if (state.shape === 'diamond') diamondPath(ctx, cx, cy, r);
+    else if (state.shape === 'shield')  shieldPath(ctx, cx, cy, r);
+    else ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // Text
+  const txt = ($('iconText').value || state.name?.slice(0,2) || '??').toUpperCase();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#fff';
+  ctx.font = `900 ${Math.round(r * 0.6)}px ${state.font || 'Arial'}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.globalAlpha = 0.92;
+  ctx.fillText(txt, cx, cy);
+  ctx.globalAlpha = 1;
 }
 
-async function runGenerate(){
-  if(!serverAlive){setStatus('⚠ Server offline','error');return;}
-  if(!state.apiKey){goStep(4);setStatus('⚠ AI Generate requires a Gemini API key in Step 4','error');return;}
-  updatePreview(); setProgress(20); setStatus('Calling Gemini AI…','info');
-  const btn=$('generateBtn'); btn.disabled=true; btn.textContent='⟳ Generating…';
-  try{
-    setProgress(40);
-    const res=await fetch(`${SERVER}/generate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({description:state.description,image_prompt:state.imagePrompt,gemini_key:state.apiKey,model:state.model,temperature:state.temperature}),signal:AbortSignal.timeout(90000)});
-    setProgress(80);
-    const data=await res.json();
-    if(!data.ok) throw new Error(data.error||'Generate failed');
-    if(data.brand){
-      const b=data.brand;
-      if(b.name){$('brandName').value=b.name;state.brandName=b.name;}
-      if(b.tagline){$('tagline').value=b.tagline;state.tagline=b.tagline;}
-      if(b.palette?.length){state.primaryHex=b.palette[0];$('primaryHex').value=b.palette[0];$('primaryPicker').value=b.palette[0];if(b.palette[1]){state.secondaryHex=b.palette[1];$('secondaryHex').value=b.palette[1];$('secondaryPicker').value=b.palette[1];}}
-      if(b.background) state.background=b.background;
-      if(b.border)     state.border=b.border;
-      if(b.font){state.font=b.font;try{$('fontSelect').value=b.font;}catch{}}
-      if(b.glow!=null){state.glow=b.glow;$('glowRange').value=b.glow;}
-      if(b.shape){state.shape=b.shape;}
-      state.activeTemplate=null;
+function renderBanner() {
+  const canvas = $('bannerCanvas'), ctx = canvas.getContext('2d');
+  const W = 960, H = 240;
+  canvas.width = W; canvas.height = H;
+
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0, state.primary);
+  grad.addColorStop(1, state.secondary);
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0,0,W,H);
+
+  const txt = $('bannerText').value || state.name || 'SIGIL';
+  ctx.fillStyle = '#fff';
+  ctx.font = `900 72px ${state.font || 'Arial'}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = state.primary; ctx.shadowBlur = 24;
+  ctx.fillText(txt.toUpperCase(), W/2, H/2);
+  ctx.shadowBlur = 0;
+
+  if ($('tagline').value) {
+    ctx.font = `400 22px Inter, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.fillText($('tagline').value, W/2, H/2 + 52);
+  }
+}
+
+function renderPalette() {
+  const strip = $('paletteStrip'); strip.innerHTML = '';
+  [state.primary, state.secondary, getBgColor(), '#ffffff'].forEach((c,i) => {
+    const s = document.createElement('div');
+    s.className = 'pal-swatch';
+    s.style.background = c;
+    s.innerHTML = `<span>${c}</span>`;
+    strip.appendChild(s);
+  });
+
+  const tbl = $('kitTable'); tbl.innerHTML = '';
+  const rows = [
+    ['Icon', ($('iconText').value || state.name?.slice(0,2) || '??').toUpperCase()],
+    ['Banner', $('bannerText').value || state.name || '—'],
+    ['Primary', state.primary],
+    ['Secondary', state.secondary],
+    ['Background', state.bg],
+    ['Border', state.border],
+    ['Shape', state.shape],
+    ['Font', state.font],
+    ['Size', state.size],
+  ];
+  rows.forEach(([k,v]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${k}</td><td>${v}</td>`;
+    tbl.appendChild(tr);
+  });
+}
+
+function renderAll() { renderIcon(); renderBanner(); renderPalette(); }
+
+// ── Shape helpers ─────────────────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+}
+function hexPath(ctx, cx, cy, r) {
+  for (let i=0;i<6;i++) { const a=Math.PI/180*(60*i-30); i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a)); } ctx.closePath();
+}
+function diamondPath(ctx, cx, cy, r) {
+  ctx.moveTo(cx,cy-r); ctx.lineTo(cx+r,cy); ctx.lineTo(cx,cy+r); ctx.lineTo(cx-r,cy); ctx.closePath();
+}
+function shieldPath(ctx, cx, cy, r) {
+  ctx.moveTo(cx,cy+r); ctx.lineTo(cx-r,cy-r*0.3); ctx.lineTo(cx-r,cy-r); ctx.lineTo(cx+r,cy-r); ctx.lineTo(cx+r,cy-r*0.3); ctx.closePath();
+}
+
+// ── Downloads ─────────────────────────────────────────────────────────────
+$('dlIconBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.download = `${(state.name || 'sigil').toLowerCase().replace(/\s+/g,'-')}-icon.png`;
+  a.href = $('iconCanvas').toDataURL(); a.click();
+});
+$('dlBannerBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.download = `${(state.name || 'sigil').toLowerCase().replace(/\s+/g,'-')}-banner.png`;
+  a.href = $('bannerCanvas').toDataURL(); a.click();
+});
+$('copyKitBtn').addEventListener('click', () => {
+  const kit = { name: state.name, tagline: state.tagline, primary: state.primary, secondary: state.secondary, background: state.bg, border: state.border, shape: state.shape, font: state.font, size: state.size };
+  navigator.clipboard.writeText(JSON.stringify(kit, null, 2));
+  showToast('✓ Kit JSON copied!');
+});
+
+// ── AI Generate ───────────────────────────────────────────────────────────
+$('aiGenBtn').addEventListener('click', async () => {
+  if (!serverAlive) { setAiStatus('⚠ Server offline', 'err'); return; }
+  setAiStatus('Generating…', 'inf');
+  $('aiGenBtn').disabled = true;
+  try {
+    const res = await fetch(`${SERVER}/ai-generate`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name: state.name, tagline: state.tagline, description: $('desc').value, prompt: $('aiPrompt').value }),
+      signal: AbortSignal.timeout(30000),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    if (data.primary)   state.primary   = data.primary;
+    if (data.secondary) state.secondary = data.secondary;
+    if (data.bg)        state.bg        = data.bg;
+    if (data.font)      state.font      = data.font;
+    if (data.shape)     state.shape     = data.shape;
+    if (data.border)    state.border    = data.border;
+    if (data.image_url) {
+      const img = $('aiImg');
+      img.src = data.image_url; img.style.display = 'block';
+      $('aiImgPlaceholder').style.display = 'none';
+      $('dlAiBtn').disabled = false;
     }
-    showImages(data);
-    if(data.ai_image_b64) showAiImage(data.ai_image_b64,data.brand?.name||state.brandName);
-    wireDownloads(data); updatePreview(); buildChips(); buildSizeChips(); buildColorLibrary(); buildTemplateGrid(); buildShapeGrid();
-    setProgress(100); setStatus(`✓ Brand kit generated${data.ai_image_b64?' + AI image':''}`, 'ok');
-    saveHash();
-  }catch(e){setStatus(e.message,'error');}
-  finally{setProgress(-1);btn.disabled=false;btn.textContent='✦ Generate';}
-}
+    syncUIFromState(); renderAll();
+    setAiStatus('✓ Brand generated!', 'ok');
+  } catch(e) {
+    setAiStatus('⚠ ' + String(e.message || e).slice(0,80), 'err');
+  } finally { $('aiGenBtn').disabled = false; }
+});
 
-function showImages(data){
-  if(data.icon_b64)   setOverlay($('iconImg'),  data.icon_b64);
-  if(data.banner_b64) setOverlay($('bannerImg'),data.banner_b64);
-}
-function setOverlay(img,b64){
-  img.src=`data:image/png;base64,${b64}`; img.style.display='block';
-  requestAnimationFrame(()=>img.classList.add('show'));
-}
-function showAiImage(b64,name){
-  $('aiImageWrap').style.display='block'; $('aiPlaceholder').style.display='none';
-  $('aiImageEl').src=`data:image/png;base64,${b64}`; $('aiImageEl').alt=`AI: ${name}`;
-  $$('[role=tab]').forEach(t=>t.classList.remove('on')); $$('.mpanel').forEach(t=>t.classList.remove('on'));
-  document.querySelector('[data-tab=ai]').classList.add('on'); $('tab-ai').classList.add('on');
-}
-function wireDownloads(data){
-  lastRender=data; $('dlBar').style.display='flex';
-  if(data.icon_b64)    $('dlIcon').onclick=()=>dlBlob(data.icon_b64,   `${state.brandName}-icon.png`);
-  if(data.banner_b64)  $('dlBanner').onclick=()=>dlBlob(data.banner_b64,`${state.brandName}-banner.png`);
-  if(data.palette_b64) $('dlPalette').onclick=()=>dlBlob(data.palette_b64,`${state.brandName}-palette.png`);
-  if(data.ai_image_b64){$('dlAi').style.display='inline-flex';$('dlAi').onclick=()=>dlBlob(data.ai_image_b64,`${state.brandName}-ai.png`);}
-}
+$('manualGenBtn').addEventListener('click', () => { renderAll(); showToast('✓ Rendered!'); });
 
-$('exportBtn').addEventListener('click',()=>{updatePreview();$('dialogJson').value=JSON.stringify(getConfig(),null,2);$('exportDialog').showModal();});
-$('dialogClose').addEventListener('click',()=>$('exportDialog').close());
-$('dialogClose2').addEventListener('click',()=>$('exportDialog').close());
-$('dialogCopyBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText($('dialogJson').value);$('dialogCopyBtn').textContent='✓ Copied!';setTimeout(()=>$('dialogCopyBtn').textContent='Copy',1600);});
-$('copyJsonBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText($('jsonOutput').value);$('copyJsonBtn').textContent='✓ Copied!';setTimeout(()=>$('copyJsonBtn').textContent='ဆ3 Copy',1600);});
+$('dlAiBtn').addEventListener('click', () => {
+  const img = $('aiImg');
+  if (!img.src) return;
+  const a = document.createElement('a'); a.href = img.src;
+  a.download = `${(state.name||'sigil').toLowerCase().replace(/\s+/g,'-')}-ai.png`; a.click();
+});
 
-$('themeBtn').addEventListener('click',()=>{const r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');});
-$('randomBtn').addEventListener('click',randomize);
-$('shareBtn').addEventListener('click',shareLink);
-
-['brandName','tagline','description','iconText','bannerText','imagePrompt','fontSelect','modelSelect'].forEach(id=>$(id).addEventListener('input',()=>{updatePreview();saveHash();}));
-['glowRange','opacityRange','tempRange','gradientToggle'].forEach(id=>$(id).addEventListener('input',()=>{updatePreview();saveHash();}));
-$('previewBtn').addEventListener('click',runPreview);
-$('generateBtn').addEventListener('click',runGenerate);
-$('apiKey').addEventListener('input',updatePreview);
+function setAiStatus(msg, type) {
+  const el = $('aiStatus');
+  el.className = 'ai-status ' + type;
+  el.textContent = msg;
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────
-loadHash();
-buildStepper(); buildTemplateGrid(); buildShapeGrid(); buildColorLibrary(); buildChips(); buildSizeChips();
-applyShape($('iconCard')); updatePreview();
+buildTemplates();
+buildAllChips();
+buildStepDots();
+syncUIFromState();
+goToStep(0);
+renderAll();
 </script>
 </body>
 </html>
