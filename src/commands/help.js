@@ -7,90 +7,101 @@ module.exports = {
 
     async execute(interaction) {
         const embed = new EmbedBuilder()
-            .setTitle('📖 Sigil — Command Reference')
+            .setTitle('\uD83D\uDCD6 Sigil \u2014 Command Reference')
             .setColor('#8B0000')
-            .setDescription('Generate Discord server icons, banners, and full brand kits powered by AI.')
+            .setDescription(
+                'Generate Discord server icons, banners, and full brand kits \u2014 powered by Canvas and optional Gemini AI.\n' +
+                '**32 backgrounds \u2022 8 border styles \u2022 5 shapes \u2022 8 fonts \u2022 8 built-in templates**'
+            )
             .addFields(
                 {
-                    name: '🖼️ `/icon`',
+                    name: '\uD83D\uDDBC\uFE0F `/icon`',
                     value: [
-                        '`text` *(required)* — text to render',
-                        '`shape` — Circle / Rounded / Square / Hexagon / Diamond',
-                        '`background` — one of 20 presets',
-                        '`border` — none / solid / glow / gradient / double / dashed',
-                        '`primary_color` / `secondary_color` — hex color with autocomplete',
-                        '`font` — Arial Black, Impact, Bebas Neue…',
-                        '`glow` — 0–25',
-                        '`opacity` — 0.0–1.0',
+                        '`text` *(required)* \u2014 up to 4 characters to render',
+                        '`shape` \u2014 Circle / Rounded / Square / Hexagon / Diamond',
+                        '`background` \u2014 32 presets (gradients, solids, patterns, named)',
+                        '`border` \u2014 none / solid / glow / gradient / double / dashed / neon / rainbow',
+                        '`primary_color` / `secondary_color` \u2014 hex with autocomplete',
+                        '`font` \u2014 Arial Black, Impact, Bebas Neue, Oswald, Playfair Display\u2026',
+                        '`glow` \u2014 0\u201325 \u2022 `opacity` \u2014 0.0\u20131.0',
                     ].join('\n'),
                 },
                 {
-                    name: '🎨 `/logo`',
+                    name: '\uD83C\uDFA8 `/logo`',
                     value: [
                         '`text` *(required)*',
-                        '`shape` — Circle / Rounded / Square / Hexagon / Diamond',
+                        '`shape` \u2014 Circle / Rounded / Square / Hexagon / Diamond',
                         '`background`, `primary_color`, `secondary_color`, `font`, `glow`',
-                        '`transparent` — true/false for transparent background',
+                        '`transparent` \u2014 true/false for transparent background',
                     ].join('\n'),
                 },
                 {
-                    name: '🏞️ `/banner`',
+                    name: '\uD83C\uDF05 `/banner`',
                     value: [
                         '`text` *(required)*',
                         '`subtitle`, `background`, `border`, `primary_color`, `secondary_color`',
-                        '`font`, `glow`, `opacity`, `align` (left / center / right)',
+                        '`font`, `glow`, `opacity`, `align` \u2014 left / center / right',
                     ].join('\n'),
                 },
                 {
-                    name: '🤖 `/brand ai`',
-                    value: 'Describe your server → Gemini designs a full brand kit (icon + banner + palette + AI image)',
+                    name: '\uD83C\uDF9F\uFE0F `/template`',
+                    value: [
+                        'Load a built-in brand template and instantly render its full kit (icon + banner + palette)',
+                        '`name` *(required)* \u2014 Demonfall, Cyber Nexus, Arcane Order, Cozy Den, Neon Drift, Polar Ops, Emerald Fang, Void Protocol',
+                        '`icon_text` \u2014 override the icon initials',
+                        '`brand_name` \u2014 override the brand name in the embed',
+                    ].join('\n'),
                 },
                 {
-                    name: '📦 `/brand kit`',
-                    value: 'Manually specify brand name, tagline, colors, background, border, font, glow',
+                    name: '\uD83E\uDD16 `/brand ai`',
+                    value: 'Describe your server \u2192 Gemini designs a full brand kit (icon + banner + palette + AI image)',
                 },
                 {
-                    name: '🎲 `/random`',
-                    value: 'Generate a fully randomized icon — random shape, colors, background, border, font, glow',
+                    name: '\uD83D\uDCE6 `/brand kit`',
+                    value: 'Manually specify brand name, tagline, colors, background, border, font, glow, shape',
                 },
                 {
-                    name: '🔍 `/compare`',
-                    value: 'Side-by-side comparison of two icon configs (two `text` options, each with full styling)',
+                    name: '\uD83C\uDFB2 `/random`',
+                    value: 'Fully randomized icon \u2014 random shape, colors, background, border, font, glow',
                 },
                 {
-                    name: '🧑‍🎨 `/avatar`',
-                    value: 'Server avatar / profile icon with optional image overlay',
+                    name: '\uD83D\uDD0D `/compare`',
+                    value: 'Side-by-side comparison of two icon configs, each with independent shape, colors, background, border',
                 },
                 {
-                    name: '🌈 `/mood`',
+                    name: '\uD83E\uDDD1\u200D\uD83C\uDFA8 `/avatar`',
+                    value: 'Server avatar / profile icon with optional overlay image, supports all 5 shapes',
+                },
+                {
+                    name: '\uD83C\uDF08 `/mood`',
                     value: 'Generate a 5-color palette from a mood description (AI)',
                 },
                 {
-                    name: '🗂️ `/preview`',
-                    value: 'Grid preview of all available backgrounds',
+                    name: '\uD83D\uDDC2\uFE0F `/preview`',
+                    value: 'Grid preview of all 32 available backgrounds',
                 },
                 {
-                    name: '💾 `/saveme`',
+                    name: '\uD83D\uDCBE `/saveme`',
                     value: 'Save your most recent design as a named kit',
                 },
                 {
-                    name: '📜 `/history`',
+                    name: '\uD83D\uDCDC `/history`',
                     value: 'View recent command history with copy-paste commands',
                 },
                 {
-                    name: '🖥️ `/gui open`',
-                    value: 'Get the link to the visual GUI brand builder',
+                    name: '\uD83D\uDDA5\uFE0F `/gui open`',
+                    value: 'Get the link to the Visual Brand Builder \u2014 full GUI with live preview, templates, and AI Generate',
                 },
                 {
-                    name: '🟢 `/gui status`',
+                    name: '\uD83D\uDFE2 `/gui status`',
                     value: 'Check if the GUI server is online',
                 },
                 {
-                    name: 'ℹ️ `/status`',
-                    value: 'Show bot status, uptime, and version',
+                    name: '\u2139\uFE0F `/status`',
+                    value: 'Show bot uptime and version',
                 },
             )
-            .setFooter({ text: 'Sigil v1.6.0 • /help' });
+            .setFooter({ text: 'Sigil v1.9.0 \u2022 /help \u2014 use /template for instant brand kits, /gui open for the visual builder' });
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     },
