@@ -51,9 +51,11 @@ client.once('ready', () => {
     global.sigilClient = client;
     console.log(`\x1b[32m\x1b[1m[Sigil] Logged in as ${client.user.tag}\x1b[0m`);
 
-    // Start background pollers
-    const { startPollers } = require('./services/pollers.js');
+    const { startPollers }   = require('./services/pollers.js');
+    const { startScheduler } = require('./services/scheduler.js');
+
     startPollers(client);
+    startScheduler(client);
 });
 
 // Slash command handler
