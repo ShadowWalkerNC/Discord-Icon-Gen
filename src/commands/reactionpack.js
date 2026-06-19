@@ -1,21 +1,20 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { createCanvas } = require('canvas');
+const { createCanvas, loadImage } = require('canvas');
 const JSZip = require('jszip');
 const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { getBackgroundById } = require('../utils/backgrounds.js');
-const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
 
 const THEME_CHOICES = [
-    { name: 'Neon Green',  value: 'neon'   },
-    { name: 'Fire Red',    value: 'fire'   },
-    { name: 'Ocean Blue',  value: 'ocean'  },
-    { name: 'Gold',        value: 'gold'   },
-    { name: 'Purple',      value: 'purple' },
-    { name: 'Custom',      value: 'custom' },
+    { name: 'Neon Green', value: 'neon'   },
+    { name: 'Fire Red',   value: 'fire'   },
+    { name: 'Ocean Blue', value: 'ocean'  },
+    { name: 'Gold',       value: 'gold'   },
+    { name: 'Purple',     value: 'purple' },
+    { name: 'Custom',     value: 'custom' },
 ];
 
 const THEME_COLORS = {
@@ -30,10 +29,8 @@ const THEME_COLORS = {
 function renderReaction({ emoji, primary, secondary, bg, font, size = 128 }) {
     const canvas = createCanvas(size, size);
     const ctx    = canvas.getContext('2d');
-
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, size, size);
-
     const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
     grad.addColorStop(0, primary + '44');
     grad.addColorStop(1, secondary + '11');
@@ -41,11 +38,9 @@ function renderReaction({ emoji, primary, secondary, bg, font, size = 128 }) {
     ctx.beginPath();
     ctx.arc(size/2, size/2, size/2 - 4, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.strokeStyle = primary + '88';
     ctx.lineWidth = 2;
     ctx.stroke();
-
     const fontSize = Math.round(size * 0.45);
     ctx.font = `bold ${fontSize}px "${font}"`;
     ctx.fillStyle = primary;
@@ -55,7 +50,6 @@ function renderReaction({ emoji, primary, secondary, bg, font, size = 128 }) {
     ctx.shadowBlur = 8;
     ctx.fillText(emoji, size/2, size/2);
     ctx.shadowBlur = 0;
-
     return canvas.toBuffer('image/png');
 }
 
@@ -73,9 +67,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_color: autocompleteColor,
+        });
     },
 
     async execute(interaction) {
@@ -103,7 +97,6 @@ module.exports = {
         const pctx    = preview.getContext('2d');
         pctx.fillStyle = theme.bg;
         pctx.fillRect(0, 0, PREVIEW_W, PREVIEW_H);
-        const { loadImage } = require('canvas');
         for (let i = 0; i < buffers.length; i++) {
             const img = await loadImage(buffers[i]);
             pctx.drawImage(img, i * (128 + 16), 0, 128, 128);
@@ -141,7 +134,6 @@ module.exports = {
             .setFooter({ text: 'Sigil • reactionpack — upload to any server for free' });
 
         await interaction.editReply({ embeds: [embed], files: [previewAttachment, zipAttachment] });
-
         saveEntry(interaction.user.id, { command: 'reactionpack', emojis, theme: themeKey, font });
     },
 };

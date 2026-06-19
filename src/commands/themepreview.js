@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discor
 const { createCanvas } = require('canvas');
 const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
 
@@ -25,9 +25,10 @@ module.exports = {
         .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            accent_color:    autocompleteColor,
+            secondary_color: autocompleteColor,
+        });
     },
 
     async execute(interaction) {
@@ -43,13 +44,10 @@ module.exports = {
 
         ctx.fillStyle = '#1e1f22';
         ctx.fillRect(0, 0, 72, H);
-
         ctx.fillStyle = '#2b2d31';
         ctx.fillRect(72, 0, 240, H);
-
         ctx.fillStyle = '#313338';
         ctx.fillRect(312, 0, W - 312, H);
-
         ctx.fillStyle = '#2b2d31';
         ctx.fillRect(W - 200, 0, 200, H);
 
@@ -92,7 +90,6 @@ module.exports = {
             ctx.font = `bold 11px Arial`;
             ctx.fillStyle = '#949ba4';
             ctx.fillText(cat, 88, cy);
-
             const channels = ['# general', '# off-topic', '# showcase'];
             channels.slice(0, 2).forEach((ch, j) => {
                 const isActive = i === 0 && j === 0;
@@ -127,7 +124,6 @@ module.exports = {
             { user: 'Sigil Bot',    color: secondary, text: 'Hello! Type /help to see all commands.', time: 'Today at 10:01 AM' },
             { user: 'Member',       color: '#949ba4', text: 'This theme looks amazing btw 👀', time: 'Today at 10:02 AM' },
         ];
-
         msgs.forEach((msg, i) => {
             const my = 72 + i * 80;
             ctx.beginPath();
@@ -169,7 +165,7 @@ module.exports = {
         ctx.fillText('ONLINE — 3', W - 188, 70);
 
         const members = [
-            { name: 'ShadowWalker', color: accent },
+            { name: 'ShadowWalker', color: accent    },
             { name: 'Sigil Bot',    color: secondary },
             { name: 'Member',       color: '#949ba4' },
         ];
@@ -213,14 +209,13 @@ module.exports = {
             .setImage('attachment://themepreview.png')
             .setColor(accent)
             .addFields(
-                { name: 'Accent',    value: accent,    inline: true },
-                { name: 'Secondary', value: secondary, inline: true },
+                { name: 'Accent',    value: accent,        inline: true },
+                { name: 'Secondary', value: secondary,     inline: true },
                 { name: 'Size',      value: '860 × 540 px', inline: true },
             )
             .setFooter({ text: 'Sigil • themepreview — Discord UI mockup' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
-
         saveEntry(interaction.user.id, { command: 'themepreview', serverName, accent, secondary, font });
     },
 };

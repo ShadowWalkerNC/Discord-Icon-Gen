@@ -1,22 +1,14 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { createCanvas } = require('canvas');
+const { createCanvas, loadImage } = require('canvas');
 const { registerAllFonts, getAllFontFamilies, renderIcon } = require('../utils/canvas.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { getBorderChoices } = require('../utils/borders.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { SHAPE_CHOICES, dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
 
 const ICON_SIZE = 512;
-
-const SHAPE_CHOICES = [
-    { name: 'Circle',  value: 'circle'  },
-    { name: 'Rounded', value: 'rounded' },
-    { name: 'Square',  value: 'square'  },
-    { name: 'Hexagon', value: 'hexagon' },
-    { name: 'Diamond', value: 'diamond' },
-];
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -38,9 +30,12 @@ module.exports = {
         .addNumberOption(opt => opt.setName('glow_b').setDescription('Glow for B (0–25)').setMinValue(0).setMaxValue(25)),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_a:   autocompleteColor,
+            secondary_a: autocompleteColor,
+            primary_b:   autocompleteColor,
+            secondary_b: autocompleteColor,
+        });
     },
 
     async execute(interaction) {
@@ -69,9 +64,8 @@ module.exports = {
             renderIcon(aOpts),
             renderIcon(bOpts),
         ]);
-
-        const { loadImage } = require('canvas');
         const [imgA, imgB] = await Promise.all([loadImage(bufA), loadImage(bufB)]);
+
         const GAP = 20;
         const W = ICON_SIZE * 2 + GAP;
         const H = ICON_SIZE;
