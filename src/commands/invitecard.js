@@ -1,10 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { createCanvas, loadImage } = require('canvas');
 const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
-const { getBackgroundById } = require('../utils/backgrounds.js');
-const { getBackgroundChoices } = require('../utils/backgrounds.js');
+const { getBackgroundById, getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
 
@@ -17,14 +16,12 @@ function buildQRMatrix(text) {
     for (let r = 0; r < size; r++) {
         matrix.push([]);
         for (let c = 0; c < size; c++) {
-            const inFinder =
-                (r < 8 && c < 8) || (r < 8 && c >= size - 8) || (r >= size - 8 && c < 8);
+            const inFinder = (r < 8 && c < 8) || (r < 8 && c >= size - 8) || (r >= size - 8 && c < 8);
             if (inFinder) {
-                const fr = r % 8, fc = c % 8;
                 const rr = (r >= size - 8) ? r - (size - 8) : r;
                 const cc = (c >= size - 8) ? c - (size - 8) : c;
                 matrix[r].push(
-                    (rr === 0 || rr === 6 || fc === 0 || fc === 6) ? 1 :
+                    (rr === 0 || rr === 6 || cc === 0 || cc === 6) ? 1 :
                     (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4) ? 1 : 0
                 );
             } else {
@@ -61,9 +58,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('icon_url').setDescription('Server icon URL (optional)')),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_color: autocompleteColor,
+        });
     },
 
     async execute(interaction) {
@@ -71,12 +68,12 @@ module.exports = {
 
         const serverName  = interaction.options.getString('server_name');
         const inviteURL   = interaction.options.getString('invite_url');
-        const description = interaction.options.getString('description')  ?? 'Join our community!';
-        const memberCount = interaction.options.getString('member_count') ?? '';
-        const background  = interaction.options.getString('background')   ?? 'solid-dark';
+        const description = interaction.options.getString('description')   ?? 'Join our community!';
+        const memberCount = interaction.options.getString('member_count')  ?? '';
+        const background  = interaction.options.getString('background')    ?? 'solid-dark';
         const primary     = interaction.options.getString('primary_color') ?? '#5865F2';
-        const font        = interaction.options.getString('font')         ?? getAllFontFamilies()[0] ?? 'Arial';
-        const iconURL     = interaction.options.getString('icon_url')    ?? null;
+        const font        = interaction.options.getString('font')          ?? getAllFontFamilies()[0] ?? 'Arial';
+        const iconURL     = interaction.options.getString('icon_url')      ?? null;
 
         const canvas = createCanvas(W, H);
         const ctx    = canvas.getContext('2d');
@@ -87,9 +84,7 @@ module.exports = {
 
         ctx.fillStyle = '#00000055';
         ctx.beginPath(); ctx.roundRect(0, 0, W - 220, H, [12, 0, 0, 12]); ctx.fill();
-
-        ctx.fillStyle = primary;
-        ctx.fillRect(0, 0, 6, H);
+        ctx.fillStyle = primary; ctx.fillRect(0, 0, 6, H);
 
         const IR = 52, IX = 36, IY = 90;
         ctx.save();
@@ -110,13 +105,11 @@ module.exports = {
         ctx.strokeStyle = primary; ctx.lineWidth = 2.5; ctx.stroke();
 
         const TX = IX + IR * 2 + 20;
-        ctx.font = `bold 32px "${font}"`;
-        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold 32px "${font}"`; ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
         ctx.fillText(serverName, TX, IY + 10);
 
-        ctx.font = `16px "${font}"`;
-        ctx.fillStyle = '#cccccc';
+        ctx.font = `16px "${font}"`; ctx.fillStyle = '#cccccc';
         const words = description.split(' ');
         let line = '', lines = [], dy = 180;
         for (const w of words) {
@@ -128,28 +121,20 @@ module.exports = {
         lines.slice(0, 4).forEach((l, i) => ctx.fillText(l, 36, dy + i * 26));
 
         if (memberCount) {
-            ctx.font = `bold 14px "${font}"`;
-            ctx.fillStyle = primary;
+            ctx.font = `bold 14px "${font}"`; ctx.fillStyle = primary;
             ctx.fillText('👥  ' + memberCount, 36, H - 56);
         }
-
-        ctx.font = `bold 15px Arial`;
-        ctx.fillStyle = '#ffffff88';
+        ctx.font = `bold 15px Arial`; ctx.fillStyle = '#ffffff88';
         ctx.fillText(inviteURL, 36, H - 32);
 
         const QR_X = W - 200, QR_Y = 40, QR_SIZE = 160;
         ctx.fillStyle = '#ffffff0a';
         ctx.beginPath(); ctx.roundRect(QR_X - 10, QR_Y - 10, 200, H - 60, 12); ctx.fill();
-
         const matrix = buildQRMatrix(inviteURL);
         drawQR(ctx, matrix, QR_X + 10, QR_Y + 20, QR_SIZE, primary);
-
-        ctx.font = `bold 13px Arial`;
-        ctx.fillStyle = primary;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
+        ctx.font = `bold 13px Arial`; ctx.fillStyle = primary;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
         ctx.fillText('SCAN TO JOIN', QR_X + 90, QR_Y + QR_SIZE + 44);
-
         ctx.font = '12px Arial'; ctx.fillStyle = '#ffffff18';
         ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
         ctx.fillText('made with Sigil', W - 12, H - 6);
@@ -163,7 +148,7 @@ module.exports = {
             .setImage('attachment://invitecard.png')
             .setColor(primary)
             .addFields(
-                { name: 'Invite',  value: inviteURL,          inline: true },
+                { name: 'Invite',  value: inviteURL,           inline: true },
                 { name: 'Members', value: memberCount || 'N/A', inline: true },
             )
             .setFooter({ text: 'Sigil • invitecard — 800×420 PNG' });

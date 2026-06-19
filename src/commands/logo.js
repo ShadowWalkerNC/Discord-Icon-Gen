@@ -2,17 +2,9 @@ const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discor
 const { registerAllFonts, getAllFontFamilies, renderIcon } = require('../utils/canvas.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { SHAPE_CHOICES, dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
-
-const SHAPE_CHOICES = [
-    { name: 'Circle',  value: 'circle'  },
-    { name: 'Rounded', value: 'rounded' },
-    { name: 'Square',  value: 'square'  },
-    { name: 'Hexagon', value: 'hexagon' },
-    { name: 'Diamond', value: 'diamond' },
-];
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,22 +20,23 @@ module.exports = {
         .addBooleanOption(opt => opt.setName('transparent').setDescription('Transparent background')),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_color:   autocompleteColor,
+            secondary_color: autocompleteColor,
+        });
     },
 
     async execute(interaction) {
         await interaction.deferReply();
 
         const text        = interaction.options.getString('text');
-        const shape       = interaction.options.getString('shape')          ?? 'square';
-        const background  = interaction.options.getString('background')     ?? 'gradient-purple';
-        const primary     = interaction.options.getString('primary_color')  ?? '#ffffff';
+        const shape       = interaction.options.getString('shape')           ?? 'square';
+        const background  = interaction.options.getString('background')      ?? 'gradient-purple';
+        const primary     = interaction.options.getString('primary_color')   ?? '#ffffff';
         const secondary   = interaction.options.getString('secondary_color') ?? '#aaaaaa';
-        const font        = interaction.options.getString('font')           ?? getAllFontFamilies()[0];
-        const glow        = interaction.options.getNumber('glow')           ?? 0;
-        const transparent = interaction.options.getBoolean('transparent')  ?? false;
+        const font        = interaction.options.getString('font')            ?? getAllFontFamilies()[0];
+        const glow        = interaction.options.getNumber('glow')            ?? 0;
+        const transparent = interaction.options.getBoolean('transparent')   ?? false;
 
         const bg  = transparent ? 'transparent' : background;
         const buf = await renderIcon({ text, shape, background: bg, border: 'none', primary, secondary, font, glow, opacity: transparent ? 0 : 1 });
