@@ -37,6 +37,17 @@ module.exports = {
             .addChannelOption(opt => opt.setName('channel').setDescription('Channel to post boost cards in').addChannelTypes(ChannelType.GuildText))
         )
         .addSubcommand(sub => sub
+            .setName('events')
+            .setDescription('Configure auto-event banners and recap cards')
+            .addBooleanOption(opt => opt.setName('enabled').setDescription('Enable auto-event banners and recaps').setRequired(true))
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel to post event banners and recaps in').addChannelTypes(ChannelType.GuildText))
+        )
+        .addSubcommand(sub => sub
+            .setName('stats')
+            .setDescription('Configure weekly server health report')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel to post weekly reports in (leave blank to disable)').addChannelTypes(ChannelType.GuildText))
+        )
+        .addSubcommand(sub => sub
             .setName('status')
             .setDescription('Show current automation status for this server')
         ),
@@ -51,21 +62,39 @@ module.exports = {
         const sub     = interaction.options.getSubcommand();
         const guildId = interaction.guild.id;
 
+        // ── STATUS ──────────────────────────────────────────────────────────
         if (sub === 'status') {
             const cfg = getConfig(guildId);
             const embed = new EmbedBuilder()
                 .setTitle('⚙️ Sigil Automation Status')
                 .setColor('#5865F2')
                 .addFields(
-                    { name: '👋 Welcome',   value: cfg.welcome_enabled   ? `🟢 On — <#${cfg.welcome_channel}>`   : '🔴 Off', inline: true },
-                    { name: '👋 Goodbye',   value: cfg.goodbye_enabled   ? `🟢 On — <#${cfg.goodbye_channel}>`   : '🔴 Off', inline: true },
-                    { name: '🎉 Milestone', value: cfg.milestone_enabled ? `🟢 On — <#${cfg.milestone_channel}>` : '🔴 Off', inline: true },
-                    { name: '🚀 Boost',     value: cfg.boost_enabled     ? `🟢 On — <#${cfg.boost_channel}>`     : '🔴 Off', inline: true },
+                    { name: '👋 Welcome',   value: cfg.welcome_enabled        ? `🟢 On — <#${cfg.welcome_channel}>`        : '🔴 Off', inline: true },
+                    { name: '👋 Goodbye',   value: cfg.goodbye_enabled        ? `🟢 On — <#${cfg.goodbye_channel}>`        : '🔴 Off', inline: true },
+                    { name: '🎉 Milestone', value: cfg.milestone_enabled      ? `🟢 On — <#${cfg.milestone_channel}>`      : '🔴 Off', inline: true },
+                    { name: '🚀 Boost',     value: cfg.boost_enabled          ? `🟢 On — <#${cfg.boost_channel}>`          : '🔴 Off', inline: true },
+                    { name: '📅 Events',    value: cfg.event_banner_enabled   ? `🟢 On — <#${cfg.event_banner_channel}>`   : '🔴 Off', inline: true },
+                    { name: '📊 Weekly Stats', value: cfg.stats_channel       ? `🟢 On — <#${cfg.stats_channel}>`          : '🔴 Off', inline: true },
                 )
                 .setFooter({ text: 'Sigil • sigilconfig status' });
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
+        // ── STATS (no enabled toggle — channel presence = enabled) ──────────
+        if (sub === 'stats') {
+            const channel = interaction.options.getChannel('channel');
+            setConfig(guildId, { stats_channel: channel ? channel.id : null });
+            const embed = new EmbedBuilder()
+                .setTitle('✅ Sigil — Stats Updated')
+                .setDescription(channel
+                    ? `Weekly server reports will post every **Monday 9:00 UTC** in <#${channel.id}>.`
+                    : 'Weekly server reports have been **disabled**.')
+                .setColor(channel ? '#39FF14' : '#ff4444')
+                .setFooter({ text: 'Sigil • sigilconfig stats' });
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+
+        // ── ALL OTHER SUBCOMMANDS (have enabled boolean) ─────────────────────
         const enabled = interaction.options.getBoolean('enabled');
         const channel = interaction.options.getChannel('channel');
 
@@ -90,6 +119,10 @@ module.exports = {
         } else if (sub === 'boost') {
             const update = { boost_enabled: enabled ? 1 : 0 };
             if (channel) update.boost_channel = channel.id;
+            setConfig(guildId, update);
+        } else if (sub === 'events') {
+            const update = { event_banner_enabled: enabled ? 1 : 0 };
+            if (channel) update.event_banner_channel = channel.id;
             setConfig(guildId, update);
         }
 
