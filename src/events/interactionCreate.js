@@ -4,6 +4,7 @@ const rsvpCommand   = require('../commands/rsvp.js');
 const lfgCommand    = require('../commands/lfg.js');
 const pollCommand   = require('../commands/poll.js');
 const ticketCommand = require('../commands/ticket.js');
+const prayerCommand = require('../commands/prayer.js');
 
 module.exports = {
     name: 'interactionCreate',
@@ -12,19 +13,13 @@ module.exports = {
 
         const { customId } = interaction;
 
-        // ── RSVP buttons ─────────────────────────────────────────
-        if (customId.startsWith('rsvp_')) return rsvpCommand.handleButton(interaction);
-
-        // ── LFG buttons ─────────────────────────────────────────
-        if (customId.startsWith('lfg_'))  return lfgCommand.handleButton(interaction);
-
-        // ── Poll buttons ─────────────────────────────────────────
-        if (customId.startsWith('poll_')) return pollCommand.handleButton(interaction);
-
-        // ── Ticket buttons ───────────────────────────────────────
+        if (customId.startsWith('rsvp_'))   return rsvpCommand.handleButton(interaction);
+        if (customId.startsWith('lfg_'))    return lfgCommand.handleButton(interaction);
+        if (customId.startsWith('poll_'))   return pollCommand.handleButton(interaction);
         if (customId.startsWith('ticket_')) return ticketCommand.handleButton(interaction);
+        if (customId.startsWith('prayer_')) return prayerCommand.handleButton(interaction);
 
-        // ── Setup wizard buttons ───────────────────────────────
+        // ── Setup wizard buttons ────────────────────────────────
         if (customId === 'setup_brand') {
             return interaction.reply({
                 embeds: [new EmbedBuilder().setColor('#00FF00').setTitle('✓ Step 1 — Brand')
