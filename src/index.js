@@ -51,11 +51,13 @@ client.once('ready', () => {
     global.sigilClient = client;
     console.log(`\x1b[32m\x1b[1m[Sigil] Logged in as ${client.user.tag}\x1b[0m`);
 
-    const { startPollers }   = require('./services/pollers.js');
-    const { startScheduler } = require('./services/scheduler.js');
+    const { startPollers }     = require('./services/pollers.js');
+    const { startScheduler }   = require('./services/scheduler.js');
+    const { startStatsRunner } = require('./services/statsRunner.js');
 
     startPollers(client);
     startScheduler(client);
+    startStatsRunner(client);
 });
 
 // Slash command handler

@@ -45,6 +45,7 @@ db.exec(`
         xp_channel              TEXT,
         xp_rate                 INTEGER DEFAULT 15,
         xp_cooldown             INTEGER DEFAULT 60,
+        last_stats_at           TEXT,
         updated_at              TEXT DEFAULT (datetime('now'))
     );
 
@@ -119,6 +120,7 @@ const migrations = [
     ['xp_channel',            'ALTER TABLE guild_config ADD COLUMN xp_channel             TEXT'],
     ['xp_rate',               'ALTER TABLE guild_config ADD COLUMN xp_rate                INTEGER DEFAULT 15'],
     ['xp_cooldown',           'ALTER TABLE guild_config ADD COLUMN xp_cooldown            INTEGER DEFAULT 60'],
+    ['last_stats_at',         'ALTER TABLE guild_config ADD COLUMN last_stats_at          TEXT'],
 ];
 for (const [col, sql] of migrations) {
     if (!existingCols.includes(col)) db.exec(sql);
@@ -226,6 +228,13 @@ function getUserRank(guildId, userId) {
     return row?.rank ?? 1;
 }
 
+function getWeeklyTopXP(guildId, limit = 3) {
+    const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    return db.prepare(
+        'SELECT * FROM user_xp WHERE guild_id = ? AND last_xp_at >= ? ORDER BY xp DESC LIMIT ?'
+    ).all(guildId, since, limit);
+}
+
 // ── Twitch sub helpers ────────────────────────────────────────────────────────
 function getTwitchSubs(guildId) {
     return db.prepare('SELECT * FROM twitch_subs WHERE guild_id = ?').all(guildId);
@@ -276,7 +285,7 @@ module.exports = {
     getConfig, setConfig, getGuildsWithFeature,
     addScheduledPost, getDueScheduledPosts, deleteScheduledPost, getScheduledPosts,
     addModCase, getModCases, countModCases,
-    getXP, setXP, updateLastXpAt, getLeaderboard, getUserRank,
+    getXP, setXP, updateLastXpAt, getLeaderboard, getUserRank, getWeeklyTopXP,
     getTwitchSubs, getAllTwitchSubs, addTwitchSub, removeTwitchSub, setTwitchLastStream,
     getYoutubeSubs, getAllYoutubeSubs, addYoutubeSub, removeYoutubeSub, setYoutubeLastVideo,
 };
