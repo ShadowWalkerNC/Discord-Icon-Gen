@@ -1,10 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
 const { getPanel, getPanelButtons } = require('../utils/db.js');
-const rsvpCommand   = require('../commands/rsvp.js');
-const lfgCommand    = require('../commands/lfg.js');
-const pollCommand   = require('../commands/poll.js');
-const ticketCommand = require('../commands/ticket.js');
-const prayerCommand = require('../commands/prayer.js');
+const rsvpCommand      = require('../commands/rsvp.js');
+const lfgCommand       = require('../commands/lfg.js');
+const pollCommand      = require('../commands/poll.js');
+const ticketCommand    = require('../commands/ticket.js');
+const prayerCommand    = require('../commands/prayer.js');
+const volunteerCommand = require('../commands/volunteer.js');
 
 module.exports = {
     name: 'interactionCreate',
@@ -13,11 +14,12 @@ module.exports = {
 
         const { customId } = interaction;
 
-        if (customId.startsWith('rsvp_'))   return rsvpCommand.handleButton(interaction);
-        if (customId.startsWith('lfg_'))    return lfgCommand.handleButton(interaction);
-        if (customId.startsWith('poll_'))   return pollCommand.handleButton(interaction);
-        if (customId.startsWith('ticket_')) return ticketCommand.handleButton(interaction);
-        if (customId.startsWith('prayer_')) return prayerCommand.handleButton(interaction);
+        if (customId.startsWith('rsvp_'))      return rsvpCommand.handleButton(interaction);
+        if (customId.startsWith('lfg_'))       return lfgCommand.handleButton(interaction);
+        if (customId.startsWith('poll_'))      return pollCommand.handleButton(interaction);
+        if (customId.startsWith('ticket_'))    return ticketCommand.handleButton(interaction);
+        if (customId.startsWith('prayer_'))    return prayerCommand.handleButton(interaction);
+        if (customId.startsWith('vol_'))       return volunteerCommand.handleButton(interaction);
 
         // ── Setup wizard buttons ────────────────────────────────
         if (customId === 'setup_brand') {
