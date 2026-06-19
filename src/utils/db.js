@@ -1,6 +1,6 @@
 /**
  * Lightweight SQLite wrapper using better-sqlite3.
- * Stores per-guild automation config, scheduled posts, mod cases, and XP.
+ * Stores per-guild automation config, scheduled posts, mod cases, XP, and stream subscriptions.
  */
 const Database = require('better-sqlite3');
 const path     = require('path');
@@ -77,6 +77,25 @@ db.exec(`
         level       INTEGER DEFAULT 0,
         last_xp_at  TEXT DEFAULT (datetime('now')),
         PRIMARY KEY (guild_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS twitch_subs (
+        guild_id        TEXT NOT NULL,
+        streamer_login  TEXT NOT NULL,
+        streamer_name   TEXT NOT NULL,
+        post_channel_id TEXT NOT NULL,
+        live_message    TEXT,
+        last_stream_id  TEXT,
+        PRIMARY KEY (guild_id, streamer_login)
+    );
+
+    CREATE TABLE IF NOT EXISTS youtube_subs (
+        guild_id        TEXT NOT NULL,
+        yt_channel_id   TEXT NOT NULL,
+        channel_name    TEXT NOT NULL,
+        post_channel_id TEXT NOT NULL,
+        last_video_id   TEXT,
+        PRIMARY KEY (guild_id, yt_channel_id)
     );
 `);
 
@@ -207,9 +226,57 @@ function getUserRank(guildId, userId) {
     return row?.rank ?? 1;
 }
 
+// ── Twitch sub helpers ────────────────────────────────────────────────────────
+function getTwitchSubs(guildId) {
+    return db.prepare('SELECT * FROM twitch_subs WHERE guild_id = ?').all(guildId);
+}
+
+function getAllTwitchSubs() {
+    return db.prepare('SELECT * FROM twitch_subs').all();
+}
+
+function addTwitchSub(guildId, streamerLogin, streamerName, postChannelId) {
+    db.prepare(
+        'INSERT OR REPLACE INTO twitch_subs (guild_id, streamer_login, streamer_name, post_channel_id) VALUES (?, ?, ?, ?)'
+    ).run(guildId, streamerLogin.toLowerCase(), streamerName, postChannelId);
+}
+
+function removeTwitchSub(guildId, streamerLogin) {
+    return db.prepare('DELETE FROM twitch_subs WHERE guild_id = ? AND streamer_login = ?').run(guildId, streamerLogin.toLowerCase()).changes;
+}
+
+function setTwitchLastStream(guildId, streamerLogin, streamId) {
+    db.prepare('UPDATE twitch_subs SET last_stream_id = ? WHERE guild_id = ? AND streamer_login = ?').run(streamId, guildId, streamerLogin);
+}
+
+// ── YouTube sub helpers ───────────────────────────────────────────────────────
+function getYoutubeSubs(guildId) {
+    return db.prepare('SELECT * FROM youtube_subs WHERE guild_id = ?').all(guildId);
+}
+
+function getAllYoutubeSubs() {
+    return db.prepare('SELECT * FROM youtube_subs').all();
+}
+
+function addYoutubeSub(guildId, ytChannelId, channelName, postChannelId) {
+    db.prepare(
+        'INSERT OR REPLACE INTO youtube_subs (guild_id, yt_channel_id, channel_name, post_channel_id) VALUES (?, ?, ?, ?)'
+    ).run(guildId, ytChannelId, channelName, postChannelId);
+}
+
+function removeYoutubeSub(guildId, ytChannelId) {
+    return db.prepare('DELETE FROM youtube_subs WHERE guild_id = ? AND yt_channel_id = ?').run(guildId, ytChannelId).changes;
+}
+
+function setYoutubeLastVideo(guildId, ytChannelId, videoId) {
+    db.prepare('UPDATE youtube_subs SET last_video_id = ? WHERE guild_id = ? AND yt_channel_id = ?').run(videoId, guildId, ytChannelId);
+}
+
 module.exports = {
     getConfig, setConfig, getGuildsWithFeature,
     addScheduledPost, getDueScheduledPosts, deleteScheduledPost, getScheduledPosts,
     addModCase, getModCases, countModCases,
     getXP, setXP, updateLastXpAt, getLeaderboard, getUserRank,
+    getTwitchSubs, getAllTwitchSubs, addTwitchSub, removeTwitchSub, setTwitchLastStream,
+    getYoutubeSubs, getAllYoutubeSubs, addYoutubeSub, removeYoutubeSub, setYoutubeLastVideo,
 };

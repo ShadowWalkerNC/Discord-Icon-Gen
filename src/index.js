@@ -17,12 +17,12 @@ const client = new Client({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,        // Required for XP message handling
+        GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildScheduledEvents,
     ],
 });
 
-client.commands = new Collection();
+client.commands  = new Collection();
 client.cooldowns = new Collection();
 
 // Load commands
@@ -47,9 +47,13 @@ for (const file of eventFiles) {
     }
 }
 
-// Expose client globally so gui-server.js webhook endpoint can post to Discord
 client.once('ready', () => {
     global.sigilClient = client;
+    console.log(`\x1b[32m\x1b[1m[Sigil] Logged in as ${client.user.tag}\x1b[0m`);
+
+    // Start background pollers
+    const { startPollers } = require('./services/pollers.js');
+    startPollers(client);
 });
 
 // Slash command handler
@@ -111,4 +115,4 @@ process.on('unhandledRejection', (error) => {
 });
 
 client.login(TOKEN);
-console.log('\x1b[32m\x1b[1m Sigil v2.0.0 starting...\x1b[0m');
+console.log('\x1b[32m\x1b[1m Sigil starting...\x1b[0m');
