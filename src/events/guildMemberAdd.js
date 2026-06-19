@@ -1,5 +1,5 @@
 const { getConfig, getAutoRolesByTrigger } = require('../utils/db.js');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage } = require('canvas');
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
