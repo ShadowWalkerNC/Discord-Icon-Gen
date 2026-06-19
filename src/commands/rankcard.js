@@ -4,6 +4,7 @@ const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -24,8 +25,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('avatar_url').setDescription('Avatar image URL (optional)')),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
@@ -44,12 +46,10 @@ module.exports = {
         const canvas = createCanvas(W, H);
         const ctx    = canvas.getContext('2d');
 
-        // Background
         try { getBackgroundById(background).draw(ctx, W, H); }
         catch { ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, W, H); }
         ctx.fillStyle = '#00000066'; ctx.fillRect(0, 0, W, H);
 
-        // Avatar
         const AR = 64, AX = 24, AY = H / 2;
         ctx.save();
         ctx.beginPath();
@@ -68,28 +68,23 @@ module.exports = {
         }
         ctx.restore();
 
-        // Avatar ring
         ctx.beginPath();
         ctx.arc(AX + AR, AY, AR + 3, 0, Math.PI * 2);
         ctx.strokeStyle = primary; ctx.lineWidth = 3; ctx.stroke();
 
-        // Text area
         const TX = AX + AR * 2 + 24;
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
-        // Rank badge
         if (rank) {
             ctx.font = `bold 13px Arial`;
             ctx.fillStyle = primary;
             ctx.fillText(`RANK #${rank}`, TX, H * 0.28);
         }
 
-        // Username
         ctx.font = `bold 32px "${font}"`;
         ctx.fillStyle = '#ffffff';
         ctx.fillText(username, TX, H * 0.28 + (rank ? 26 : 10));
 
-        // Level label
         ctx.textAlign = 'right';
         ctx.font = `bold 13px Arial`;
         ctx.fillStyle = '#aaaaaa';
@@ -98,14 +93,12 @@ module.exports = {
         ctx.fillStyle = primary;
         ctx.fillText(`${level}`, W - 20, H * 0.28 + 26);
 
-        // XP bar track
         const barX = TX, barY = H * 0.68, barW = W - TX - 24, barH = 18;
         ctx.fillStyle = '#ffffff22';
         ctx.beginPath();
         ctx.roundRect(barX, barY, barW, barH, barH / 2);
         ctx.fill();
 
-        // XP bar fill
         const pct = Math.min(1, currentXP / requiredXP);
         const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
         grad.addColorStop(0, primary);
@@ -117,13 +110,11 @@ module.exports = {
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // XP label
         ctx.font = `13px Arial`;
         ctx.fillStyle = '#aaaaaa';
         ctx.textAlign = 'left';
         ctx.fillText(`${currentXP.toLocaleString()} / ${requiredXP.toLocaleString()} XP`, barX, barY + barH + 18);
 
-        // Watermark
         ctx.font = '12px Arial'; ctx.fillStyle = '#ffffff18';
         ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
         ctx.fillText('made with Sigil', W - 12, H - 6);

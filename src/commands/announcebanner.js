@@ -4,6 +4,7 @@ const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -48,8 +49,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('font').setDescription('Font').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
@@ -87,7 +89,6 @@ module.exports = {
         ctx.font = `bold 44px "${font}"`;
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = accent; ctx.shadowBlur = 6;
-        // Auto-shrink if too wide
         let titleSize = 44;
         while (ctx.measureText(title).width > W - 80 && titleSize > 20) {
             titleSize -= 2;

@@ -4,6 +4,7 @@ const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -24,8 +25,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('avatar_url').setDescription('Avatar image URL (leave blank to skip)')),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
@@ -44,14 +46,11 @@ module.exports = {
         const canvas = createCanvas(W, H);
         const ctx    = canvas.getContext('2d');
 
-        // Background
         try { getBackgroundById(background).draw(ctx, W, H); } catch { ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, W, H); }
 
-        // Accent bar on left
         ctx.fillStyle = primary;
         ctx.fillRect(0, 0, 6, H);
 
-        // Avatar circle
         const AVATAR_X = 48, AVATAR_Y = H / 2, AVATAR_R = 72;
         ctx.save();
         ctx.beginPath();
@@ -66,7 +65,6 @@ module.exports = {
                 ctx.fill();
             }
         } else {
-            // Default monogram
             ctx.fillStyle = primary + '33';
             ctx.fill();
             ctx.restore();
@@ -79,14 +77,12 @@ module.exports = {
         }
         ctx.restore();
 
-        // Avatar ring
         ctx.beginPath();
         ctx.arc(AVATAR_X + AVATAR_R, AVATAR_Y, AVATAR_R + 3, 0, Math.PI * 2);
         ctx.strokeStyle = primary;
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Username
         const textX = AVATAR_X + AVATAR_R * 2 + 32;
         ctx.font = `bold 38px "${font}"`;
         ctx.fillStyle = '#ffffff';
@@ -94,14 +90,12 @@ module.exports = {
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(username, textX, tagline ? H * 0.38 : H / 2 + 12);
 
-        // Tagline
         if (tagline) {
             ctx.font = `20px "${font}"`;
             ctx.fillStyle = '#aaaaaa';
             ctx.fillText(tagline, textX, H * 0.38 + 32);
         }
 
-        // Role badges
         const roles = [role1, role2, role3].filter(Boolean);
         if (roles.length) {
             let rx = textX;
@@ -125,7 +119,6 @@ module.exports = {
             }
         }
 
-        // Sigil watermark
         ctx.font = `13px Arial`;
         ctx.fillStyle = '#ffffff22';
         ctx.textAlign = 'right';
@@ -136,11 +129,11 @@ module.exports = {
         const attachment = new AttachmentBuilder(buf, { name: 'namecard.png' });
 
         const embed = new EmbedBuilder()
-            .setTitle(`\uD83C\uDD94 ${username}'s Name Card`)
-            .setDescription('Share this anywhere \u2014 Discord, Twitter, Reddit, wherever.')
+            .setTitle(`🆔 ${username}'s Name Card`)
+            .setDescription('Share this anywhere — Discord, Twitter, Reddit, wherever.')
             .setImage('attachment://namecard.png')
             .setColor(primary)
-            .setFooter({ text: 'Sigil \u2022 namecard \u2014 800\u00d7280 px PNG' });
+            .setFooter({ text: 'Sigil • namecard — 800×280 px PNG' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
 
