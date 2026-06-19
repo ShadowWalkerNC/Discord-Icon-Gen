@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { registerAllFonts, getAllFontFamilies, renderIcon } = require('../utils/canvas.js');
 const { geminiRequest, extractJson } = require('../utils/gemini.js');
+const { saveEntry } = require('../utils/history.js');
 
 registerAllFonts();
 
@@ -43,7 +44,6 @@ Respond with ONLY valid JSON (no markdown, no extra text):
 
         const { palette, primary, secondary, background, description } = data;
 
-        // Render a preview icon using the mood palette
         const font = getAllFontFamilies()[0] ?? 'Arial';
         const buf = await renderIcon({
             text: mood.slice(0, 20),
@@ -72,5 +72,12 @@ Respond with ONLY valid JSON (no markdown, no extra text):
             .setFooter({ text: 'Sigil • mood' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
+
+        saveEntry(interaction.user.id, {
+            command: 'mood',
+            primary_color:   primary   ?? palette?.[0] ?? null,
+            secondary_color: secondary ?? palette?.[1] ?? null,
+            palette:         palette   ?? [],
+        });
     },
 };

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { loadHistory } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 // ── Hex validation ────────────────────────────────────────────────────────
 function isHex(v) {
@@ -109,8 +110,9 @@ module.exports = {
         ),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
@@ -130,22 +132,16 @@ module.exports = {
         const hasManual    = manualInputs.some(v => v);
 
         if (hasManual) {
-            // Build from manual options
             manualInputs.forEach((raw, i) => {
                 if (!raw) return;
                 const hex = normalizeHex(raw);
-                if (hex) {
-                    colors.push({ hex, label: labels[i] });
-                } else {
-                    // non-fatal — skip invalid
-                }
+                if (hex) colors.push({ hex, label: labels[i] });
             });
 
             if (!colors.length) {
                 return interaction.editReply('\u274c No valid hex colors provided. Use format `#RRGGBB` (e.g. `#8B0000`).');
             }
         } else {
-            // Fall back to last kit from history
             const history = loadHistory(interaction.user.id);
             if (!history.length) {
                 return interaction.editReply(
@@ -159,7 +155,6 @@ module.exports = {
             }
         }
 
-        // ── Build output ─────────────────────────────────────────────────
         let output, formatLabel, langHint;
         if (format === 'css') {
             output      = buildCssVars(colors);

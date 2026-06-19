@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discor
 const { registerAllFonts, getAllFontFamilies, renderIcon } = require('../utils/canvas.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -23,8 +24,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {

@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType } = 
 const { getConfig, setConfig } = require('../utils/db.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { getAllFontFamilies } = require('../utils/canvas.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -41,8 +42,9 @@ module.exports = {
         ),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
