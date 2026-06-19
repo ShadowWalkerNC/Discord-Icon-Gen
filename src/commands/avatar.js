@@ -4,6 +4,7 @@ const { registerAllFonts, getAllFontFamilies, renderIcon, applyShapeClip } = req
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { getBorderChoices } = require('../utils/borders.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -33,8 +34,9 @@ module.exports = {
         .addNumberOption(opt => opt.setName('opacity').setDescription('Background opacity (0.0–1.0)').setMinValue(0).setMaxValue(1)),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
