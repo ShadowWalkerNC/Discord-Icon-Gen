@@ -28,14 +28,6 @@ db.exec(`
         event_banner_channel    TEXT,
         webhook_channel         TEXT,
         webhook_secret          TEXT,
-        twitch_enabled          INTEGER DEFAULT 0,
-        twitch_channel          TEXT,
-        twitch_streamers        TEXT,
-        twitch_last_stream_id   TEXT,
-        youtube_enabled         INTEGER DEFAULT 0,
-        youtube_channel         TEXT,
-        youtube_handles         TEXT,
-        youtube_last_video_id   TEXT,
         mod_log_channel         TEXT,
         xp_enabled              INTEGER DEFAULT 0,
         xp_channel              TEXT,
@@ -198,22 +190,26 @@ db.exec(`
         created_at      TEXT DEFAULT (datetime('now')),
         UNIQUE(guild_id, trigger)
     );
+
+    -- Indexes for high-frequency guild_id lookups
+    CREATE INDEX IF NOT EXISTS idx_mod_cases_guild_user    ON mod_cases (guild_id, user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_xp_guild           ON user_xp (guild_id, xp DESC);
+    CREATE INDEX IF NOT EXISTS idx_scheduled_posts_guild   ON scheduled_posts (guild_id);
+    CREATE INDEX IF NOT EXISTS idx_polls_guild             ON polls (guild_id, closed);
+    CREATE INDEX IF NOT EXISTS idx_giveaways_guild         ON giveaways (guild_id, ended);
+    CREATE INDEX IF NOT EXISTS idx_auto_roles_guild        ON auto_roles (guild_id, trigger);
+    CREATE INDEX IF NOT EXISTS idx_tickets_guild           ON tickets (guild_id, status);
+    CREATE INDEX IF NOT EXISTS idx_custom_commands_guild   ON custom_commands (guild_id, trigger);
+    CREATE INDEX IF NOT EXISTS idx_reaction_panels_guild   ON reaction_role_panels (guild_id);
 `);
 
+// ── Column migrations (existing DBs) ────────────────────────────────────────
 const existingCols = db.prepare('PRAGMA table_info(guild_config)').all().map(r => r.name);
 const migrations = [
     ['event_banner_enabled',    'ALTER TABLE guild_config ADD COLUMN event_banner_enabled    INTEGER DEFAULT 0'],
     ['event_banner_channel',    'ALTER TABLE guild_config ADD COLUMN event_banner_channel    TEXT'],
     ['webhook_channel',         'ALTER TABLE guild_config ADD COLUMN webhook_channel         TEXT'],
     ['webhook_secret',          'ALTER TABLE guild_config ADD COLUMN webhook_secret          TEXT'],
-    ['twitch_enabled',          'ALTER TABLE guild_config ADD COLUMN twitch_enabled          INTEGER DEFAULT 0'],
-    ['twitch_channel',          'ALTER TABLE guild_config ADD COLUMN twitch_channel          TEXT'],
-    ['twitch_streamers',        'ALTER TABLE guild_config ADD COLUMN twitch_streamers        TEXT'],
-    ['twitch_last_stream_id',   'ALTER TABLE guild_config ADD COLUMN twitch_last_stream_id   TEXT'],
-    ['youtube_enabled',         'ALTER TABLE guild_config ADD COLUMN youtube_enabled         INTEGER DEFAULT 0'],
-    ['youtube_channel',         'ALTER TABLE guild_config ADD COLUMN youtube_channel         TEXT'],
-    ['youtube_handles',         'ALTER TABLE guild_config ADD COLUMN youtube_handles         TEXT'],
-    ['youtube_last_video_id',   'ALTER TABLE guild_config ADD COLUMN youtube_last_video_id   TEXT'],
     ['mod_log_channel',         'ALTER TABLE guild_config ADD COLUMN mod_log_channel         TEXT'],
     ['xp_enabled',              'ALTER TABLE guild_config ADD COLUMN xp_enabled              INTEGER DEFAULT 0'],
     ['xp_channel',              'ALTER TABLE guild_config ADD COLUMN xp_channel              TEXT'],
@@ -248,6 +244,18 @@ const migrations = [
 ];
 for (const [col, sql] of migrations) {
     if (!existingCols.includes(col)) db.exec(sql);
+}
+
+// ── Drop dead integration config columns (requires SQLite >= 3.35) ──────────
+const deadCols = [
+    'twitch_enabled', 'twitch_channel', 'twitch_streamers', 'twitch_last_stream_id',
+    'youtube_enabled', 'youtube_channel', 'youtube_handles', 'youtube_last_video_id',
+];
+for (const col of deadCols) {
+    if (existingCols.includes(col)) {
+        try { db.exec(`ALTER TABLE guild_config DROP COLUMN ${col}`); }
+        catch { /* SQLite < 3.35 — column stays but is inert */ }
+    }
 }
 
 function getConfig(guildId) {
@@ -313,6 +321,10 @@ function getLeaderboard(guildId, limit = 10) {
 function getUserRank(guildId, userId) {
     return db.prepare('SELECT COUNT(*) + 1 as rank FROM user_xp WHERE guild_id = ? AND xp > (SELECT xp FROM user_xp WHERE guild_id = ? AND user_id = ?)').get(guildId, guildId, userId)?.rank ?? 1;
 }
+// NOTE: getWeeklyTopXP filters by last_xp_at, not weekly-accumulated XP.
+// A user who earned all their XP last month but gained 1 XP this week still
+// ranks above someone who earned 500 XP this week. To fix properly, add a
+// weekly_xp column that resets on a cron, or a separate xp_history table.
 function getWeeklyTopXP(guildId, limit = 3) {
     const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
     return db.prepare('SELECT * FROM user_xp WHERE guild_id = ? AND last_xp_at >= ? ORDER BY xp DESC LIMIT ?').all(guildId, since, limit);
@@ -445,8 +457,6 @@ function getStarboardEntry(guildId, messageId) {
 function setStarboardEntry(guildId, messageId, sbMessageId) {
     db.prepare('INSERT OR REPLACE INTO starboard_entries (guild_id, message_id, sb_message_id) VALUES (?, ?, ?)').run(guildId, messageId, sbMessageId);
 }
-
-// ── Custom Commands ────────────────────────────────────────────────────
 function addCustomCommand(guildId, trigger, response, embed, embedColor, deleteTrigger, createdBy) {
     return db.prepare(
         'INSERT OR REPLACE INTO custom_commands (guild_id, trigger, response, embed, embed_color, delete_trigger, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)'
