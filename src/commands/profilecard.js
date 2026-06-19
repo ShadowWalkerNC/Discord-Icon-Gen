@@ -4,6 +4,7 @@ const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -47,8 +48,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
@@ -66,13 +68,11 @@ module.exports = {
         const canvas = createCanvas(W, H);
         const ctx    = canvas.getContext('2d');
 
-        // Base card background (Discord dark)
         ctx.fillStyle = '#2b2d31';
         ctx.beginPath();
         ctx.roundRect(0, 0, W, H, 12);
         ctx.fill();
 
-        // Banner
         ctx.save();
         ctx.beginPath();
         ctx.roundRect(0, 0, W, BANNER_H, [12, 12, 0, 0]);
@@ -81,7 +81,6 @@ module.exports = {
         catch { ctx.fillStyle = bannerColor; ctx.fillRect(0, 0, W, BANNER_H); }
         ctx.restore();
 
-        // Avatar circle
         ctx.save();
         ctx.beginPath();
         ctx.arc(AVATAR_X + AVATAR_R, AVATAR_Y, AVATAR_R + 5, 0, Math.PI * 2);
@@ -111,7 +110,6 @@ module.exports = {
         }
         ctx.restore();
 
-        // Online status dot
         ctx.beginPath();
         ctx.arc(AVATAR_X + AVATAR_R * 2 - 10, AVATAR_Y + AVATAR_R - 10, 10, 0, Math.PI * 2);
         ctx.fillStyle = '#2b2d31';
@@ -121,7 +119,6 @@ module.exports = {
         ctx.fillStyle = '#23a55a';
         ctx.fill();
 
-        // Username
         const textX = AVATAR_X + AVATAR_R * 2 + 20;
         const nameY  = BANNER_H + 32;
         ctx.font = `bold 26px "${font}"`;
@@ -130,7 +127,6 @@ module.exports = {
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(username, textX, nameY);
 
-        // Badge pill
         const badgeLabel = BADGE_LABELS[badgeKey];
         if (badgeLabel) {
             ctx.font = `13px "${font}"`;
@@ -149,11 +145,9 @@ module.exports = {
             ctx.fillText(badgeLabel, bx + bw / 2, by + 15);
         }
 
-        // Divider
         ctx.fillStyle = '#ffffff22';
         ctx.fillRect(textX, nameY + 10, W - textX - 20, 1);
 
-        // About me section
         ctx.font = `bold 11px Arial`;
         ctx.fillStyle = '#b5bac1';
         ctx.textAlign = 'left';
@@ -161,7 +155,6 @@ module.exports = {
 
         ctx.font = `15px "${font}"`;
         ctx.fillStyle = '#dbdee1';
-        // Word wrap bio
         const maxW = W - textX - 24;
         const words = bio.split(' ');
         let line = '', lines = [], ly = nameY + 50;
@@ -173,7 +166,6 @@ module.exports = {
         if (line) lines.push(line);
         lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, textX, ly + i * 22));
 
-        // Sigil watermark
         ctx.font = '12px Arial';
         ctx.fillStyle = '#ffffff18';
         ctx.textAlign = 'right';
@@ -184,7 +176,7 @@ module.exports = {
         const attachment = new AttachmentBuilder(buf, { name: 'profilecard.png' });
 
         const embed = new EmbedBuilder()
-            .setTitle(`\uD83D\uDC64 ${username}'s Profile Card`)
+            .setTitle(`👤 ${username}'s Profile Card`)
             .setDescription('A Nitro-style Discord profile card mockup — share it anywhere.')
             .setImage('attachment://profilecard.png')
             .setColor(bannerColor)
@@ -195,7 +187,6 @@ module.exports = {
             .setFooter({ text: 'Sigil • profilecard — 600×340 PNG' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
-
         saveEntry(interaction.user.id, { command: 'profilecard', username, bio, badge: badgeKey, bannerBg, bannerColor, avatarColor, font });
     },
 };

@@ -4,6 +4,7 @@ const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
 
 registerAllFonts();
 
@@ -22,8 +23,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('avatar_url').setDescription('Avatar image URL (optional)')),
 
     async autocomplete(interaction) {
-        const { colorAutocomplete } = require('../utils/colors.js');
-        await colorAutocomplete(interaction);
+        const focused = interaction.options.getFocused();
+        const results = getColorAutocomplete(focused);
+        await interaction.respond(results);
     },
 
     async execute(interaction) {
@@ -40,19 +42,15 @@ module.exports = {
         const canvas = createCanvas(W, H);
         const ctx    = canvas.getContext('2d');
 
-        // Background
         try { getBackgroundById(background).draw(ctx, W, H); }
         catch { ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, W, H); }
 
-        // Dark overlay for readability
         ctx.fillStyle = '#00000055';
         ctx.fillRect(0, 0, W, H);
 
-        // Accent bar left
         ctx.fillStyle = primary;
         ctx.fillRect(0, 0, 6, H);
 
-        // Avatar
         const AR = 90, AX = 36, AY = H / 2;
         ctx.save();
         ctx.beginPath();
@@ -77,40 +75,33 @@ module.exports = {
         }
         ctx.restore();
 
-        // Avatar ring
         ctx.beginPath();
         ctx.arc(AX + AR, AY, AR + 4, 0, Math.PI * 2);
         ctx.strokeStyle = primary; ctx.lineWidth = 3; ctx.stroke();
 
-        // Text
         const TX = AX + AR * 2 + 36;
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
-        // WELCOME header
         ctx.font = `bold 13px Arial`;
         ctx.fillStyle = primary;
         ctx.fillText('W E L C O M E', TX, H * 0.30);
 
-        // Username
         ctx.font = `bold 42px "${font}"`;
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = primary; ctx.shadowBlur = 8;
         ctx.fillText(username, TX, H * 0.30 + 48);
         ctx.shadowBlur = 0;
 
-        // Message
         ctx.font = `18px "${font}"`;
         ctx.fillStyle = '#cccccc';
         ctx.fillText(message, TX, H * 0.30 + 48 + 32);
 
-        // Member count
         if (memberCount) {
             ctx.font = `bold 14px "${font}"`;
             ctx.fillStyle = primary + 'cc';
             ctx.fillText(memberCount, TX, H * 0.85);
         }
 
-        // Watermark
         ctx.font = '12px Arial'; ctx.fillStyle = '#ffffff18';
         ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
         ctx.fillText('made with Sigil', W - 12, H - 8);
