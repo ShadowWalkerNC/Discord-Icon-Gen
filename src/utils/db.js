@@ -1,6 +1,5 @@
 /**
  * Lightweight SQLite wrapper using better-sqlite3.
- * Stores per-guild automation config, scheduled posts, mod cases, XP, and stream subscriptions.
  */
 const Database = require('better-sqlite3');
 const path     = require('path');
@@ -98,9 +97,23 @@ db.exec(`
         last_video_id   TEXT,
         PRIMARY KEY (guild_id, yt_channel_id)
     );
+
+    CREATE TABLE IF NOT EXISTS polls (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id    TEXT NOT NULL,
+        channel_id  TEXT NOT NULL,
+        message_id  TEXT,
+        question    TEXT NOT NULL,
+        options     TEXT NOT NULL,
+        votes       TEXT NOT NULL DEFAULT '{}',
+        ends_at     TEXT NOT NULL,
+        closed      INTEGER DEFAULT 0,
+        created_by  TEXT NOT NULL,
+        created_at  TEXT DEFAULT (datetime('now'))
+    );
 `);
 
-// Runtime migrations
+// Runtime column migrations
 const existingCols = db.prepare('PRAGMA table_info(guild_config)').all().map(r => r.name);
 const migrations = [
     ['event_banner_enabled',  'ALTER TABLE guild_config ADD COLUMN event_banner_enabled  INTEGER DEFAULT 0'],
@@ -126,7 +139,7 @@ for (const [col, sql] of migrations) {
     if (!existingCols.includes(col)) db.exec(sql);
 }
 
-// ── Guild config helpers ──────────────────────────────────────────────────────
+// Guild config
 function getConfig(guildId) {
     let row = db.prepare('SELECT * FROM guild_config WHERE guild_id = ?').get(guildId);
     if (!row) {
@@ -135,7 +148,6 @@ function getConfig(guildId) {
     }
     return row;
 }
-
 function setConfig(guildId, fields) {
     const current = getConfig(guildId);
     const merged  = { ...current, ...fields, guild_id: guildId, updated_at: new Date().toISOString() };
@@ -143,58 +155,42 @@ function setConfig(guildId, fields) {
     const sets    = cols.map(c => `${c} = @${c}`).join(', ');
     db.prepare(`UPDATE guild_config SET ${sets} WHERE guild_id = @guild_id`).run(merged);
 }
-
 function getGuildsWithFeature(column) {
     return db.prepare(`SELECT * FROM guild_config WHERE ${column} = 1`).all();
 }
 
-// ── Scheduled posts helpers ───────────────────────────────────────────────────
+// Scheduled posts
 function addScheduledPost(guildId, channelId, postAt, payload) {
-    return db.prepare(
-        'INSERT INTO scheduled_posts (guild_id, channel_id, post_at, payload) VALUES (?, ?, ?, ?)'
-    ).run(guildId, channelId, postAt, JSON.stringify(payload));
+    return db.prepare('INSERT INTO scheduled_posts (guild_id, channel_id, post_at, payload) VALUES (?, ?, ?, ?)').run(guildId, channelId, postAt, JSON.stringify(payload));
 }
-
 function getDueScheduledPosts() {
-    return db.prepare(
-        "SELECT * FROM scheduled_posts WHERE post_at <= datetime('now')"
-    ).all().map(r => ({ ...r, payload: JSON.parse(r.payload) }));
+    return db.prepare("SELECT * FROM scheduled_posts WHERE post_at <= datetime('now')").all().map(r => ({ ...r, payload: JSON.parse(r.payload) }));
 }
-
 function deleteScheduledPost(id) {
     db.prepare('DELETE FROM scheduled_posts WHERE id = ?').run(id);
 }
-
 function getScheduledPosts(guildId) {
-    return db.prepare('SELECT * FROM scheduled_posts WHERE guild_id = ? ORDER BY post_at ASC').all(guildId)
-        .map(r => ({ ...r, payload: JSON.parse(r.payload) }));
+    return db.prepare('SELECT * FROM scheduled_posts WHERE guild_id = ? ORDER BY post_at ASC').all(guildId).map(r => ({ ...r, payload: JSON.parse(r.payload) }));
 }
 
-// ── Mod case helpers ──────────────────────────────────────────────────────────
+// Mod cases
 function getNextCaseNumber(guildId) {
     const row = db.prepare('SELECT MAX(case_number) as max FROM mod_cases WHERE guild_id = ?').get(guildId);
     return (row?.max ?? 0) + 1;
 }
-
 function addModCase(guildId, type, userId, userTag, modId, modTag, reason) {
     const caseNumber = getNextCaseNumber(guildId);
-    db.prepare(
-        'INSERT INTO mod_cases (guild_id, case_number, type, user_id, user_tag, mod_id, mod_tag, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(guildId, caseNumber, type, userId, userTag, modId, modTag, reason);
+    db.prepare('INSERT INTO mod_cases (guild_id, case_number, type, user_id, user_tag, mod_id, mod_tag, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(guildId, caseNumber, type, userId, userTag, modId, modTag, reason);
     return caseNumber;
 }
-
 function getModCases(guildId, userId, limit = 10, offset = 0) {
-    return db.prepare(
-        'SELECT * FROM mod_cases WHERE guild_id = ? AND user_id = ? ORDER BY case_number DESC LIMIT ? OFFSET ?'
-    ).all(guildId, userId, limit, offset);
+    return db.prepare('SELECT * FROM mod_cases WHERE guild_id = ? AND user_id = ? ORDER BY case_number DESC LIMIT ? OFFSET ?').all(guildId, userId, limit, offset);
 }
-
 function countModCases(guildId, userId) {
     return db.prepare('SELECT COUNT(*) as count FROM mod_cases WHERE guild_id = ? AND user_id = ?').get(guildId, userId)?.count ?? 0;
 }
 
-// ── XP helpers ───────────────────────────────────────────────────────────────
+// XP
 function getXP(guildId, userId) {
     let row = db.prepare('SELECT * FROM user_xp WHERE guild_id = ? AND user_id = ?').get(guildId, userId);
     if (!row) {
@@ -203,82 +199,75 @@ function getXP(guildId, userId) {
     }
     return row;
 }
-
 function setXP(guildId, userId, xp, level) {
-    db.prepare(
-        'INSERT INTO user_xp (guild_id, user_id, xp, level, last_xp_at) VALUES (?, ?, ?, ?, datetime(\'now\')) ' +
-        'ON CONFLICT(guild_id, user_id) DO UPDATE SET xp = ?, level = ?, last_xp_at = datetime(\'now\')'
-    ).run(guildId, userId, xp, level, xp, level);
+    db.prepare('INSERT INTO user_xp (guild_id, user_id, xp, level, last_xp_at) VALUES (?, ?, ?, ?, datetime(\'now\')) ON CONFLICT(guild_id, user_id) DO UPDATE SET xp = ?, level = ?, last_xp_at = datetime(\'now\')').run(guildId, userId, xp, level, xp, level);
 }
-
 function updateLastXpAt(guildId, userId) {
     db.prepare("UPDATE user_xp SET last_xp_at = datetime('now') WHERE guild_id = ? AND user_id = ?").run(guildId, userId);
 }
-
 function getLeaderboard(guildId, limit = 10) {
-    return db.prepare(
-        'SELECT * FROM user_xp WHERE guild_id = ? ORDER BY xp DESC LIMIT ?'
-    ).all(guildId, limit);
+    return db.prepare('SELECT * FROM user_xp WHERE guild_id = ? ORDER BY xp DESC LIMIT ?').all(guildId, limit);
 }
-
 function getUserRank(guildId, userId) {
-    const row = db.prepare(
-        'SELECT COUNT(*) + 1 as rank FROM user_xp WHERE guild_id = ? AND xp > (SELECT xp FROM user_xp WHERE guild_id = ? AND user_id = ?)'
-    ).get(guildId, guildId, userId);
-    return row?.rank ?? 1;
+    return db.prepare('SELECT COUNT(*) + 1 as rank FROM user_xp WHERE guild_id = ? AND xp > (SELECT xp FROM user_xp WHERE guild_id = ? AND user_id = ?)').get(guildId, guildId, userId)?.rank ?? 1;
 }
-
 function getWeeklyTopXP(guildId, limit = 3) {
     const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
-    return db.prepare(
-        'SELECT * FROM user_xp WHERE guild_id = ? AND last_xp_at >= ? ORDER BY xp DESC LIMIT ?'
-    ).all(guildId, since, limit);
+    return db.prepare('SELECT * FROM user_xp WHERE guild_id = ? AND last_xp_at >= ? ORDER BY xp DESC LIMIT ?').all(guildId, since, limit);
 }
 
-// ── Twitch sub helpers ────────────────────────────────────────────────────────
-function getTwitchSubs(guildId) {
-    return db.prepare('SELECT * FROM twitch_subs WHERE guild_id = ?').all(guildId);
-}
-
-function getAllTwitchSubs() {
-    return db.prepare('SELECT * FROM twitch_subs').all();
-}
-
+// Twitch
+function getTwitchSubs(guildId) { return db.prepare('SELECT * FROM twitch_subs WHERE guild_id = ?').all(guildId); }
+function getAllTwitchSubs() { return db.prepare('SELECT * FROM twitch_subs').all(); }
 function addTwitchSub(guildId, streamerLogin, streamerName, postChannelId) {
-    db.prepare(
-        'INSERT OR REPLACE INTO twitch_subs (guild_id, streamer_login, streamer_name, post_channel_id) VALUES (?, ?, ?, ?)'
-    ).run(guildId, streamerLogin.toLowerCase(), streamerName, postChannelId);
+    db.prepare('INSERT OR REPLACE INTO twitch_subs (guild_id, streamer_login, streamer_name, post_channel_id) VALUES (?, ?, ?, ?)').run(guildId, streamerLogin.toLowerCase(), streamerName, postChannelId);
 }
-
 function removeTwitchSub(guildId, streamerLogin) {
     return db.prepare('DELETE FROM twitch_subs WHERE guild_id = ? AND streamer_login = ?').run(guildId, streamerLogin.toLowerCase()).changes;
 }
-
 function setTwitchLastStream(guildId, streamerLogin, streamId) {
     db.prepare('UPDATE twitch_subs SET last_stream_id = ? WHERE guild_id = ? AND streamer_login = ?').run(streamId, guildId, streamerLogin);
 }
 
-// ── YouTube sub helpers ───────────────────────────────────────────────────────
-function getYoutubeSubs(guildId) {
-    return db.prepare('SELECT * FROM youtube_subs WHERE guild_id = ?').all(guildId);
-}
-
-function getAllYoutubeSubs() {
-    return db.prepare('SELECT * FROM youtube_subs').all();
-}
-
+// YouTube
+function getYoutubeSubs(guildId) { return db.prepare('SELECT * FROM youtube_subs WHERE guild_id = ?').all(guildId); }
+function getAllYoutubeSubs() { return db.prepare('SELECT * FROM youtube_subs').all(); }
 function addYoutubeSub(guildId, ytChannelId, channelName, postChannelId) {
-    db.prepare(
-        'INSERT OR REPLACE INTO youtube_subs (guild_id, yt_channel_id, channel_name, post_channel_id) VALUES (?, ?, ?, ?)'
-    ).run(guildId, ytChannelId, channelName, postChannelId);
+    db.prepare('INSERT OR REPLACE INTO youtube_subs (guild_id, yt_channel_id, channel_name, post_channel_id) VALUES (?, ?, ?, ?)').run(guildId, ytChannelId, channelName, postChannelId);
 }
-
 function removeYoutubeSub(guildId, ytChannelId) {
     return db.prepare('DELETE FROM youtube_subs WHERE guild_id = ? AND yt_channel_id = ?').run(guildId, ytChannelId).changes;
 }
-
 function setYoutubeLastVideo(guildId, ytChannelId, videoId) {
     db.prepare('UPDATE youtube_subs SET last_video_id = ? WHERE guild_id = ? AND yt_channel_id = ?').run(videoId, guildId, ytChannelId);
+}
+
+// Polls
+function createPoll(guildId, channelId, question, options, endsAt, createdBy) {
+    return db.prepare('INSERT INTO polls (guild_id, channel_id, question, options, votes, ends_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)').run(guildId, channelId, question, JSON.stringify(options), '{}', endsAt, createdBy);
+}
+function setPollMessageId(pollId, messageId) {
+    db.prepare('UPDATE polls SET message_id = ? WHERE id = ?').run(messageId, pollId);
+}
+function getPoll(pollId) {
+    const row = db.prepare('SELECT * FROM polls WHERE id = ?').get(pollId);
+    return row ? { ...row, options: JSON.parse(row.options), votes: JSON.parse(row.votes) } : null;
+}
+function getPollByMessageId(messageId) {
+    const row = db.prepare('SELECT * FROM polls WHERE message_id = ?').get(messageId);
+    return row ? { ...row, options: JSON.parse(row.options), votes: JSON.parse(row.votes) } : null;
+}
+function updatePollVotes(pollId, votes) {
+    db.prepare('UPDATE polls SET votes = ? WHERE id = ?').run(JSON.stringify(votes), pollId);
+}
+function closePoll(pollId) {
+    db.prepare('UPDATE polls SET closed = 1 WHERE id = ?').run(pollId);
+}
+function getExpiredPolls() {
+    return db.prepare("SELECT * FROM polls WHERE closed = 0 AND ends_at <= datetime('now')").all().map(r => ({ ...r, options: JSON.parse(r.options), votes: JSON.parse(r.votes) }));
+}
+function getActiveGuildPolls(guildId) {
+    return db.prepare('SELECT * FROM polls WHERE guild_id = ? AND closed = 0 ORDER BY created_at DESC').all(guildId).map(r => ({ ...r, options: JSON.parse(r.options), votes: JSON.parse(r.votes) }));
 }
 
 module.exports = {
@@ -288,4 +277,5 @@ module.exports = {
     getXP, setXP, updateLastXpAt, getLeaderboard, getUserRank, getWeeklyTopXP,
     getTwitchSubs, getAllTwitchSubs, addTwitchSub, removeTwitchSub, setTwitchLastStream,
     getYoutubeSubs, getAllYoutubeSubs, addYoutubeSub, removeYoutubeSub, setYoutubeLastVideo,
+    createPoll, setPollMessageId, getPoll, getPollByMessageId, updatePollVotes, closePoll, getExpiredPolls, getActiveGuildPolls,
 };
