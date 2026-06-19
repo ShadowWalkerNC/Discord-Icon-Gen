@@ -1,11 +1,10 @@
 /**
- * Scheduled post runner + poll auto-closer. Fires every 60s.
+ * Scheduled post runner + poll auto-closer + giveaway auto-closer. Fires every 60s.
  */
 const { EmbedBuilder } = require('discord.js');
-const { getDueScheduledPosts, deleteScheduledPost, getExpiredPolls } = require('../utils/db.js');
+const { getDueScheduledPosts, deleteScheduledPost, getExpiredPolls, getExpiredGiveaways } = require('../utils/db.js');
 
 async function runScheduler(client) {
-    // Scheduled posts
     const due = getDueScheduledPosts();
     for (const post of due) {
         deleteScheduledPost(post.id);
@@ -27,11 +26,16 @@ async function runScheduler(client) {
         }
     }
 
-    // Expired polls
-    const expired = getExpiredPolls();
-    if (expired.length) {
+    const expiredPolls = getExpiredPolls();
+    if (expiredPolls.length) {
         const { finalizePoll } = require('../commands/poll.js');
-        for (const poll of expired) await finalizePoll(client, poll);
+        for (const poll of expiredPolls) await finalizePoll(client, poll);
+    }
+
+    const expiredGiveaways = getExpiredGiveaways();
+    if (expiredGiveaways.length) {
+        const { finalizeGiveaway } = require('../commands/giveaway.js');
+        for (const giveaway of expiredGiveaways) await finalizeGiveaway(client, giveaway);
     }
 }
 
@@ -40,7 +44,7 @@ function startScheduler(client) {
         runScheduler(client);
         setInterval(() => runScheduler(client), 60_000);
     }, 3_000);
-    console.log('[Scheduler] Scheduled post + poll runner started (60s interval).');
+    console.log('[Scheduler] Scheduled post + poll + giveaway runner started (60s interval).');
 }
 
 module.exports = { startScheduler };
