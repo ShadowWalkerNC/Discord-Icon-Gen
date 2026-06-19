@@ -317,6 +317,168 @@ const CATEGORIES = [
         ],
     },
     {
+        emoji: '🛡️',
+        name: 'Moderation',
+        commands: [
+            {
+                name: '/warn',
+                desc: 'Warn a member and log it',
+                params: ['`user` *(required)* · `reason`'].join('\n'),
+                tip: '💡 All warns are stored and viewable with `/modlog`',
+            },
+            {
+                name: '/modlog',
+                desc: 'View a member\'s warning history',
+                params: ['`user` *(required)*'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/purge',
+                desc: 'Bulk delete messages in a channel',
+                params: ['`amount` *(required)* — 1–100 messages'].join('\n'),
+                tip: '💡 Requires Manage Messages permission',
+            },
+            {
+                name: '/slowmode',
+                desc: 'Set or clear slowmode on a channel',
+                params: ['`seconds` *(required)* — 0 to disable'].join('\n'),
+                tip: '💡 Use 0 to clear slowmode',
+            },
+            {
+                name: '/kick',
+                desc: 'Kick a member from the server',
+                params: ['`user` *(required)* · `reason`'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/ban',
+                desc: 'Ban a member from the server',
+                params: ['`user` *(required)* · `reason`'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/unban',
+                desc: 'Unban a previously banned user',
+                params: ['`user_id` *(required)*'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/timeout',
+                desc: 'Timeout a member for a duration',
+                params: ['`user` *(required)* · `duration` · `reason`'].join('\n'),
+                tip: null,
+            },
+        ],
+    },
+    {
+        emoji: '⭐',
+        name: 'XP & Levels',
+        commands: [
+            {
+                name: '/xprank',
+                desc: 'View your XP, level, and rank',
+                params: ['No parameters — shows your current XP progress'],
+                tip: '💡 Earn XP by chatting in the server',
+            },
+            {
+                name: '/xpleaderboard',
+                desc: 'View the top XP earners in the server',
+                params: ['No parameters'],
+                tip: null,
+            },
+            {
+                name: '/xpadmin setlevel',
+                desc: 'Manually set a member\'s level (admin only)',
+                params: ['`user` *(required)* · `level` *(required)*'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/levelroles',
+                desc: 'Configure roles awarded at specific XP levels',
+                params: ['`level` *(required)* · `role` *(required)*'].join('\n'),
+                tip: '💡 Reward active members automatically',
+            },
+        ],
+    },
+    {
+        emoji: '🎟️',
+        name: 'Tickets',
+        commands: [
+            {
+                name: '/ticket open',
+                desc: 'Open a support ticket thread',
+                params: ['`reason` — brief description of your issue'].join('\n'),
+                tip: '💡 One open ticket per user at a time',
+            },
+            {
+                name: '/ticket close',
+                desc: 'Close the current ticket thread',
+                params: ['`reason` — must be run inside the ticket thread'].join('\n'),
+                tip: '💡 A transcript is auto-saved and DMed to the user on close',
+            },
+            {
+                name: '/ticket add',
+                desc: 'Add a user to the current ticket',
+                params: ['`user` *(required)*'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/ticket remove',
+                desc: 'Remove a user from the current ticket',
+                params: ['`user` *(required)*'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/ticket transcript',
+                desc: 'Save a transcript of the current ticket',
+                params: ['No parameters — saves and DMs a .txt transcript'],
+                tip: null,
+            },
+            {
+                name: '/ticket panel',
+                desc: 'Post a ticket-opening button panel to a channel',
+                params: ['`channel` *(required)* · `title` · `description`'].join('\n'),
+                tip: '💡 Use this instead of telling users to type `/ticket open`',
+            },
+            {
+                name: '/ticket setup',
+                desc: 'Configure ticket category, support role, and log channel',
+                params: ['`category` · `support_role` · `log_channel`'].join('\n'),
+                tip: null,
+            },
+            {
+                name: '/ticket list',
+                desc: 'List all open tickets in the server',
+                params: ['No parameters'],
+                tip: null,
+            },
+        ],
+    },
+    {
+        emoji: '🗳️',
+        name: 'Polls & Giveaways',
+        commands: [
+            {
+                name: '/poll',
+                desc: 'Create a timed poll with up to 5 options',
+                params: [
+                    '`question` *(required)* · `options` *(required)* — comma-separated, e.g. `Yes,No,Maybe`',
+                    '`duration` — e.g. `10m` · `1h` · `1d`',
+                ].join('\n'),
+                tip: '💡 Results are shown automatically when the poll ends',
+            },
+            {
+                name: '/giveaway',
+                desc: 'Run a timed giveaway with random winner selection',
+                params: [
+                    '`prize` *(required)* · `winners` *(required)* — number of winners',
+                    '`duration` *(required)* — e.g. `1h` · `1d`',
+                ].join('\n'),
+                tip: '💡 Winner is announced automatically when the timer ends',
+            },
+        ],
+    },
+    {
         emoji: '📊',
         name: 'Analytics',
         commands: [
@@ -325,6 +487,18 @@ const CATEGORIES = [
                 desc: 'Visual server health card — members, channels, roles, emoji, age, boosts',
                 params: ['No parameters — reads directly from your server'],
                 tip: '💡 Post weekly in #announcements to show growth',
+            },
+        ],
+    },
+    {
+        emoji: '🔔',
+        name: 'Bump Reminder',
+        commands: [
+            {
+                name: '/bumpreminder status',
+                desc: 'Show the last bump time and next reminder',
+                params: ['No parameters'],
+                tip: '💡 Sigil detects DISBOARD bumps automatically and reminds when it\'s time',
             },
         ],
     },
@@ -395,7 +569,12 @@ module.exports = {
                     { name: '🚀 Nitro-Free Features',  value: 'nitrofree' },
                     { name: '🏆 Community Tools',      value: 'community' },
                     { name: '⚙️ Automation',           value: 'automation' },
+                    { name: '🛡️ Moderation',           value: 'moderation' },
+                    { name: '⭐ XP & Levels',           value: 'xp' },
+                    { name: '🎟️ Tickets',              value: 'tickets' },
+                    { name: '🗳️ Polls & Giveaways',    value: 'polls' },
                     { name: '📊 Analytics',            value: 'analytics' },
+                    { name: '🔔 Bump Reminder',        value: 'bump' },
                     { name: '🧠 AI & Utilities',       value: 'ai' },
                 )
         ),
@@ -406,8 +585,13 @@ module.exports = {
             nitrofree:  1,
             community:  2,
             automation: 3,
-            analytics:  4,
-            ai:         5,
+            moderation: 4,
+            xp:         5,
+            tickets:    6,
+            polls:      7,
+            analytics:  8,
+            bump:       9,
+            ai:         10,
         };
 
         const choice = interaction.options.getString('category');
@@ -426,7 +610,7 @@ module.exports = {
                 .setTitle(`${cat.emoji} ${cat.name}`)
                 .setColor('#5865F2')
                 .addFields(fields)
-                .setFooter({ text: 'Sigil v2.0.0 • /help category:<name> to jump to a section • /gui open for visual builder' });
+                .setFooter({ text: 'Sigil • /help category:<name> to jump to a section • /gui open for visual builder' });
         });
 
         // Discord allows max 10 embeds per message
