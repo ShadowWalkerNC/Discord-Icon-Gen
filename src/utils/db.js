@@ -43,7 +43,7 @@ db.exec(`
     );
 `);
 
-// Runtime migration — adds columns to existing DBs that predate this schema
+// Runtime migration -- adds columns to existing DBs that predate this schema
 const existingCols = db.prepare('PRAGMA table_info(guild_config)').all().map(r => r.name);
 if (!existingCols.includes('event_banner_enabled')) {
     db.exec('ALTER TABLE guild_config ADD COLUMN event_banner_enabled INTEGER DEFAULT 0');
