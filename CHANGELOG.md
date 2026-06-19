@@ -28,7 +28,11 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 ### Fixed
 - **Brand Builder → Community** nav link corrected from `/` to `/brand`
 - **404 catch-all** added to `gui-server.js` — unknown routes now return HTTP 404 with branded page instead of raw Express error
-- **Color autocomplete — all commands** — replaced broken `colorAutocomplete(interaction)` call (which referenced a non-existent export) with correct `getColorAutocomplete(focused)` pattern across all 21 commands that use color options: `announcebanner`, `avatar`, `banner`, `brand`, `certificate`, `compare`, `eventbanner`, `icon`, `invitecard`, `logo`, `namecard`, `palette`, `profilecard`, `rankcard`, `reactionpack`, `rolebadge`, `servercard`, `splash`, `sticker`, `texteffect`, `themepreview`, `welcomecard`
+- **Color autocomplete — all commands** — replaced broken `colorAutocomplete(interaction)` call (which referenced a non-existent export) with correct `getColorAutocomplete(focused)` pattern across all 25 commands that use color options: `announcebanner`, `avatar`, `banner`, `brand`, `certificate`, `compare`, `emote`, `eventbanner`, `icon`, `invitecard`, `logo`, `namecard`, `palette`, `profilecard`, `rankcard`, `reactionpack`, `rolebadge`, `servercard`, `sigilconfig`, `splash`, `sticker`, `texteffect`, `themepreview`, `welcomecard`
+- **`/mood`** — added `saveEntry()` call so AI-generated palettes are saved to history and accessible via `/history` and `/brand share`
+
+### Removed
+- **`src/utils/database.js`** — dead file; was never imported by any command; wrote to incorrect path (`sigil.db` in root instead of `data/sigil.db`); all active DB logic lives in `src/utils/db.js`
 
 ---
 
