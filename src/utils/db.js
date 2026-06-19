@@ -42,6 +42,9 @@ db.exec(`
         xp_rate                 INTEGER DEFAULT 15,
         xp_cooldown             INTEGER DEFAULT 60,
         last_stats_at           TEXT,
+        ticket_category_id      TEXT,
+        ticket_support_role     TEXT,
+        ticket_log_channel      TEXT,
         updated_at              TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS scheduled_posts (
@@ -142,6 +145,18 @@ db.exec(`
         color    TEXT NOT NULL DEFAULT 'primary',
         UNIQUE(panel_id, role_id)
     );
+    CREATE TABLE IF NOT EXISTS tickets (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id   TEXT NOT NULL,
+        user_id    TEXT NOT NULL,
+        thread_id  TEXT,
+        subject    TEXT NOT NULL DEFAULT 'Support request',
+        status     TEXT NOT NULL DEFAULT 'open',
+        closed_by  TEXT,
+        close_reason TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        closed_at  TEXT
+    );
 `);
 
 const existingCols = db.prepare('PRAGMA table_info(guild_config)').all().map(r => r.name);
@@ -164,6 +179,9 @@ const migrations = [
     ['xp_rate',               'ALTER TABLE guild_config ADD COLUMN xp_rate                INTEGER DEFAULT 15'],
     ['xp_cooldown',           'ALTER TABLE guild_config ADD COLUMN xp_cooldown            INTEGER DEFAULT 60'],
     ['last_stats_at',         'ALTER TABLE guild_config ADD COLUMN last_stats_at          TEXT'],
+    ['ticket_category_id',    'ALTER TABLE guild_config ADD COLUMN ticket_category_id     TEXT'],
+    ['ticket_support_role',   'ALTER TABLE guild_config ADD COLUMN ticket_support_role    TEXT'],
+    ['ticket_log_channel',    'ALTER TABLE guild_config ADD COLUMN ticket_log_channel     TEXT'],
 ];
 for (const [col, sql] of migrations) {
     if (!existingCols.includes(col)) db.exec(sql);
@@ -339,6 +357,25 @@ function removePanelButton(panelId, roleId) {
 function getPanelButtons(panelId) {
     return db.prepare('SELECT * FROM reaction_role_buttons WHERE panel_id = ? ORDER BY id').all(panelId);
 }
+function createTicket(guildId, userId, subject) {
+    return db.prepare('INSERT INTO tickets (guild_id, user_id, subject) VALUES (?, ?, ?)').run(guildId, userId, subject);
+}
+function getTicket(id) {
+    return db.prepare('SELECT * FROM tickets WHERE id = ?').get(id) ?? null;
+}
+function getTicketByThread(threadId) {
+    return db.prepare('SELECT * FROM tickets WHERE thread_id = ?').get(threadId) ?? null;
+}
+function setTicketThreadId(id, threadId) {
+    db.prepare('UPDATE tickets SET thread_id = ? WHERE id = ?').run(threadId, id);
+}
+function closeTicket(id, reason, closedBy) {
+    db.prepare("UPDATE tickets SET status = 'closed', close_reason = ?, closed_by = ?, closed_at = datetime('now') WHERE id = ?").run(reason, closedBy, id);
+}
+function getGuildTickets(guildId, status) {
+    if (status) return db.prepare('SELECT * FROM tickets WHERE guild_id = ? AND status = ? ORDER BY created_at DESC').all(guildId, status);
+    return db.prepare('SELECT * FROM tickets WHERE guild_id = ? ORDER BY created_at DESC').all(guildId);
+}
 
 module.exports = {
     getConfig, setConfig, getGuildsWithFeature,
@@ -351,4 +388,5 @@ module.exports = {
     createGiveaway, setGiveawayMessageId, getGiveaway, toggleGiveawayEntry, endGiveaway, getExpiredGiveaways, getActiveGuildGiveaways,
     addAutoRole, removeAutoRole, getAutoRoles, getAutoRolesByTrigger, getLevelAutoRoles,
     createPanel, getPanel, getGuildPanels, setPanelMessageId, deletePanel, addPanelButton, removePanelButton, getPanelButtons,
+    createTicket, getTicket, getTicketByThread, setTicketThreadId, closeTicket, getGuildTickets,
 };
