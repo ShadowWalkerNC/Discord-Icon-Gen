@@ -1,8 +1,9 @@
 // gui-server.js — Sigil GUI bridge server v2.0
 // Run with: node gui/gui-server.js
 
-const express = require('express');
-const path    = require('path');
+const express    = require('express');
+const path       = require('path');
+const rateLimit  = require('express-rate-limit');
 const { createCanvas, loadImage } = require('canvas');
 const { renderKit, registerAllFonts } = require('../src/utils/canvas.js');
 const { getBackgroundById } = require('../src/utils/backgrounds.js');
@@ -18,14 +19,24 @@ const AI_ENABLED = false;
 
 app.use(express.json({ limit: '4mb' }));
 
-// ── Static pages ────────────────────────────────────────────────────────────
+// ── Rate limiting — 20 render requests per minute per IP ────────────────────
+const renderLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, error: '⏳ Too many requests — slow down and try again in a minute.' },
+});
+
+// ── Static pages ─────────────────────────────────────────────────────────────
 app.get('/',            (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/brand',       (req, res) => res.sendFile(path.join(__dirname, 'sigil-gui-builder.html')));
 app.get('/community',   (req, res) => res.sendFile(path.join(__dirname, 'sigil-community.html')));
 app.get('/developers',  (req, res) => res.sendFile(path.join(__dirname, 'developers.html')));
+app.get('/setup',       (req, res) => res.sendFile(path.join(__dirname, '..', 'setup.html')));
 app.get('/health',      (req, res) => res.json({ ok: true, version: '2.0.0', ai_enabled: AI_ENABLED }));
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function clamp(n, min, max) { const v = Number(n); return isNaN(v) ? min : Math.min(max, Math.max(min, v)); }
 function safeHex(hex, fallback = '#ffffff') {
     return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(hex || '').trim()) ? String(hex).trim() : fallback;
@@ -34,6 +45,11 @@ function parseDimensions(b) { return { width: clamp(b.width, 64, 3840) || undefi
 const VALID_SHAPES = new Set(['circle', 'rounded', 'hexagon', 'diamond', 'square']);
 function safeShape(s) { const v = String(s || 'square').toLowerCase().trim(); return VALID_SHAPES.has(v) ? v : 'square'; }
 
+// Strip non-printable / control characters from user-supplied text
+function safeText(str, maxLen = 128) {
+    return String(str || '').replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, maxLen);
+}
+
 function classifyError(err) {
     const msg = String(err?.message || err);
     if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) return '⚠️ Quota exceeded. Wait a moment and try again.';
@@ -41,12 +57,12 @@ function classifyError(err) {
     return '⚠️ ' + msg.split('\n')[0].slice(0, 120);
 }
 
-// ── POST /preview — Brand kit (icon + banner + palette) ───────────────────
-app.post('/preview', async (req, res) => {
+// ── POST /preview — Brand kit (icon + banner + palette) ──────────────────────
+app.post('/preview', renderLimiter, async (req, res) => {
     try {
         const b = req.body || {};
-        const text       = String(b.icon_text    || b.text   || 'SIGIL').slice(0, 8).toUpperCase();
-        const bannerText = String(b.banner_text  || b.text   || text);
+        const text       = safeText(b.icon_text    || b.text   || 'SIGIL', 8).toUpperCase();
+        const bannerText = safeText(b.banner_text  || b.text   || text, 64);
         const primary    = safeHex(b.primary_color   || b.primary,   '#8B0000');
         const secondary  = safeHex(b.secondary_color || b.secondary, '#4B0082');
         const background = String(b.background || 'midnight-gradient');
@@ -62,13 +78,13 @@ app.post('/preview', async (req, res) => {
     } catch (err) { console.error('[/preview]', err); res.status(500).json({ ok: false, error: classifyError(err) }); }
 });
 
-// ── POST /preview/welcome ─────────────────────────────────────────────────
-app.post('/preview/welcome', async (req, res) => {
+// ── POST /preview/welcome ─────────────────────────────────────────────────────
+app.post('/preview/welcome', renderLimiter, async (req, res) => {
     try {
         const b = req.body || {};
         const W = 900, H = 300;
-        const username = String(b.username || 'NewMember').slice(0, 32);
-        const message  = String(b.message  || 'Welcome to the server!');
+        const username = safeText(b.username || 'NewMember', 32);
+        const message  = safeText(b.message  || 'Welcome to the server!', 128);
         const primary  = safeHex(b.primary_color, '#39FF14');
         const bg       = String(b.background || 'gradient-purple');
         const font     = String(b.font || 'Arial');
@@ -106,12 +122,12 @@ app.post('/preview/welcome', async (req, res) => {
     } catch (err) { console.error('[/preview/welcome]', err); res.status(500).json({ ok: false, error: classifyError(err) }); }
 });
 
-// ── POST /preview/rankcard ────────────────────────────────────────────────
-app.post('/preview/rankcard', async (req, res) => {
+// ── POST /preview/rankcard ────────────────────────────────────────────────────
+app.post('/preview/rankcard', renderLimiter, async (req, res) => {
     try {
         const b = req.body || {};
         const W = 800, H = 200;
-        const username    = String(b.username    || 'Player').slice(0, 32);
+        const username    = safeText(b.username    || 'Player', 32);
         const level       = clamp(b.level,       1, 9999);
         const rank        = clamp(b.rank,        1, 9999);
         const current_xp  = clamp(b.current_xp,  0, 9999999);
@@ -160,12 +176,12 @@ app.post('/preview/rankcard', async (req, res) => {
     } catch (err) { console.error('[/preview/rankcard]', err); res.status(500).json({ ok: false, error: classifyError(err) }); }
 });
 
-// ── POST /preview/serverstats ─────────────────────────────────────────────
-app.post('/preview/serverstats', async (req, res) => {
+// ── POST /preview/serverstats ─────────────────────────────────────────────────
+app.post('/preview/serverstats', renderLimiter, async (req, res) => {
     try {
         const b = req.body || {};
         const W = 860, H = 480;
-        const server_name  = String(b.server_name  || 'My Server').slice(0, 48);
+        const server_name  = safeText(b.server_name  || 'My Server', 48);
         const member_count = clamp(b.member_count,  0, 9999999);
         const channel_count= clamp(b.channel_count, 0, 9999);
         const role_count   = clamp(b.role_count,    0, 9999);
@@ -221,12 +237,12 @@ app.post('/preview/serverstats', async (req, res) => {
     } catch (err) { console.error('[/preview/serverstats]', err); res.status(500).json({ ok: false, error: classifyError(err) }); }
 });
 
-// ── POST /generate — AI brand kit (DISABLED — coming soon) ────────────────
+// ── POST /generate — AI brand kit (DISABLED — coming soon) ───────────────────
 app.post('/generate', (req, res) => {
     res.status(503).json({ ok: false, coming_soon: true, error: '✨ AI Generate is coming soon. Stay tuned!' });
 });
 
-// ── 404 Catch-all — must be after all other routes ────────────────────────
+// ── 404 Catch-all — must be after all other routes ───────────────────────────
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });

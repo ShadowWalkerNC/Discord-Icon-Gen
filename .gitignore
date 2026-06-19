@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
 
-# Environment
+# Environment — NEVER commit real tokens
 .env
+.env.local
+.env.*.local
 
 # Data files (user history/kits — generated at runtime)
 data/history/
@@ -19,3 +21,7 @@ npm-debug.log*
 # Build output
 dist/
 build/
+
+# Editor
+.vscode/
+.idea/

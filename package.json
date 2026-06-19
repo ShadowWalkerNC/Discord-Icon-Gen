@@ -4,13 +4,15 @@
     "description": "Sigil — The Discord God Mode Bot. Free branding, community tools, automation, and analytics for every Discord server.",
     "main": "src/index.js",
     "engines": {
-        "node": ">=18 <19"
+        "node": ">=20 <23"
     },
     "scripts": {
         "start": "node src/index.js",
         "dev": "node --watch src/index.js",
         "gui": "node gui/gui-server.js",
-        "gui:dev": "node --watch gui/gui-server.js"
+        "gui:dev": "node --watch gui/gui-server.js",
+        "lint": "eslint src/ gui/ --ext .js",
+        "test": "echo \"No tests yet — stub OK\" && exit 0"
     },
     "author": "ShadowWalkerNC (fork of NoVa-Gh0ul)",
     "license": "MIT",
@@ -20,7 +22,11 @@
         "dotenv": "^16.4.5",
         "@google/generative-ai": "^0.24.0",
         "express": "^4.21.2",
+        "express-rate-limit": "^7.4.1",
         "jszip": "^3.10.1",
         "better-sqlite3": "^9.4.3"
+    },
+    "devDependencies": {
+        "eslint": "^9.0.0"
     }
 }
