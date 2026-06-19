@@ -1,12 +1,17 @@
 # Sigil — The Discord God Mode Bot
 
+[![Version](https://img.shields.io/badge/version-v2.0.0-crimson?style=flat-square)](https://github.com/ShadowWalkerNC/Sigil/releases)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-green?style=flat-square)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Railway](https://img.shields.io/badge/deployed-Railway-blueviolet?style=flat-square)](https://railway.app)
+
 **Sigil** is the free, open-source layer that gives every Discord server what Nitro charges for — and what Discord itself will never build. Custom branding, community tools, creator kits, server automation, analytics, and more. All from slash commands. No subscription. No paywall. Power back to the server.
 
 > **"Like Windows God Mode, but for Discord."**
 
 ---
 
-> **Current version: v1.9.0** — 32 commands across 4 categories
+> **Current version: v2.0.0** — 32 commands across 4 categories
 > **Roadmap target: v3.0** — 70+ commands across 8 verticals
 
 ---
@@ -18,11 +23,11 @@ Discord has two problems:
 1. **It locks visual quality behind Nitro** — small servers look amateur, large servers look polished. Sigil removes that wall entirely.
 2. **It only does messaging** — no analytics, no automation, no lifecycle tools, no cross-platform brand consistency. Sigil builds that layer on top.
 
-Every image Sigil generates carries a subtle `made with Sigil` watermark. Every server that uses it spreads it. That’s the distribution model.
+Every image Sigil generates carries a subtle `made with Sigil` watermark. Every server that uses it spreads it. That's the distribution model.
 
 ---
 
-## Current Commands (v1.9.0)
+## Current Commands (v2.0.0)
 
 ### 🎨 Branding & Icons
 | Command | Description |
@@ -76,7 +81,7 @@ Every image Sigil generates carries a subtle `made with Sigil` watermark. Every 
 
 ## Anti-Paywall Reference
 
-| What Discord / Other Bots Charge For | Monthly Cost | Sigil’s Free Alternative |
+| What Discord / Other Bots Charge For | Monthly Cost | Sigil's Free Alternative |
 |---|---|---|
 | MEE6 Pro welcome images | $5.99/mo | `/welcomecard` |
 | MEE6 Pro / Tatsu rank cards | $4–$10/mo | `/rankcard` |
@@ -110,14 +115,18 @@ Browser-based 4-step wizard — no slash commands required.
 
 **Steps:** Identity → Colors → Style → Generate
 
-**Features:** 8 templates, 5 shapes, 32 backgrounds, 8 borders, 7 output presets, shareable links, randomizer, light/dark theme, Gemini AI generate, export config JSON.
+**Features:** 8 templates, 5 shapes, 32 backgrounds, 8 borders, 7 output presets, shareable links, randomizer, light/dark theme, export config JSON.
+
+> ⚠️ **AI Generate** is temporarily disabled — coming in a future update.
+
+For full API reference see [`docs/API.md`](docs/API.md).
 
 ---
 
 ## Setup
 
 ### Prerequisites
-- Node.js 18
+- Node.js 20+
 - Discord bot token — [Discord Developer Portal](https://discord.com/developers/applications)
 - Google Gemini API key — [Google AI Studio](https://aistudio.google.com/app/apikey) *(optional — AI commands only)*
 
@@ -158,12 +167,17 @@ For the GUI server, create a second Railway service with start command `node gui
 ```
 Sigil/
 ├── gui/
-│   ├── gui-server.js
-│   └── sigil-gui-builder.html
+│   ├── gui-server.js             # Express server: render API + static routes
+│   ├── index.html                # GUI landing page
+│   ├── sigil-gui-builder.html    # Brand Builder (4-step wizard)
+│   ├── sigil-community.html      # Community Tools page
+│   ├── developers.html           # Developers / API reference page
+│   └── 404.html                  # Branded 404 error page
 ├── src/
-│   ├── commands/              # 32 slash command handlers
-│   ├── events/                # Discord.js event handlers
-│   ├── fonts/                 # Bundled font files
+│   ├── commands/                 # 32 slash command handlers
+│   ├── events/                   # Discord.js event handlers
+│   ├── automation/               # v2.0 automation engine (in progress)
+│   ├── fonts/                    # Bundled font files
 │   ├── utils/
 │   │   ├── backgrounds.js
 │   │   ├── borders.js
@@ -177,6 +191,7 @@ Sigil/
 ├── docs/
 │   ├── ROADMAP.md
 │   ├── CONTEXT.md
+│   ├── API.md
 │   └── FONTS.md
 ├── .env.example
 ├── railpack.json

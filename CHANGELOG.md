@@ -6,6 +6,31 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 
 ---
 
+## [Unreleased — v2.0.0 in progress]
+
+### Added
+- **`gui/developers.html`** — Developers page with API reference, navbar link on all GUI pages
+- **`gui/sigil-community.html`** — Community Tools page (welcome cards, rank cards, server stats)
+- **`gui/404.html`** — Branded 404 error page matching Sigil dark theme
+- **`/setup` route** — `setup.html` now served at `/setup` instead of being orphaned in root
+- **`express-rate-limit`** — 20 requests/minute per IP on all `/preview/*` canvas routes
+- **`safeText()`** — Input sanitizer strips control characters from all user text fields
+- **`docs/API.md`** — Full GUI server API reference
+
+### Changed
+- **AI Generate disabled** — `/generate` endpoint returns 503 Coming Soon; GUI button and textarea disabled with Coming Soon banner
+- **Node engine** bumped from `>=18 <19` to `>=20 <23` (Node 18 is EOL)
+- **`.gitignore`** — Added `.env.local`, `.env.*.local`, editor dirs (`.vscode/`, `.idea/`)
+- **`package.json`** — Added `express-rate-limit` dep, `eslint` devDep, `lint` and `test` scripts
+- **README** — Updated version, file tree, GUI feature list (AI status), Node prerequisite, badges
+- **`docs/CONTEXT.md`** — Updated to v2.0.0 state
+
+### Fixed
+- **Brand Builder → Community** nav link corrected from `/` to `/brand`
+- **404 catch-all** added to `gui-server.js` — unknown routes now return HTTP 404 with branded page instead of raw Express error
+
+---
+
 ## [1.11.1] — 2026-06-18
 
 ### Removed
