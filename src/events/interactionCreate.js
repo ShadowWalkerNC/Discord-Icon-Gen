@@ -1,11 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
 const { getPanel, getPanelButtons } = require('../utils/db.js');
-const rsvpCommand = require('../commands/rsvp.js');
-const lfgCommand  = require('../commands/lfg.js');
-const pollCommand = require('../commands/poll.js');
+const rsvpCommand   = require('../commands/rsvp.js');
+const lfgCommand    = require('../commands/lfg.js');
+const pollCommand   = require('../commands/poll.js');
+const ticketCommand = require('../commands/ticket.js');
 
-// Slash command routing is handled in src/index.js.
-// This file handles all button interactions.
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction) {
@@ -14,21 +13,18 @@ module.exports = {
         const { customId } = interaction;
 
         // ── RSVP buttons ─────────────────────────────────────────
-        if (customId.startsWith('rsvp_')) {
-            return rsvpCommand.handleButton(interaction);
-        }
+        if (customId.startsWith('rsvp_')) return rsvpCommand.handleButton(interaction);
 
         // ── LFG buttons ─────────────────────────────────────────
-        if (customId.startsWith('lfg_')) {
-            return lfgCommand.handleButton(interaction);
-        }
+        if (customId.startsWith('lfg_'))  return lfgCommand.handleButton(interaction);
 
         // ── Poll buttons ─────────────────────────────────────────
-        if (customId.startsWith('poll_')) {
-            return pollCommand.handleButton(interaction);
-        }
+        if (customId.startsWith('poll_')) return pollCommand.handleButton(interaction);
 
-        // ── Setup wizard buttons ────────────────────────────────
+        // ── Ticket buttons ───────────────────────────────────────
+        if (customId.startsWith('ticket_')) return ticketCommand.handleButton(interaction);
+
+        // ── Setup wizard buttons ───────────────────────────────
         if (customId === 'setup_brand') {
             return interaction.reply({
                 embeds: [new EmbedBuilder().setColor('#00FF00').setTitle('✓ Step 1 — Brand')
@@ -58,7 +54,7 @@ module.exports = {
             });
         }
 
-        // ── Reaction role panels — customId: rr_<panelId>_<roleId> ────────
+        // ── Reaction role panels — rr_<panelId>_<roleId> ─────────────
         if (customId.startsWith('rr_')) {
             const parts   = customId.split('_');
             if (parts.length < 3) return;
