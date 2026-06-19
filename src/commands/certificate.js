@@ -1,22 +1,22 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas } = require('canvas');
 const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
 
 const W = 900, H = 620;
 
 const TYPE_CHOICES = [
-    { name: '🏆 Achievement',       value: 'achievement'   },
-    { name: '⭐ Staff of the Month',  value: 'staff'         },
-    { name: '👑 Best Member',       value: 'member'        },
-    { name: '🏅 Tournament Winner', value: 'tournament'    },
-    { name: '👀 Most Active',       value: 'active'        },
-    { name: '🎨 Creative Award',    value: 'creative'      },
-    { name: '🛡️ Moderator Award',   value: 'moderator'     },
-    { name: '✨ Custom',             value: 'custom'        },
+    { name: '🏆 Achievement',        value: 'achievement'  },
+    { name: '⭐ Staff of the Month',  value: 'staff'        },
+    { name: '👑 Best Member',         value: 'member'       },
+    { name: '🏅 Tournament Winner',   value: 'tournament'   },
+    { name: '👀 Most Active',         value: 'active'       },
+    { name: '🎨 Creative Award',      value: 'creative'     },
+    { name: '🛡️ Moderator Award',    value: 'moderator'    },
+    { name: '✨ Custom',              value: 'custom'       },
 ];
 
 const TYPE_TITLES = {
@@ -49,9 +49,9 @@ module.exports = {
         .addStringOption(opt => opt.setName('font').setDescription('Font').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_color: autocompleteColor,
+        });
     },
 
     async execute(interaction) {

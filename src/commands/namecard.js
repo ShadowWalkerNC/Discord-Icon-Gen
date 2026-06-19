@@ -1,145 +1,72 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { createCanvas, loadImage } = require('canvas');
 const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
-const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
+const { getBorderChoices } = require('../utils/borders.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
 
 registerAllFonts();
-
-const W = 800, H = 280;
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('namecard')
-        .setDescription('Generate a shareable Discord identity card with your username, roles, and style')
-        .addStringOption(opt => opt.setName('username').setDescription('Display name on the card').setRequired(true))
-        .addStringOption(opt => opt.setName('tagline').setDescription('Short bio or status line'))
-        .addStringOption(opt => opt.setName('role1').setDescription('Role badge 1 (e.g. Admin)'))
-        .addStringOption(opt => opt.setName('role2').setDescription('Role badge 2'))
-        .addStringOption(opt => opt.setName('role3').setDescription('Role badge 3'))
+        .setDescription('Generate a name card / business card style graphic')
+        .addStringOption(opt => opt.setName('name').setDescription('Display name or title').setRequired(true))
+        .addStringOption(opt => opt.setName('role').setDescription('Role or subtitle'))
+        .addStringOption(opt => opt.setName('tagline').setDescription('Short tagline or slogan'))
+        .addStringOption(opt => opt.setName('primary_color').setDescription('Primary color').setAutocomplete(true))
+        .addStringOption(opt => opt.setName('secondary_color').setDescription('Secondary color').setAutocomplete(true))
         .addStringOption(opt => opt.setName('background').setDescription('Background style').addChoices(...getBackgroundChoices()))
-        .addStringOption(opt => opt.setName('primary_color').setDescription('Accent color (hex)').setAutocomplete(true))
-        .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f }))))
-        .addStringOption(opt => opt.setName('avatar_url').setDescription('Avatar image URL (leave blank to skip)')),
+        .addStringOption(opt => opt.setName('border').setDescription('Border style').addChoices(...getBorderChoices()))
+        .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_color:   autocompleteColor,
+            secondary_color: autocompleteColor,
+        });
     },
 
     async execute(interaction) {
         await interaction.deferReply();
 
-        const username   = interaction.options.getString('username');
-        const tagline    = interaction.options.getString('tagline')      ?? '';
-        const role1      = interaction.options.getString('role1')        ?? '';
-        const role2      = interaction.options.getString('role2')        ?? '';
-        const role3      = interaction.options.getString('role3')        ?? '';
-        const background = interaction.options.getString('background')   ?? 'solid-dark';
-        const primary    = interaction.options.getString('primary_color') ?? '#39FF14';
-        const font       = interaction.options.getString('font')         ?? getAllFontFamilies()[0] ?? 'Arial';
-        const avatarURL  = interaction.options.getString('avatar_url')  ?? null;
+        const name       = interaction.options.getString('name');
+        const role       = interaction.options.getString('role')           ?? '';
+        const tagline    = interaction.options.getString('tagline')        ?? '';
+        const primary    = interaction.options.getString('primary_color')  ?? '#5865F2';
+        const secondary  = interaction.options.getString('secondary_color') ?? '#ffffff';
+        const background = interaction.options.getString('background')     ?? 'gradient-dark';
+        const border     = interaction.options.getString('border')         ?? 'none';
+        const font       = interaction.options.getString('font')           ?? getAllFontFamilies()[0];
 
+        const W = 600, H = 200;
         const canvas = createCanvas(W, H);
-        const ctx    = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
 
-        try { getBackgroundById(background).draw(ctx, W, H); } catch { ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, W, H); }
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, '#1a1a2e'); grad.addColorStop(1, '#16213e');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
 
-        ctx.fillStyle = primary;
-        ctx.fillRect(0, 0, 6, H);
+        ctx.fillStyle = primary; ctx.fillRect(0, 0, 8, H);
 
-        const AVATAR_X = 48, AVATAR_Y = H / 2, AVATAR_R = 72;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(AVATAR_X + AVATAR_R, AVATAR_Y, AVATAR_R, 0, Math.PI * 2);
-        ctx.clip();
-        if (avatarURL) {
-            try {
-                const img = await loadImage(avatarURL);
-                ctx.drawImage(img, AVATAR_X, AVATAR_Y - AVATAR_R, AVATAR_R * 2, AVATAR_R * 2);
-            } catch {
-                ctx.fillStyle = primary + '44';
-                ctx.fill();
-            }
-        } else {
-            ctx.fillStyle = primary + '33';
-            ctx.fill();
-            ctx.restore();
-            ctx.save();
-            ctx.font = `bold 48px "${font}"`;
-            ctx.fillStyle = primary;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(username.slice(0, 2).toUpperCase(), AVATAR_X + AVATAR_R, AVATAR_Y);
-        }
-        ctx.restore();
-
-        ctx.beginPath();
-        ctx.arc(AVATAR_X + AVATAR_R, AVATAR_Y, AVATAR_R + 3, 0, Math.PI * 2);
-        ctx.strokeStyle = primary;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        const textX = AVATAR_X + AVATAR_R * 2 + 32;
-        ctx.font = `bold 38px "${font}"`;
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'left';
+        ctx.font = `bold 32px "${font}"`; ctx.fillStyle = '#ffffff';
         ctx.textBaseline = 'alphabetic';
-        ctx.fillText(username, textX, tagline ? H * 0.38 : H / 2 + 12);
-
-        if (tagline) {
-            ctx.font = `20px "${font}"`;
-            ctx.fillStyle = '#aaaaaa';
-            ctx.fillText(tagline, textX, H * 0.38 + 32);
-        }
-
-        const roles = [role1, role2, role3].filter(Boolean);
-        if (roles.length) {
-            let rx = textX;
-            const ry = H * 0.72;
-            for (const role of roles) {
-                const pad = 14;
-                ctx.font = `bold 15px "${font}"`;
-                const rw = ctx.measureText(role).width + pad * 2;
-                const rh = 26;
-                ctx.fillStyle = primary + '33';
-                ctx.beginPath();
-                ctx.roundRect(rx, ry - rh / 2, rw, rh, 6);
-                ctx.fill();
-                ctx.strokeStyle = primary;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.fillStyle = primary;
-                ctx.textAlign = 'center';
-                ctx.fillText(role, rx + rw / 2, ry + 1);
-                rx += rw + 10;
-            }
-        }
-
-        ctx.font = `13px Arial`;
-        ctx.fillStyle = '#ffffff22';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText('made with Sigil', W - 16, H - 12);
+        ctx.fillText(name, 36, 80);
+        if (role) { ctx.font = `18px "${font}"`; ctx.fillStyle = primary; ctx.fillText(role, 36, 112); }
+        if (tagline) { ctx.font = `14px "${font}"`; ctx.fillStyle = '#99AAB5'; ctx.fillText(tagline, 36, 145); }
 
         const buf = canvas.toBuffer('image/png');
         const attachment = new AttachmentBuilder(buf, { name: 'namecard.png' });
 
         const embed = new EmbedBuilder()
-            .setTitle(`🆔 ${username}'s Name Card`)
-            .setDescription('Share this anywhere — Discord, Twitter, Reddit, wherever.')
+            .setTitle(`🪪 Name Card — ${name}`)
+            .setDescription(role || tagline || 'Your custom name card is ready.')
             .setImage('attachment://namecard.png')
             .setColor(primary)
-            .setFooter({ text: 'Sigil • namecard — 800×280 px PNG' });
+            .setFooter({ text: 'Sigil • namecard' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
-
-        saveEntry(interaction.user.id, {
-            command: 'namecard', username, tagline, background,
-            primary_color: primary, font,
-        });
+        saveEntry(interaction.user.id, { command: 'namecard', name, role, tagline, primary_color: primary, secondary_color: secondary, background, border, font });
     },
 };

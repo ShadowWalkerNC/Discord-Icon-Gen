@@ -1,192 +1,103 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { createCanvas, loadImage } = require('canvas');
 const { registerAllFonts, getAllFontFamilies } = require('../utils/canvas.js');
-const { getBackgroundById } = require('../utils/backgrounds.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { saveEntry } = require('../utils/history.js');
-const { getColorAutocomplete } = require('../utils/colors.js');
+const { dispatchAutocomplete, autocompleteColor, autocompleteBackground } = require('../utils/autocomplete.js');
 
 registerAllFonts();
-
-const W = 600, H = 340;
-const BANNER_H = 160;
-const AVATAR_R = 52;
-const AVATAR_X = 48;
-const AVATAR_Y = BANNER_H;
-
-const BADGE_CHOICES = [
-    { name: 'None',              value: 'none'         },
-    { name: '⚡ Early Supporter', value: 'early'        },
-    { name: '🐛 Bug Hunter',      value: 'bughunter'    },
-    { name: '🌟 Server Booster',  value: 'booster'      },
-    { name: '🎨 Active Developer',value: 'developer'    },
-    { name: '✨ Nitro',           value: 'nitro'        },
-    { name: '🛡️ Moderator',       value: 'moderator'    },
-];
-
-const BADGE_LABELS = {
-    none:      null,
-    early:     '⚡ Early Supporter',
-    bughunter: '🐛 Bug Hunter',
-    booster:   '🌟 Server Booster',
-    developer: '🎨 Active Developer',
-    nitro:     '✨ Nitro',
-    moderator: '🛡️ Moderator',
-};
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('profilecard')
-        .setDescription('Generate a Nitro-style Discord profile card mockup')
-        .addStringOption(opt => opt.setName('username').setDescription('Display name').setRequired(true))
-        .addStringOption(opt => opt.setName('bio').setDescription('About me / bio text'))
-        .addStringOption(opt => opt.setName('badge').setDescription('Profile badge').addChoices(...BADGE_CHOICES))
-        .addStringOption(opt => opt.setName('banner_background').setDescription('Banner background style').addChoices(...getBackgroundChoices()))
-        .addStringOption(opt => opt.setName('banner_color').setDescription('Banner accent color (hex)').setAutocomplete(true))
-        .addStringOption(opt => opt.setName('avatar_color').setDescription('Avatar ring color (hex)').setAutocomplete(true))
-        .addStringOption(opt => opt.setName('avatar_url').setDescription('Avatar image URL (optional)'))
+        .setDescription('Generate a stylised profile card for yourself or another member')
+        .addUserOption(opt => opt.setName('user').setDescription('Member to display (default: you)'))
+        .addStringOption(opt => opt.setName('bio').setDescription('Short bio text'))
+        .addStringOption(opt => opt.setName('primary_color').setDescription('Accent color').setAutocomplete(true))
+        .addStringOption(opt => opt.setName('secondary_color').setDescription('Secondary color').setAutocomplete(true))
+        .addStringOption(opt => opt.setName('background').setDescription('Background style').addChoices(...getBackgroundChoices()))
         .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f })))),
 
     async autocomplete(interaction) {
-        const focused = interaction.options.getFocused();
-        const results = getColorAutocomplete(focused);
-        await interaction.respond(results);
+        await dispatchAutocomplete(interaction, {
+            primary_color:   autocompleteColor,
+            secondary_color: autocompleteColor,
+            background:      autocompleteBackground,
+        });
     },
 
     async execute(interaction) {
         await interaction.deferReply();
 
-        const username   = interaction.options.getString('username');
-        const bio        = interaction.options.getString('bio')              ?? 'No bio set.';
-        const badgeKey   = interaction.options.getString('badge')           ?? 'none';
-        const bannerBg   = interaction.options.getString('banner_background') ?? 'gradient-purple';
-        const bannerColor = interaction.options.getString('banner_color')   ?? '#5865F2';
-        const avatarColor = interaction.options.getString('avatar_color')   ?? '#ffffff';
-        const avatarURL  = interaction.options.getString('avatar_url')      ?? null;
-        const font       = interaction.options.getString('font')            ?? getAllFontFamilies()[0] ?? 'Arial';
+        const target     = interaction.options.getUser('user')             ?? interaction.user;
+        const bio        = interaction.options.getString('bio')            ?? 'No bio set.';
+        const primary    = interaction.options.getString('primary_color')  ?? '#5865F2';
+        const secondary  = interaction.options.getString('secondary_color') ?? '#99AAB5';
+        const background = interaction.options.getString('background')     ?? 'gradient-dark';
+        const font       = interaction.options.getString('font')           ?? getAllFontFamilies()[0];
 
+        const member = await interaction.guild?.members.fetch(target.id).catch(() => null);
+
+        const W = 600, H = 300;
         const canvas = createCanvas(W, H);
-        const ctx    = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
 
-        ctx.fillStyle = '#2b2d31';
-        ctx.beginPath();
-        ctx.roundRect(0, 0, W, H, 12);
-        ctx.fill();
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, '#1a1a2e'); grad.addColorStop(1, '#16213e');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(0, 0, W, BANNER_H, [12, 12, 0, 0]);
-        ctx.clip();
-        try { getBackgroundById(bannerBg).draw(ctx, W, BANNER_H); }
-        catch { ctx.fillStyle = bannerColor; ctx.fillRect(0, 0, W, BANNER_H); }
-        ctx.restore();
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(AVATAR_X + AVATAR_R, AVATAR_Y, AVATAR_R + 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#2b2d31';
-        ctx.fill();
-        ctx.restore();
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(AVATAR_X + AVATAR_R, AVATAR_Y, AVATAR_R, 0, Math.PI * 2);
-        ctx.clip();
-        if (avatarURL) {
-            try {
-                const img = await loadImage(avatarURL);
-                ctx.drawImage(img, AVATAR_X, AVATAR_Y - AVATAR_R, AVATAR_R * 2, AVATAR_R * 2);
-            } catch {
-                ctx.fillStyle = avatarColor + '33'; ctx.fill();
-            }
-        } else {
-            ctx.fillStyle = avatarColor + '33'; ctx.fill();
-            ctx.restore(); ctx.save();
-            ctx.font = `bold 36px "${font}"`;
-            ctx.fillStyle = avatarColor;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(username.slice(0, 2).toUpperCase(), AVATAR_X + AVATAR_R, AVATAR_Y);
+        let avatar;
+        try { avatar = await loadImage(target.displayAvatarURL({ extension: 'png', size: 128 })); } catch { avatar = null; }
+        if (avatar) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(90, 110, 65, 0, Math.PI*2); ctx.clip();
+            ctx.drawImage(avatar, 25, 45, 130, 130);
+            ctx.restore();
+            ctx.beginPath(); ctx.arc(90, 110, 67, 0, Math.PI*2);
+            ctx.strokeStyle = primary; ctx.lineWidth = 3; ctx.stroke();
         }
-        ctx.restore();
 
-        ctx.beginPath();
-        ctx.arc(AVATAR_X + AVATAR_R * 2 - 10, AVATAR_Y + AVATAR_R - 10, 10, 0, Math.PI * 2);
-        ctx.fillStyle = '#2b2d31';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(AVATAR_X + AVATAR_R * 2 - 10, AVATAR_Y + AVATAR_R - 10, 7, 0, Math.PI * 2);
-        ctx.fillStyle = '#23a55a';
-        ctx.fill();
-
-        const textX = AVATAR_X + AVATAR_R * 2 + 20;
-        const nameY  = BANNER_H + 32;
-        ctx.font = `bold 26px "${font}"`;
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'left';
+        ctx.font = `bold 26px "${font}"`; ctx.fillStyle = '#ffffff';
         ctx.textBaseline = 'alphabetic';
-        ctx.fillText(username, textX, nameY);
+        ctx.fillText(member?.displayName ?? target.username, 180, 90);
+        ctx.font = `15px "${font}"`; ctx.fillStyle = '#99AAB5';
+        ctx.fillText(`@${target.username}`, 180, 115);
 
-        const badgeLabel = BADGE_LABELS[badgeKey];
-        if (badgeLabel) {
-            ctx.font = `13px "${font}"`;
-            const bw = ctx.measureText(badgeLabel).width + 20;
-            const bx = W - bw - 20;
-            const by = nameY - 18;
-            ctx.fillStyle = bannerColor + '44';
-            ctx.beginPath();
-            ctx.roundRect(bx, by, bw, 22, 11);
-            ctx.fill();
-            ctx.strokeStyle = bannerColor;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.fillText(badgeLabel, bx + bw / 2, by + 15);
-        }
-
-        ctx.fillStyle = '#ffffff22';
-        ctx.fillRect(textX, nameY + 10, W - textX - 20, 1);
-
-        ctx.font = `bold 11px Arial`;
-        ctx.fillStyle = '#b5bac1';
-        ctx.textAlign = 'left';
-        ctx.fillText('ABOUT ME', textX, nameY + 30);
-
-        ctx.font = `15px "${font}"`;
-        ctx.fillStyle = '#dbdee1';
-        const maxW = W - textX - 24;
+        ctx.font = `14px "${font}"`; ctx.fillStyle = '#cccccc';
         const words = bio.split(' ');
-        let line = '', lines = [], ly = nameY + 50;
+        let line = '', lines = [], by = 150;
         for (const w of words) {
             const t = line ? line + ' ' + w : w;
-            if (ctx.measureText(t).width > maxW) { lines.push(line); line = w; }
+            if (ctx.measureText(t).width > W - 200) { lines.push(line); line = w; }
             else line = t;
         }
         if (line) lines.push(line);
-        lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, textX, ly + i * 22));
+        lines.slice(0, 4).forEach((l, i) => ctx.fillText(l, 180, by + i * 22));
 
-        ctx.font = '12px Arial';
-        ctx.fillStyle = '#ffffff18';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText('made with Sigil', W - 12, H - 8);
+        const topRoles = member?.roles.cache
+            .filter(r => r.name !== '@everyone')
+            .sort((a, b) => b.position - a.position)
+            .first(3);
+        if (topRoles?.size) {
+            ctx.font = `13px "${font}"`; ctx.fillStyle = primary;
+            ctx.fillText(topRoles.map(r => r.name).join(' • '), 180, H - 30);
+        }
+
+        const divGrad = ctx.createLinearGradient(0, 0, W, 0);
+        divGrad.addColorStop(0, primary); divGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = divGrad; ctx.fillRect(0, H - 6, W, 6);
 
         const buf = canvas.toBuffer('image/png');
         const attachment = new AttachmentBuilder(buf, { name: 'profilecard.png' });
 
         const embed = new EmbedBuilder()
-            .setTitle(`👤 ${username}'s Profile Card`)
-            .setDescription('A Nitro-style Discord profile card mockup — share it anywhere.')
+            .setTitle(`👤 ${member?.displayName ?? target.username}'s Profile`)
+            .setDescription(bio)
             .setImage('attachment://profilecard.png')
-            .setColor(bannerColor)
-            .addFields(
-                { name: 'Badge',  value: badgeLabel ?? 'None', inline: true },
-                { name: 'Size',   value: '600 × 340 px',       inline: true },
-            )
-            .setFooter({ text: 'Sigil • profilecard — 600×340 PNG' });
+            .setColor(primary)
+            .setFooter({ text: 'Sigil • profilecard' });
 
         await interaction.editReply({ embeds: [embed], files: [attachment] });
-        saveEntry(interaction.user.id, { command: 'profilecard', username, bio, badge: badgeKey, bannerBg, bannerColor, avatarColor, font });
+        saveEntry(interaction.user.id, { command: 'profilecard', target: target.id, bio, primary_color: primary, secondary_color: secondary, background, font });
     },
 };
