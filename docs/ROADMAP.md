@@ -1,8 +1,8 @@
 # Sigil — Roadmap
 
-> **Vision:** Become the free, open-source "God Mode" layer for Discord — giving every server the visual quality, automation, analytics, and platform reach that Discord’s paywall and feature gaps deny them.
+> **Vision:** Become the free, open-source "God Mode" layer for Discord — giving every server the visual quality, automation, analytics, and platform reach that Discord's paywall and feature gaps deny them.
 >
-> **Last updated: 2026-06-18 | Current version: v1.9.0 | Target: v3.0**
+> **Last updated: 2026-06-18 | Current version: v2.0 | Target: v3.0**
 
 ---
 
@@ -14,10 +14,10 @@
 | v1.5–1.7 | Nitro-free features — stickers, emotes, cards | ✅ Shipped |
 | v1.8 | Extended visuals — reaction packs, profile cards, theme preview | ✅ Shipped |
 | v1.9 | Community tools — welcome cards, rank cards, certificates, event banners | ✅ Shipped |
-| **v2.0** | **Automation engine — event-driven auto-posting, scheduled posts** | 🚧 Next |
+| **v2.0** | **Automation engine — event-driven auto-posting, scheduled posts, webhooks** | 🚧 Next |
 | v2.1 | Analytics — server stats, growth cards, activity reports | 📝 Planned |
-| v2.2 | Gaming vertical — player cards, team kits, brackets, leaderboards | 📝 Planned |
-| v2.3 | Creator vertical — creator kits, content cards, stream overlays | 📝 Planned |
+| v2.2 | Gaming vertical — player cards, team kits, brackets, leaderboards, Rich Presence | 📝 Planned |
+| v2.3 | Creator vertical — creator kits, content cards, stream overlays, IRL QR | 📝 Planned |
 | v2.4 | Sports & esports — rosters, standings, match results, schedules | 📝 Planned |
 | v2.5 | Education — study cards, progress tracking, grade certificates | 📝 Planned |
 | v2.6 | Business & org tools — meeting cards, onboarding, policy cards | 📝 Planned |
@@ -29,11 +29,16 @@
 
 *Turn Sigil from a pull-based tool into push-based server infrastructure.*
 
+### Webhook Integrations
+- [ ] **Incoming webhooks** — Twitch live, YouTube upload, GitHub commit → auto-render branded card and post via Discord webhook URL
+- [ ] **Outgoing webhook listener** — MEE6 / Tatsu XP events → auto-post `/rankcard` on levelup
+- [ ] **`/sigilconfig webhook set`** — admin stores webhook URL per event type in SQLite
+- [ ] **`POST /webhook/trigger`** — REST endpoint: receives event payload, validates HMAC secret, renders card, posts to Discord
+
 ### Event Triggers
 - [ ] **Auto-welcome** — on `guildMemberAdd` → auto-post `/welcomecard` in configured welcome channel
 - [ ] **Auto-goodbye** — on `guildMemberRemove` → post a styled goodbye card
-- [ ] **Auto-milestone** — on member count hitting 100 / 500 / 1K / 5K etc. → post milestone celebration card
-- [ ] **Auto-levelup** — webhook listener for MEE6 / Tatsu XP events → auto-post `/rankcard`
+- [ ] **Auto-milestone** — on member count hitting 100 / 500 / 1K / 5K → post milestone celebration card
 - [ ] **Auto-event-banner** — on Discord Scheduled Event created → auto-generate and post event banner
 - [ ] **Auto-event-recap** — on Scheduled Event ended → post recap card with attendee count
 - [ ] **Auto-boost-card** — on server boost → post styled thank-you card for the booster
@@ -52,13 +57,14 @@
 
 ## v2.1 — Analytics & Visibility
 
-*Give admins visibility they’ve never had for free.*
+*Give admins visibility they've never had for free.*
 
 - [ ] **`/serverstats`** — visual server health card — member count, boost level, channel count, role count, server age, online now
 - [ ] **`/growthcard`** — member count trend over 7 / 30 days as a canvas line chart
 - [ ] **`/activityreport`** — most active channels and top members this week as a styled PNG
 - [ ] **`/invitetracker`** — which invite links are driving joins — visual leaderboard
 - [ ] **`/boosthistory`** — timeline of server boosts as a styled card
+- [ ] **`GET /api/kit/:id`** — serve a saved brand kit as JSON (for cross-platform use)
 
 ---
 
@@ -66,6 +72,12 @@
 
 *Every gaming server deserves to look like a pro org.*
 
+### Rich Presence Art Assets
+- [ ] **`/richpresence asset`** — generate Rich Presence art (512×512 large, 160×160 small) matching server brand kit
+- [ ] **`/richpresence preview`** — render Discord UI mockup of full Rich Presence card with custom art
+- [ ] **GUI `/richpresence` page** — visual builder for Rich Presence assets with live preview
+
+### Gaming Commands
 - [ ] **`/playercard`** — custom stat card — username, rank, K/D or score, hours, game logo
 - [ ] **`/teamkit`** — full visual identity kit for a clan or team — logo, banner, jersey colors
 - [ ] **`/bracket`** — tournament bracket graphic — single/double elimination, up to 16 teams
@@ -80,12 +92,18 @@
 
 *YouTubers, streamers, and TikTokers deserve Discord servers that match their brand.*
 
-- [ ] **`/creatorkit`** — pull a YouTube / Twitch channel’s dominant colors from a URL and generate a matching Discord brand kit
-- [ ] **`/contentcard`** — “New Video” or “Now Live” announcement card with thumbnail URL, title, platform icon
-- [ ] **`/streamoverlay`** — Twitch/Kick panel graphics that match the Discord server’s brand
-- [ ] **`/milestonecard`** — “We hit 10K subs!” celebration graphic for the server
-- [ ] **`/merchtease`** — product / merch announcement card with image, name, price, link
-- [ ] **`/linkinbio`** — styled card with all links (YouTube, Twitch, Twitter, TikTok, Merch, Discord) as a shareable PNG
+### IRL ↔ URL Mapping (Print-Ready Discord Assets)
+- [ ] **`/invitecard qr`** — invite card with QR code — scan at event/LAN → lands in server
+- [ ] **`/eventcard poster`** — printable event poster (A4/letter) with QR, event name, date, server invite
+- [ ] **`/lancard`** — LAN party / gaming event physical badge with Discord handle + QR code
+
+### Creator Commands
+- [ ] **`/creatorkit`** — pull YouTube / Twitch channel dominant colors from URL → generate matching Discord brand kit
+- [ ] **`/contentcard`** — "New Video" or "Now Live" announcement card with thumbnail URL, title, platform icon
+- [ ] **`/streamoverlay`** — Twitch/Kick panel graphics matching Discord server's brand
+- [ ] **`/milestonecard`** — "We hit 10K subs!" celebration graphic for server
+- [ ] **`/merchtease`** — product/merch announcement card with image, name, price, link
+- [ ] **`/linkinbio`** — styled card with all links (YouTube, Twitch, Twitter, TikTok, Merch, Discord) as shareable PNG
 
 ---
 
@@ -114,7 +132,7 @@
 
 ---
 
-## v2.6 — Business & Organization Vertical
+## v2.6 — Business & Organization Tools
 
 *Discord for teams, companies, and professional communities.*
 
@@ -135,10 +153,6 @@
 - [ ] **Template marketplace** — community-submitted templates with approval workflow
 - [ ] **Cross-server brand sync** — push one brand kit to multiple servers simultaneously
 - [ ] **Server structure backup/restore** — export full channel/role/permission layout as JSON, restore to new server
-- [ ] **Webhook integrations** — Twitch live, YouTube upload, GitHub commit → auto-post branded cards
-- [ ] **Discord Scheduled Events deep integration** — full lifecycle from creation to recap, all automated
-- [ ] **Forum channel header cards** — auto-generate styled header images for Discord Forum posts
-- [ ] **Stage channel speaker cards** — auto-post speaker intro card when a Stage event starts
 - [ ] **Brand versioning** — save multiple named brand kit versions per server
 - [ ] **CI/CD pipeline** — GitHub Actions for lint + test + deploy on push to main
 
@@ -168,6 +182,8 @@ Things the Discord API fully supports that almost no free tool uses well:
 | Auto-mod API | Visual moderation reports |
 | Forum Channels | Auto-header cards for structured communities |
 | Stage Channel events | Auto-speaker cards |
-| Voice State events | Live activity cards “Now in voice: X members” |
+| Voice State events | Live activity cards "Now in voice: X members" |
 | Invite tracking | Which links drive joins — visual breakdown |
 | Audit Log API | Weekly moderation activity visual report |
+| **Rich Presence SDK** | Generate Rich Presence art assets (512×512, 160×160) for Discord-connected games |
+| **Guild Invites + QR** | Print-ready IRL→URL bridge assets (invite cards, event posters, LAN badges) |
