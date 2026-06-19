@@ -1,4 +1,5 @@
-const { handleWeeklyReport } = require('../automation/weeklyReportHandler.js');
+const { handleWeeklyReport }        = require('../automation/weeklyReportHandler.js');
+const { startScheduledPostRunner }  = require('../automation/scheduledPostRunner.js');
 
 module.exports = {
     name: 'clientReady',
@@ -6,6 +7,7 @@ module.exports = {
     async execute(client) {
         console.log(`[Sigil] Logged in as ${client.user.tag}`);
         startWeeklyCron(client);
+        startScheduledPostRunner(client);
     },
 };
 
@@ -14,7 +16,6 @@ function startWeeklyCron(client) {
         const now  = new Date();
         const next = new Date(now);
         const day  = now.getUTCDay();
-        // If today is Monday before 09:00 UTC — fire today
         if (day === 1 && now.getUTCHours() < 9) {
             next.setUTCHours(9, 0, 0, 0);
         } else {
