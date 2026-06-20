@@ -14,10 +14,10 @@ const { verifyHmac } = require('../src/utils/hmac.js');
 const { handleTwitchLive, handleYouTubeUpload, handleGitHubPush } = require('../src/automation/webhookHandler.js');
 const { enablePackage, disablePackage, getAllPackageStates } = require('../src/utils/packages.js');
 const logBuffer  = require('../src/util/logBuffer.js');
-const registry   = require('../src/util/serviceRegistry.js');
+const Database   = require('better-sqlite3');
 require('dotenv').config();
 
-// Patch console so all output flows through the ring buffer
+// Patch console so all gui-server output flows through the in-process ring buffer
 logBuffer.patch();
 
 registerAllFonts();
@@ -27,6 +27,59 @@ const server    = http.createServer(app);
 const PORT      = Number(process.env.PORT) || 8080;
 const START_TS  = Date.now();
 const VERSION   = '2.5.0';
+
+// ── SQLite IPC bridge (read-only) ─────────────────────────────────────────────
+// The bot writes bot_heartbeat, service_registry, and log_buffer rows.
+// gui-server reads them here instead of relying on global.sigilClient.
+const DB_PATH = path.join(__dirname, '..', 'data', 'sigil.db');
+
+function getIpcDb() {
+    try { return new Database(DB_PATH, { readonly: true, fileMustExist: true }); }
+    catch { return null; }
+}
+
+function readBotHeartbeat() {
+    const ipc = getIpcDb();
+    if (!ipc) return null;
+    try {
+        return ipc.prepare('SELECT * FROM bot_heartbeat WHERE id = 1').get() ?? null;
+    } catch { return null; } finally { ipc.close(); }
+}
+
+function readServiceRegistry() {
+    const ipc = getIpcDb();
+    if (!ipc) return [];
+    try {
+        return ipc.prepare('SELECT * FROM service_registry').all().map(row => ({
+            name:          row.name,
+            status:        row.status,
+            lastHeartbeat: row.last_heartbeat,
+            lastError:     row.last_error,
+            errorCount:    row.error_count,
+            meta:          JSON.parse(row.meta    || '{}'),
+            options:       JSON.parse(row.options || '{}'),
+        }));
+    } catch { return []; } finally { ipc.close(); }
+}
+
+function readLogBuffer(n = 50, level = null) {
+    const ipc = getIpcDb();
+    if (!ipc) return [];
+    try {
+        const safeN = Math.max(1, Math.min(500, n));
+        if (level) {
+            return ipc.prepare(
+                'SELECT ts, level, text FROM log_buffer WHERE level = ? ORDER BY id DESC LIMIT ?'
+            ).all(level, safeN).reverse();
+        }
+        return ipc.prepare(
+            'SELECT ts, level, text FROM log_buffer ORDER BY id DESC LIMIT ?'
+        ).all(safeN).reverse();
+    } catch { return []; } finally { ipc.close(); }
+}
+
+// Stale threshold: if heartbeat is older than 90 s, bot is considered offline.
+const BOT_STALE_MS = 90_000;
 
 // ── ASCILINE stream_server.py base URL (co-hosted, local only) ───────────────
 const STREAM_URL = (process.env.STREAM_SERVER_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
@@ -243,10 +296,29 @@ app.get('/api/media/queue', mediaLimiter, async (req, res) => {
 // ║                  LOGS — /api/logs + WebSocket /ws/logs          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
+/**
+ * GET /api/logs
+ * Returns combined lines: gui-server in-process buffer UNION bot SQLite buffer,
+ * merged and sorted by timestamp, then tailed to n lines.
+ */
 app.get('/api/logs', apiLimiter, (req, res) => {
     const n     = Math.max(1, Math.min(500, parseInt(req.query.tail || '50', 10)));
     const level = ['info', 'warn', 'error'].includes(req.query.level) ? req.query.level : null;
-    res.json({ ok: true, lines: logBuffer.tail(n, level) });
+
+    // In-process gui-server lines
+    const guiLines = logBuffer.tail(n, level);
+
+    // Bot lines from SQLite
+    const botLines = readLogBuffer(n, level);
+
+    // Merge, deduplicate by ts+text, sort chronologically, tail
+    const seen = new Set();
+    const merged = [...guiLines, ...botLines]
+        .filter(l => { const k = `${l.ts}|${l.text}`; if (seen.has(k)) return false; seen.add(k); return true; })
+        .sort((a, b) => a.ts - b.ts)
+        .slice(-n);
+
+    res.json({ ok: true, lines: merged });
 });
 
 const wssLogs = new WebSocketServer({ noServer: true });
@@ -279,10 +351,10 @@ server.on('upgrade', (req, socket, head) => {
  * GET /api/status/full
  * Aggregates health from:
  *   - gui-server itself (uptime, version)
- *   - bot (global.sigilClient guild count + ping)
+ *   - bot (SQLite bot_heartbeat row — written every 30 s by src/index.js)
  *   - ASCILINE stream_server.py (proxies /api/status)
- *   - service registry snapshot (scheduler, twitch-poller, youtube-poller, stats-runner)
- *   - logBuffer last error line
+ *   - service registry (SQLite service_registry rows — written every 60 s by bot)
+ *   - last error line (SQLite log_buffer)
  */
 app.get('/api/status/full', apiLimiter, async (req, res) => {
     const result = { ok: true };
@@ -295,17 +367,22 @@ app.get('/api/status/full', apiLimiter, async (req, res) => {
         uptime_ms: Date.now() - START_TS,
     };
 
-    // ─ bot client (available via global.sigilClient set by start.js) ───
-    const client = global.sigilClient;
-    if (client && client.isReady()) {
+    // ─ bot health via SQLite IPC ────────────────────────────────
+    const hb = readBotHeartbeat();
+    if (hb && (Date.now() - hb.ts) < BOT_STALE_MS) {
         result.bot = {
             ok:        true,
             reachable: true,
-            guilds:    client.guilds.cache.size,
-            latency:   client.ws.ping,
+            guilds:    hb.guilds,
+            latency:   hb.latency,
+            tag:       hb.tag,
         };
     } else {
-        result.bot = { ok: false, reachable: false };
+        result.bot = {
+            ok:          false,
+            reachable:   false,
+            last_seen_ms: hb ? Date.now() - hb.ts : null,
+        };
     }
 
     // ─ ASCILINE ────────────────────────────────────────────────
@@ -323,17 +400,14 @@ app.get('/api/status/full', apiLimiter, async (req, res) => {
         result.asciline = { ok: false, reachable: false };
     }
 
-    // ─ Service registry snapshot ────────────────────────────────
-    //   Populated by scheduler.js, pollers.js, statsRunner.js at runtime.
-    //   Empty array when the bot hasn't started yet (gui-server only mode).
-    result.services = registry.getSnapshot();
+    // ─ Service registry snapshot from SQLite ────────────────────
+    result.services = readServiceRegistry();
 
-    // Derive an overall services health flag
     const degraded = result.services.filter(s => s.status !== 'ok' && s.status !== 'starting');
     result.services_ok = degraded.length === 0;
 
-    // ─ Last error from log ring buffer ───────────────────────────
-    const lastErrors = logBuffer.tail(1, 'error');
+    // ─ Last error from SQLite log_buffer ─────────────────────────
+    const lastErrors = readLogBuffer(1, 'error');
     result.last_error = lastErrors.length ? lastErrors[0] : null;
 
     // ─ Overall ok flag ─────────────────────────────────────────
@@ -346,17 +420,6 @@ app.get('/api/status/full', apiLimiter, async (req, res) => {
 // ║          CONTROL — POST /api/control/restart                    ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-/**
- * POST /api/control/restart
- * Triggers a clean process exit so PM2 / Railway auto-restarts.
- *
- * Authentication: requires header  x-control-secret  to match
- * the CONTROL_SECRET environment variable.  If CONTROL_SECRET is
- * not set the endpoint is disabled (returns 503) so it can never
- * be abused on an open deployment.
- *
- * Rate limited to 5 calls/min to prevent restart loops.
- */
 app.post('/api/control/restart', controlLimiter, (req, res) => {
     const secret = process.env.CONTROL_SECRET || '';
 
@@ -372,11 +435,8 @@ app.post('/api/control/restart', controlLimiter, (req, res) => {
         return res.status(401).json({ ok: false, error: 'Invalid or missing x-control-secret.' });
     }
 
-    // Respond before exiting so the caller receives the 200.
     res.json({ ok: true, message: 'Restart signal accepted. Process exiting now.' });
 
-    // Flush the response socket then exit cleanly.
-    // PM2 / Railway will restart the process automatically.
     res.on('finish', () => {
         console.log('[GUI] Restart requested via /api/control/restart — exiting.');
         gracefulShutdown('restart');
@@ -608,14 +668,6 @@ app.use((req, res) => {
 // ║            GRACEFUL SHUTDOWN — SIGTERM / SIGINT                 ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-/**
- * gracefulShutdown(reason)
- * Closes the HTTP server and all WebSocket connections cleanly
- * before exiting.  Called by SIGTERM, SIGINT, and the restart endpoint.
- *
- * Timeout: if the server hasn't closed within 8 s (e.g. stalled WS
- * connections) we force-exit anyway so PM2/Railway never gets stuck.
- */
 let shuttingDown = false;
 
 function gracefulShutdown(reason = 'signal') {
@@ -624,17 +676,14 @@ function gracefulShutdown(reason = 'signal') {
 
     console.log(`[GUI] Graceful shutdown initiated (reason: ${reason}).`);
 
-    // Close all open WebSocket connections
     wssLogs.clients.forEach(ws => ws.terminate());
 
-    // Stop accepting new HTTP connections; finish in-flight ones
     server.close((err) => {
         if (err) console.error('[GUI] server.close error:', err);
         console.log('[GUI] HTTP server closed. Exiting.');
         process.exit(0);
     });
 
-    // Hard timeout — force exit after 8 s
     setTimeout(() => {
         console.warn('[GUI] Shutdown timed out — forcing exit.');
         process.exit(1);

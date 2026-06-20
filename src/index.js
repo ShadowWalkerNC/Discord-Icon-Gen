@@ -6,7 +6,7 @@ require('dotenv').config();
 // ── DB MUST be required first ─────────────────────────────────────────────────
 // This runs all CREATE TABLE IF NOT EXISTS statements before any command file
 // calls db.prepare() at module load time, regardless of load order.
-require('./db');
+const db = require('./db');
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TOKEN     = process.env.DISCORD_TOKEN || process.env.TOKEN;
@@ -64,6 +64,78 @@ for (const file of eventFiles) {
     }
 }
 
+// ── IPC: prepared statements for bot → SQLite → gui-server bridge ─────────────
+const _upsertHeartbeat = db.prepare(`
+    INSERT INTO bot_heartbeat (id, ts, guilds, latency, tag)
+    VALUES (1, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+        ts      = excluded.ts,
+        guilds  = excluded.guilds,
+        latency = excluded.latency,
+        tag     = excluded.tag
+`);
+
+const _upsertService = db.prepare(`
+    INSERT INTO service_registry (name, status, last_heartbeat, last_error, error_count, meta, options)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(name) DO UPDATE SET
+        status         = excluded.status,
+        last_heartbeat = excluded.last_heartbeat,
+        last_error     = excluded.last_error,
+        error_count    = excluded.error_count,
+        meta           = excluded.meta,
+        options        = excluded.options
+`);
+
+const _insertLog = db.prepare(
+    'INSERT INTO log_buffer (ts, level, text) VALUES (?, ?, ?)'
+);
+const _trimLog = db.prepare(
+    'DELETE FROM log_buffer WHERE id NOT IN (SELECT id FROM log_buffer ORDER BY id DESC LIMIT 500)'
+);
+
+// Flush serviceRegistry snapshot to SQLite.
+function flushServiceRegistry() {
+    try {
+        const registry = require('./util/serviceRegistry.js');
+        const snapshot = registry.getSnapshot();
+        for (const svc of snapshot) {
+            _upsertService.run(
+                svc.name,
+                svc.status,
+                svc.lastHeartbeat ?? null,
+                svc.lastError     ?? null,
+                svc.errorCount,
+                JSON.stringify(svc.meta    ?? {}),
+                JSON.stringify(svc.options ?? {}),
+            );
+        }
+    } catch (err) {
+        // Non-fatal — don't crash the bot if IPC write fails
+        console.warn('[IPC] flushServiceRegistry error:', err.message);
+    }
+}
+
+// Patch console so bot logs are written to the shared log_buffer table.
+// This lets gui-server's /api/logs and /ws/logs serve bot-side lines.
+(function patchConsole() {
+    const _log   = console.log.bind(console);
+    const _warn  = console.warn.bind(console);
+    const _error = console.error.bind(console);
+
+    function writeLog(level, args) {
+        try {
+            const text = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+            _insertLog.run(Date.now(), level, text.slice(0, 2000));
+            _trimLog.run();
+        } catch { /* never crash bot over a log write */ }
+    }
+
+    console.log   = (...a) => { _log(...a);   writeLog('info',  a); };
+    console.warn  = (...a) => { _warn(...a);  writeLog('warn',  a); };
+    console.error = (...a) => { _error(...a); writeLog('error', a); };
+}());
+
 client.once('clientReady', () => {
     global.sigilClient = client;
 
@@ -80,6 +152,25 @@ client.once('clientReady', () => {
     startDevotional(client);
     startShiftScheduler(client);
     startMyShiftScheduler(client);
+
+    // Write initial heartbeat immediately, then every 30 s.
+    function writeHeartbeat() {
+        try {
+            _upsertHeartbeat.run(
+                Date.now(),
+                client.guilds.cache.size,
+                client.ws.ping,
+                client.user.tag,
+            );
+        } catch (err) {
+            console.warn('[IPC] heartbeat write error:', err.message);
+        }
+    }
+    writeHeartbeat();
+    setInterval(writeHeartbeat, 30_000);
+
+    // Flush service registry snapshot every 60 s.
+    setInterval(flushServiceRegistry, 60_000);
 
     console.log(`\x1b[32m\x1b[1m[Sigil] Ready! Logged in as ${client.user.tag}\x1b[0m`);
 });
@@ -106,12 +197,10 @@ client.on('interactionCreate', async (interaction) => {
         const expiresAt = timestamps.get(interaction.user.id) + cooldownMs;
         if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            // Wrap in try/catch — interaction token may have expired (10062) if bot
-            // was restarting; swallow silently rather than crashing the process.
             try {
                 await interaction.reply({
                     content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
-                    flags: 64, // ephemeral
+                    flags: 64,
                 });
             } catch (cdErr) {
                 if (cdErr?.code !== 10062) console.warn('[cooldown] reply failed:', cdErr?.message);

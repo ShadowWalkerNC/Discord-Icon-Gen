@@ -85,6 +85,37 @@ db.exec(`
         menu_channel    TEXT,
         alert_channel   TEXT
     );
+
+    -- ── IPC bridge: bot → gui-server ─────────────────────────────────────────
+    -- Single-row heartbeat written by the bot every 30 s.
+    -- gui-server reads this instead of global.sigilClient.
+    CREATE TABLE IF NOT EXISTS bot_heartbeat (
+        id          INTEGER PRIMARY KEY CHECK (id = 1),
+        ts          INTEGER NOT NULL,   -- epoch ms of last write
+        guilds      INTEGER NOT NULL DEFAULT 0,
+        latency     INTEGER NOT NULL DEFAULT 0,
+        tag         TEXT    NOT NULL DEFAULT ''
+    );
+
+    -- Per-service health rows written by the bot after each registry flush.
+    CREATE TABLE IF NOT EXISTS service_registry (
+        name          TEXT PRIMARY KEY,
+        status        TEXT NOT NULL DEFAULT 'starting',
+        last_heartbeat INTEGER,
+        last_error    TEXT,
+        error_count   INTEGER NOT NULL DEFAULT 0,
+        meta          TEXT    NOT NULL DEFAULT '{}',
+        options       TEXT    NOT NULL DEFAULT '{}'
+    );
+
+    -- Rolling log buffer written by the bot process.
+    -- gui-server tails this for /api/logs and /ws/logs (bot-side lines).
+    CREATE TABLE IF NOT EXISTS log_buffer (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts      INTEGER NOT NULL,
+        level   TEXT    NOT NULL DEFAULT 'info',
+        text    TEXT    NOT NULL
+    );
 `);
 
 // ── Migrations (safe to re-run — each is wrapped in a try/catch) ─────────────
