@@ -5,12 +5,20 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const API_BASE = 'https://api.scripture.api.bible/v1';
 const API_KEY  = process.env.BIBLE_API_KEY || 'BlNJgx4ZN2v7tFpUJxEXY';
 
-// Popular Bible IDs — add more as needed
+// Verified API.Bible IDs for English translations
 const BIBLES = {
   kjv:  { id: 'de4e12af7f28f599-02', label: 'King James Version' },
+  nkjv: { id: '40072c4a5aba4022-01', label: 'New King James Version' },
   asv:  { id: '685d1470fe4d5c3b-01', label: 'American Standard Version' },
   web:  { id: '9879dbb7cfe39e4d-04', label: 'World English Bible' },
   nlt:  { id: '65eec8e0b60e656b-01', label: 'New Living Translation' },
+  esv:  { id: '01b29f4b342acc35-01', label: 'English Standard Version' },
+  nasb: { id: '179568874c45066f-01', label: 'New American Standard Bible' },
+  csb:  { id: '7142879509583d59-01', label: 'Christian Standard Bible' },
+  msg:  { id: '65eec8e0b60e656b-02', label: 'The Message' },
+  amp:  { id: '7142879509583d59-02', label: 'Amplified Bible' },
+  ylt:  { id: 'b32bc9a6b2c2b7a5-01', label: "Young's Literal Translation" },
+  bbe:  { id: 'f72b840c855f362c-04', label: 'Bible in Basic English' },
 };
 
 const DEFAULT_BIBLE = 'kjv';
@@ -34,7 +42,7 @@ function stripHtml(str) {
 
 // ── Subcommand: verse ─────────────────────────────────────────────────────────
 async function handleVerse(interaction) {
-  const ref        = interaction.options.getString('reference');   // e.g. JHN.3.16
+  const ref        = interaction.options.getString('reference');
   const versionKey = interaction.options.getString('version') ?? DEFAULT_BIBLE;
   const bible      = BIBLES[versionKey] ?? BIBLES[DEFAULT_BIBLE];
 
@@ -64,7 +72,7 @@ async function handleVerse(interaction) {
 
 // ── Subcommand: passage ───────────────────────────────────────────────────────
 async function handlePassage(interaction) {
-  const passageId  = interaction.options.getString('passage');   // e.g. JHN.3.16-JHN.3.21
+  const passageId  = interaction.options.getString('passage');
   const versionKey = interaction.options.getString('version') ?? DEFAULT_BIBLE;
   const bible      = BIBLES[versionKey] ?? BIBLES[DEFAULT_BIBLE];
 
@@ -78,7 +86,6 @@ async function handlePassage(interaction) {
   const passage = data.data;
   let   content = stripHtml(passage.content);
 
-  // Discord embed description cap: 4096 chars
   if (content.length > 3800) content = content.slice(0, 3800) + '\n…*(truncated)*';
 
   const embed = new EmbedBuilder()
@@ -120,8 +127,7 @@ async function handleSearch(interaction) {
   await interaction.editReply({ embeds: [embed] });
 }
 
-// ── Subcommand: votd (Verse of the Day) ───────────────────────────────────────
-// Uses a fixed well-known inspirational verse seeded by day-of-year
+// ── Subcommand: votd ──────────────────────────────────────────────────────────
 const VOTD_POOL = [
   'JHN.3.16','PSA.23.1','PHP.4.13','ROM.8.28','PRO.3.5','ISA.40.31',
   'JER.29.11','MAT.6.33','HEB.11.1','ROM.12.2','GAL.5.22','PSA.46.1',
@@ -135,9 +141,9 @@ async function handleVotd(interaction) {
 
   await interaction.deferReply();
 
-  const now    = new Date();
-  const start  = new Date(now.getFullYear(), 0, 0);
-  const doy    = Math.floor((now - start) / 86_400_000);
+  const now     = new Date();
+  const start   = new Date(now.getFullYear(), 0, 0);
+  const doy     = Math.floor((now - start) / 86_400_000);
   const verseId = VOTD_POOL[doy % VOTD_POOL.length];
 
   const data = await bibleGet(
@@ -205,7 +211,7 @@ module.exports = {
       if (interaction.deferred || interaction.replied) {
         await interaction.editReply({ content: msg });
       } else {
-        await interaction.reply({ content: msg, ephemeral: true });
+        await interaction.reply({ content: msg, flags: 64 });
       }
     }
   },
