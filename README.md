@@ -1,142 +1,164 @@
+<div align="center">
+
+<img src="https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
+<img src="https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=node.js&logoColor=white" />
+<img src="https://img.shields.io/badge/self--hosted-open%20source-F4C842?style=for-the-badge" />
+<img src="https://img.shields.io/github/license/ShadowWalkerNC/Sigil?style=for-the-badge" />
+
 # ⚡ Sigil
 
-> A powerful, self-hosted Discord bot built for **any community** — gaming clans, churches, restaurants, content creators, schools, and small businesses. Built on discord.js v14 with canvas graphics, AI branding, XP engagement, full moderation, real-time alerts, and smart automation.
+### *One bot. Every community.*
+
+**Sigil is a self-hosted Discord bot that turns any server into a fully-managed community hub — without needing a developer.**
+
+Built for churches, gaming clans, restaurants, streamers, schools, and businesses. Plug it in, run a few commands, and your server runs itself.
+
+[**Get Started →**](#-quick-start) · [**Commands →**](#-command-reference) · [**Scheduler Bridge →**](SCHEDULER_INTEGRATION.md)
+
+</div>
 
 ---
 
-## 🎯 Who Is Sigil For?
+## Why Sigil?
 
-Sigil is designed so that **non-technical admins** can run a fully-featured server without touching config files. A pastor, restaurant manager, or gaming clan leader should be able to type one command and have it work beautifully.
+Most Discord bots are built for tech people. Sigil is built for **everyone else**.
 
-| Community | How Sigil Helps |
+A pastor shouldn't need to edit JSON to post a daily devotional. A restaurant manager shouldn't need a developer to show today's roster. A clan leader shouldn't need to read documentation to start a giveaway.
+
+With Sigil, every feature is a **single slash command** — no dashboards, no config files, no subscriptions. You own it. You host it. It does exactly what you need.
+
+---
+
+## 🌍 Built for Real Communities
+
+| Community | What Sigil Does For You |
 |---|---|
-| 🎮 **Gaming / Xbox / Console** | LFG posts, session scheduling, XP leaderboards, Twitch/YouTube live alerts, weekly top-player boards |
-| ⛪ **Churches** | Service announcements, prayer requests, volunteer sign-ups, devotionals, event RSVPs, onboarding new visitors |
-| 🍽️ **Restaurants / Hospitality** | Staff shift coordination, daily specials, customer announcements, ticket-based support, loyalty engagement via XP |
-| 🎥 **Content Creators / Streamers** | Twitch/YouTube live & upload alerts, fan engagement XP, milestone rewards, subscriber role perks |
-| 🎓 **Schools / Study Groups** | Assignment reminders, study session scheduling, resource sharing, leaderboards |
-| 💼 **Small Businesses** | Customer support tickets, product drops, appointment reminders, branded announcements |
-
-**The Discord advantage:** Slash commands, buttons, and embeds mean your community interacts through a polished interface — no app to download, no website to manage.
+| ⛪ **Churches** | Daily devotionals with translation picker, prayer walls, volunteer sign-ups, sermon announcements, RSVP events, visitor onboarding |
+| 🎮 **Gaming / Clans** | LFG posts, XP leaderboards, giveaways, Twitch/YouTube live alerts, session scheduling |
+| 🍽️ **Restaurants & Hospitality** | Staff shift boards connected to your scheduler, callout submissions from Discord, daily specials, customer announcements, loyalty XP |
+| 🎥 **Streamers & Creators** | Auto live alerts, YouTube upload notifications, fan engagement XP, milestone celebrations, subscriber role perks |
+| 🎓 **Schools & Study Groups** | Reminders, leaderboards, resource sharing, event scheduling |
+| 💼 **Small Businesses** | Support tickets, product drops, appointment reminders, branded embeds |
 
 ---
 
-## ✅ Current Features
+## ✨ Feature Highlights
 
-| Module | Description |
-|---|---|
-| 🎉 Welcome / Goodbye | Canvas-rendered branded cards on member join and leave |
-| 🚀 Boost Alerts | Auto-post a thank-you embed when a member boosts the server |
-| 🏆 Member Milestones | Auto-celebrate when the server hits member count milestones |
-| 🔨 Moderation | Ban, kick, warn, timeout, unban, purge, slowmode, mod log, case history |
-| ⭐ XP & Leveling | Per-message XP, level-up canvas cards, lifetime leaderboard, weekly XP tracking with Sunday reset, level auto-roles |
-| 🎨 Branding & Graphics | Canvas-generated banners, logos, rank cards, profile cards, certificates, palettes, mood boards, stickers, and more — plus AI-powered brand kits via Gemini |
-| 🟣 Twitch Alerts | Auto live alerts when tracked streamers go live, per-guild subscriptions |
-| 📥 YouTube Alerts | Upload alerts via YouTube Data API v3 or RSS fallback |
-| 🗓️ Scheduled Posts | Schedule text or rich embed messages to any channel at any future time |
-| 📊 Weekly Stats | Auto Monday 09:00 UTC server health report with member, message, and channel stats |
-| 📌 Event Banners | Teaser, live, and recap embeds auto-posted for Discord Scheduled Events |
-| 📋 Polls | Timed polls with up to 10 options, live vote counts, and auto-close |
-| 🎁 Giveaways | Button-entry giveaways with auto draw, reroll, and early-end |
-| 🎛️ Reaction Roles | Button-based role panels — unlimited roles, post anywhere |
-| 🎟️ Tickets | Private thread-based support tickets with support-role access, log channel, and close reason |
-| 🤖 Automod | Anti-spam, anti-links, anti-caps, mention flood protection, bad word filter, bypass roles |
-| ⭐ Starboard | Auto-pin highly-reacted messages to a dedicated starboard channel |
-| 💤 Bump Reminders | Remind your server to bump on DISBOARD every 2 hours after the last bump |
-| 🔧 Custom Commands | Create custom slash-triggered text or embed responses, with template variables and optional embed colors |
-| 🎭 Auto Roles | Automatically assign roles when a member joins |
-| 🏅 Level Roles | Automatically assign roles when a member reaches an XP level threshold |
-| 📋 Server Logging | Log message edits, deletions, member joins/leaves, and more to a dedicated log channel |
-| 🌐 Webhook Automation | Inbound webhook handler for external service integrations |
-| 🎨 GUI Brand Builder | Visual web interface for designing server brand kits — accessible via `/gui open` |
-| 🤖 AI (Gemini) | AI-powered brand kits, server name suggestions, descriptions, and graphic generation |
+### 🏠 Community Essentials
+- **Welcome & Goodbye** — Canvas-rendered branded cards on join and leave
+- **Auto Roles** — Assign roles automatically when members join
+- **XP & Leveling** — Message XP, level-up cards, weekly leaderboard with Sunday reset, level-based role rewards
+- **Giveaways** — Timed button-entry giveaways with auto draw, reroll, role-gating, and live countdown
+- **Polls** — Timed polls with up to 10 options and live vote counts
+- **Tickets** — Private thread-based support tickets with staff access and close logging
+- **Reminders** — Personal DM or channel reminders, up to 30 days out
 
----
+### 🛡️ Moderation
+- Ban, kick, warn, timeout, purge, slowmode
+- Mod case history per user
+- Automod: anti-spam, anti-links, anti-caps, mention flood, bad word filter, bypass roles
+- Server logging: message edits, deletions, joins, and leaves
 
-## 🚧 Roadmap
+### 🎨 Branding & Graphics
+- **25+ canvas commands** — rank cards, welcome banners, certificates, event banners, mood boards, stickers, and more
+- **AI Brand Kit** — Gemini-powered brand name suggestions, logo generation, and visual theme building via `/brand`
+- **Embed Builder** — Live preview `/embed create` with fields, images, colors, and footer — no code needed
+- **Sermon Announcements** — `/sermon` posts a clean embed with video, audio, scripture, and study notes links
 
-Building smart — focused on what real communities actually use.
+### 🔔 Alerts & Integrations
+- **Twitch** — Auto-post live alerts when tracked streamers go live
+- **YouTube** — Upload alerts via YouTube API or free RSS fallback
+- **Scheduler Bridge** — Connect Sylvia Ross MC or any compatible scheduler; staff check shifts and submit callouts from Discord
+- **Scheduled Posts** — Set any message to auto-post at a future time
+- **Webhook Automation** — Inbound webhook handler for external service integrations
 
-### Tier 1 — Next Up
-| Feature | Serves | Status |
-|---|---|---|
-| `/weeklyleaderboard` | All | DB + weekly reset cron live — command pending |
-| `/announce` | All | Formatted embed with role ping targeting |
-| `/rsvp` | Churches, restaurants, gaming | Button-based yes/no/maybe with headcount + 24h reminder |
-
-### Tier 2 — Planned
-| Feature | Serves | Notes |
-|---|---|---|
-| `/lfg` | Gaming (Xbox, PC, console) | Looking For Group post with game, mode, platform, player count; auto-expires |
-| `/prayerrequest` | Churches | Posts to `#prayer-wall`; optional DM to pastor/prayer team; 🙏 reaction counter |
-| `/volunteer` | Churches, restaurants | Sign-up slots, open slot list, coordinator summary, DM confirmation |
-| `/shift` | Restaurants, church staff | Staff clock-in/out tracking with log channel |
-| `/devotional` | Churches | Daily verse via Bible API, auto-scheduled morning post to `#devotional` |
-| `/xpadmin set` | All | Admin XP override tool |
-| `/warnings` | All | Quick mod case summary per user |
-
-### Tier 3 — Future
-| Feature | Serves | Notes |
-|---|---|---|
-| Ticket transcripts | All | Save thread content to log channel on ticket close |
-| `/remindme` | All | Personal DM reminder |
-| Voice XP | Gaming, all | XP for time spent in voice channels (`voiceStateUpdate` already wired) |
-| Onboarding flow | All | DM new members welcome + rules summary automatically |
+### ⛪ Church Tools
+- **Daily Devotionals** — Auto-scheduled morning posts with verse from API.Bible (8 translations: KJV, NIV, ESV, NKJV, NLT, MSG, AMP, WEB), custom reflection queue, and `/devotional lookup`
+- **Prayer Requests** — Post to a prayer wall with optional staff notification
+- **Volunteer Sign-ups** — Shift slots with open-slot list and DM confirmation
+- **RSVP Events** — Button-based Yes / No / Maybe with headcount and 24h reminders
 
 ---
 
-## 🛠️ Requirements
+## 🚀 Quick Start
 
-- **Node.js** v18 or higher
-- **npm** packages: `discord.js`, `better-sqlite3`, `@napi-rs/canvas`, `dotenv`
-- A Discord bot application with the following **Privileged Intents** enabled in the [Developer Portal](https://discord.com/developers/applications):
-  - `SERVER MEMBERS INTENT`
-  - `MESSAGE CONTENT INTENT`
-  - `PRESENCE INTENT`
+### 1 — Prerequisites
+- [Node.js v18+](https://nodejs.org)
+- A [Discord Application](https://discord.com/developers/applications) with a bot token
+- Enable these **Privileged Intents** in the Developer Portal:
+  - ✅ Server Members Intent
+  - ✅ Message Content Intent
+  - ✅ Presence Intent
 
----
-
-## 🚀 Installation
+### 2 — Install
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/ShadowWalkerNC/Sigil.git
 cd Sigil
-
-# 2. Install dependencies
 npm install
+```
 
-# 3. Copy and fill in environment variables
+### 3 — Configure
+
+```bash
 cp .env.example .env
+```
 
-# 4. Deploy slash commands to Discord
+Open `.env` and fill in at minimum:
+
+```env
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_application_client_id
+GUILD_ID=your_server_id
+```
+
+> Full `.env` reference: [see below →](#-env-reference)
+
+### 4 — Deploy Commands
+
+```bash
 node src/deploy-commands.js
+```
 
-# 5. Start the bot
+### 5 — Start
+
+```bash
 node src/index.js
 ```
+
+Your bot is live. Invite it to your server and run `/help` to explore.
+
+> **Tip:** For 24/7 hosting, use [PM2](https://pm2.keymetrics.io/) (`pm2 start src/index.js --name sigil`) or deploy to [Railway](https://railway.app) / [Render](https://render.com).
 
 ---
 
 ## 🔐 .env Reference
 
 ```env
-# Required
-DISCORD_TOKEN=your_bot_token
-CLIENT_ID=your_application_client_id
-GUILD_ID=your_server_id
+# ── Required ───────────────────────────────────────────────
+DISCORD_TOKEN=           # Your bot token
+CLIENT_ID=              # Your application client ID
+GUILD_ID=               # Your server ID (for dev/slash deploy)
 
-# Twitch live alerts (required for /twitch commands)
-TWITCH_CLIENT_ID=your_twitch_client_id
-TWITCH_CLIENT_SECRET=your_twitch_client_secret
+# ── Twitch Alerts (optional) ───────────────────────────────
+TWITCH_CLIENT_ID=
+TWITCH_CLIENT_SECRET=
 
-# YouTube upload alerts (optional — RSS fallback works without it)
-YOUTUBE_API_KEY=your_youtube_api_key
+# ── YouTube Alerts (optional — RSS fallback works free) ────
+YOUTUBE_API_KEY=
 
-# Gemini AI (optional — enables AI brand kit, name suggestions, graphics)
-GEMINI_API_KEY=your_gemini_api_key
+# ── AI Brand Kit (optional) ────────────────────────────────
+GEMINI_API_KEY=         # Enables /brand AI features
 
-# GUI brand builder (optional — defaults to http://localhost:3420)
+# ── API.Bible (optional — free fallback works without) ─────
+BIBLE_API_KEY=          # Free key at https://scripture.api.bible
+                        # Unlocks all 8 translations in /devotional
+
+# ── Scheduler Bridge (optional) ────────────────────────────
+# Set on your scheduler server, not here.
+# See SCHEDULER_INTEGRATION.md for full setup.
+
+# ── GUI Brand Builder (optional) ───────────────────────────
 GUI_URL=http://localhost:3420
 PORT=3420
 ```
@@ -145,233 +167,166 @@ PORT=3420
 
 ## 📜 Command Reference
 
-### ⚙️ Configuration (`/sigilconfig`)
+### ⚙️ Server Configuration
 | Command | Description |
 |---|---|
-| `/sigilconfig welcome` | Configure welcome cards (channel, color, background, font) |
+| `/sigilconfig welcome` | Configure welcome cards — channel, color, background, font |
 | `/sigilconfig goodbye` | Configure goodbye cards |
-| `/sigilconfig boost` | Configure boost alert channel |
-| `/sigilconfig milestone` | Configure member milestone alert channel |
+| `/sigilconfig boost` | Set boost alert channel |
+| `/sigilconfig milestone` | Set member milestone alert channel |
 | `/sigilconfig stats` | Set weekly stats report channel |
-| `/sigilconfig event_banner` | Enable/disable auto event banner posting |
-| `/sigilconfig xp` | Configure XP system (enable/disable, channel, rate, cooldown) |
-| `/sigilconfig ticket` | Configure ticket category, support role, and log channel |
-| `/sigilconfig starboard` | Configure starboard channel, threshold, and emoji |
-| `/sigilconfig bump` | Configure DISBOARD bump reminder channel and custom message |
+| `/sigilconfig xp` | Configure XP system — on/off, channel, rate, cooldown |
+| `/sigilconfig ticket` | Configure ticket category, support role, log channel |
+| `/sigilconfig starboard` | Configure starboard channel, threshold, emoji |
+| `/sigilconfig bump` | Configure DISBOARD bump reminder |
 | `/sigilconfig status` | View all current settings for this server |
 
 ### 🔨 Moderation
 | Command | Description |
 |---|---|
 | `/ban` | Ban a member with reason |
-| `/kick` | Kick a member with reason |
-| `/warn` | Warn a member (logged to case history) |
-| `/timeout` | Timeout (mute) a member for a set duration |
-| `/unban` | Unban a previously banned user |
-| `/purge` | Bulk-delete messages from a channel |
-| `/slowmode` | Set or clear slowmode on a channel |
+| `/kick` | Kick a member |
+| `/warn` | Issue a warning (logged to case history) |
+| `/timeout` | Mute a member for a duration |
+| `/unban` | Unban a user |
+| `/purge` | Bulk-delete messages |
+| `/slowmode` | Set or clear channel slowmode |
 | `/history` | View a member's full mod case history |
-| `/modlog` | Configure the mod log channel |
-| `/userinfo` | View detailed info about a member |
-
-### 🤖 Automod
-| Command | Description |
-|---|---|
-| `/automod` | Configure anti-spam, anti-links, anti-caps, mention flood, bad word filter, and bypass roles |
+| `/modlog` | Set the mod log channel |
+| `/userinfo` | View detailed member info |
+| `/automod` | Configure anti-spam, anti-links, bad words, mention flood |
 
 ### ⭐ XP & Leveling
 | Command | Description |
 |---|---|
-| `/xprank [user]` | View canvas XP rank card for yourself or another user |
-| `/xpleaderboard` | View top 10 lifetime XP leaderboard canvas card |
-| `/weeklyleaderboard` | View top XP earners this week *(coming soon)* |
-| `/xpadmin give/set/setlevel/reset` | Admin XP management tools |
-| `/levelroles add/remove/list` | Assign roles to be auto-given at XP level thresholds |
+| `/xprank [user]` | View your XP rank card |
+| `/xpleaderboard` | Top 10 lifetime XP leaderboard |
+| `/weeklyleaderboard` | Top earners this week (resets Sunday) |
+| `/xpadmin` | Admin XP tools — give, set, setlevel, reset |
+| `/levelroles` | Assign roles to auto-grant at XP level thresholds |
 
 ### 🎭 Roles
 | Command | Description |
 |---|---|
-| `/autorole add/remove/list` | Auto-assign roles to new members on join |
+| `/autorole add/remove/list/clear` | Auto-assign roles to new members |
 | `/reactionroles create/add/remove/post/delete` | Button-based self-assign role panels |
+
+### 🏠 Community
+| Command | Description |
+|---|---|
+| `/welcome set/disable/test/view` | Configure the welcome message and DM system |
+| `/giveaway start` | Start a timed giveaway — prize, duration, winner count, role requirement |
+| `/giveaway reroll` | Reroll winners for a completed giveaway |
+| `/giveaway list` | List active giveaways with jump links |
+| `/poll create` | Create a timed poll with up to 10 options |
+| `/poll end` | Close a poll early |
+| `/ticket open` | Open a private support ticket |
+| `/ticket close` | Close a ticket with reason |
+| `/ticket list` | List all open tickets |
+| `/remind` | Set a personal DM or channel reminder (supports `30m`, `2h`, `1d`) |
+| `/rsvp create` | Button-based event RSVP with headcount and 24h reminder |
+| `/announce` | Post a formatted announcement embed with role ping |
+| `/lfg` | Post a Looking For Group request with game, mode, and player slots |
+
+### ⛪ Church & Spiritual
+| Command | Description |
+|---|---|
+| `/devotional setup` | Schedule daily auto-post with translation, time, timezone, ping |
+| `/devotional lookup` | Look up any Bible verse in any supported translation |
+| `/devotional queue` | Add a reflection to the devotional queue |
+| `/devotional preview` | Preview today's devotional before it posts |
+| `/devotional post` | Manually post the devotional now |
+| `/devotional list` | View queued reflections |
+| `/devotional disable` | Disable the schedule |
+| `/sermon` | Post a sermon embed with title, speaker, scripture, video/audio/notes links |
+| `/prayer` | Submit or view prayer requests |
+| `/volunteer` | Sign up for volunteer slots or view open positions |
+
+> **Bible Translations:** KJV · NIV · ESV · NKJV · NLT · MSG · AMP · WEB
+> Powered by [API.Bible](https://scripture.api.bible) (free key) with auto-fallback.
+
+### 🗓️ Scheduling
+| Command | Description |
+|---|---|
+| `/schedule post` | Schedule any message to post at a future time |
+| `/schedule list` | View pending scheduled posts |
+| `/schedule cancel` | Cancel a pending post by ID |
+
+### 📅 Shifts & Scheduler Bridge
+| Command | Description |
+|---|---|
+| `/myshift setup` | Connect a Sylvia Ross / compatible scheduler (Admin) |
+| `/myshift link` | Link your Discord account to your scheduler name |
+| `/myshift today` | See your shift today |
+| `/myshift week` | See your full week of shifts |
+| `/myshift roster` | See everyone's shifts today |
+| `/callout` | Submit a callout from Discord directly to the scheduler |
+| `/shift` | Manual clock-in / clock-out tracker |
+
+> **Scheduler setup guide:** [SCHEDULER_INTEGRATION.md](SCHEDULER_INTEGRATION.md)
 
 ### 🎨 Branding & Graphics
 | Command | Description |
 |---|---|
-| `/announcebanner` | Generate a canvas announcement banner |
-| `/avatar` | View and download a user's avatar in full resolution |
+| `/embed create` | Open the live embed builder — title, description, color, fields, images, footer |
+| `/embed quick` | Instantly send a simple embed to any channel |
+| `/brand` | AI-powered full brand kit — logo, colors, fonts, name suggestions |
 | `/banner` | Generate a custom canvas server banner |
-| `/brand` | Full brand kit generator (logo, colors, fonts, AI-powered) |
-| `/certificate` | Generate a canvas achievement or award certificate |
-| `/compare` | Compare two users' avatars or profiles side by side |
-| `/emote` | Create or resize custom emote images |
-| `/eventbanner` | Generate a canvas event banner image |
-| `/icon` | Generate a server or user icon graphic |
-| `/invitecard` | Generate a custom canvas invite card |
-| `/logo` | Generate a server logo graphic |
-| `/mood` | Generate a mood board or color palette card |
-| `/namecard` | Generate a canvas name or business card |
-| `/palette` | Extract and display a color palette from an image |
-| `/profilecard` | Generate a canvas profile card |
+| `/announcebanner` | Generate a canvas announcement banner |
+| `/certificate` | Generate a canvas achievement certificate |
+| `/eventbanner` | Generate a canvas event banner |
+| `/welcomecard` | Preview or generate a welcome card |
 | `/rankcard` | Generate a custom canvas rank card |
-| `/reactionpack` | Generate a set of reaction images |
-| `/resize` | Resize an image to custom dimensions |
-| `/rolebadge` | Generate a canvas role badge graphic |
-| `/servercard` | Generate a canvas server info card |
-| `/splash` | Generate a server splash or welcome screen graphic |
+| `/profilecard` | Generate a profile card |
+| `/namecard` | Generate a name or business card |
+| `/splash` | Generate a server splash screen graphic |
 | `/sticker` | Create a custom sticker image |
-| `/template` | Apply a canvas template to an image |
-| `/texteffect` | Apply text effects: glow, shadow, gradient, outline |
-| `/themepreview` | Preview a color theme across multiple card styles |
-| `/welcomecard` | Preview or generate a welcome card manually |
+| `/mood` | Generate a mood board or color palette |
+| `/palette` | Extract a color palette from an image |
+| `/texteffect` | Apply glow, shadow, gradient, or outline to text |
+| `/resize` | Resize an image to custom dimensions |
+| `/avatar` | View and download a user's full-resolution avatar |
+| `/compare` | Compare two users' avatars side by side |
+| `/gui open` | Open the Sigil Visual Brand Builder web UI |
 
-### 🟣 Twitch
+### 🔔 Alerts & Integrations
 | Command | Description |
 |---|---|
-| `/twitch add` | Subscribe to a Twitch streamer's live alerts |
-| `/twitch remove` | Remove a Twitch alert subscription |
-| `/twitch list` | List all tracked Twitch streamers for this server |
+| `/twitch add/remove/list` | Subscribe to Twitch live alerts |
+| `/youtube add/remove/list` | Subscribe to YouTube upload alerts |
 
-### 📥 YouTube
+### 📋 Logging & Stats
 | Command | Description |
 |---|---|
-| `/youtube add` | Subscribe to a YouTube channel's upload alerts |
-| `/youtube remove` | Remove a YouTube alert subscription |
-| `/youtube list` | List all tracked YouTube channels for this server |
+| `/logging set/disable` | Configure server log channel |
+| `/stats` | Post weekly server stats on demand |
+| `/serverinfo` | View detailed server information |
+| `/serverstats` | Live server statistics embed |
+| `/eventrecap` | Post a teaser, live banner, or recap for a Discord event |
 
-### 🗓️ Scheduled Posts
+### 🔧 Utilities
 | Command | Description |
 |---|---|
-| `/schedule post` | Schedule a plain text or rich embed message for any future time |
-| `/schedule list` | View all pending scheduled posts (paginated) |
-| `/schedule cancel` | Cancel a pending scheduled post by ID |
-
-### 📋 Polls
-| Command | Description |
-|---|---|
-| `/poll create` | Create a timed poll with up to 10 options |
-| `/poll end` | Manually close a poll early and display results |
-
-### 🎁 Giveaways
-| Command | Description |
-|---|---|
-| `/giveaway start` | Start a button-entry giveaway with auto draw at end time |
-| `/giveaway end` | Manually end a giveaway early and draw winners |
-| `/giveaway reroll` | Reroll winners for a completed giveaway |
-
-### 🎟️ Tickets
-| Command | Description |
-|---|---|
-| `/ticket open` | Open a private support ticket thread |
-| `/ticket close` | Close a ticket with optional reason |
-| `/ticket list` | List all open tickets for this server |
-
-### ⭐ Starboard
-| Command | Description |
-|---|---|
-| `/starboard` | Configure the starboard — channel, threshold, and emoji |
-
-### 💤 Bump Reminders
-| Command | Description |
-|---|---|
-| `/bumpreminder` | Configure or test the DISBOARD bump reminder system |
-
-### 🔧 Custom Commands
-| Command | Description |
-|---|---|
-| `/customcmd create` | Create a custom command with text or embed response |
-| `/customcmd edit` | Edit an existing custom command |
-| `/customcmd delete` | Delete a custom command |
-| `/customcmd list` | List all custom commands for this server |
-
-### 📋 Logging
-| Command | Description |
-|---|---|
-| `/logging set` | Set the server log channel for message edits, deletes, joins, and more |
-| `/logging disable` | Disable server logging |
-
-### 📊 Stats & Events
-| Command | Description |
-|---|---|
-| `/stats` | Post the weekly server stats report on demand |
-| `/serverinfo` | View detailed information about this server |
-| `/serverstats` | View live server statistics embed |
-| `/eventrecap` | Manually post a teaser, live banner, or recap for a Discord event |
-
-### 🎨 GUI Brand Builder
-| Command | Description |
-|---|---|
-| `/gui open` | Get the direct link to the Sigil Visual Brand Builder web interface |
-| `/gui status` | Check if the GUI server is currently online |
-
-### 🔗 Utilities & Integrations
-| Command | Description |
-|---|---|
-| `/ping` | Check bot latency and Discord API response time |
-| `/status` | View bot uptime, version, and service status |
-| `/integrations status` | View active Twitch and YouTube subscriptions for this server |
+| `/ping` | Check bot latency and API response time |
+| `/status` | Bot uptime, version, and service status |
+| `/customcmd create/edit/delete/list` | Create custom slash-triggered responses |
 | `/saveme` | DM yourself a full copy of this server's Sigil config |
 | `/help` | Interactive help menu — browse all commands by category |
 
 ---
 
-## 🔄 Automation Layer
-
-Sigil uses a dedicated `src/automation/` layer for event-driven background tasks — separate from scheduled services:
-
-| Handler | Trigger | Purpose |
-|---|---|---|
-| `welcomeHandler` | Member join | Renders and posts canvas welcome card |
-| `goodbyeHandler` | Member leave | Renders and posts canvas goodbye card |
-| `boostHandler` | Server boost | Posts boost thank-you embed |
-| `milestoneHandler` | Member count | Posts milestone celebration embed |
-| `eventBannerHandler` | Event scheduled/started | Posts teaser or live banner |
-| `eventRecapHandler` | Event ended | Posts recap embed |
-| `webhookHandler` | Inbound HTTP webhook | Routes external payloads to configured channels |
-| `twitchPoller` | 15s interval | Checks tracked streamers for live status |
-| `youtubePoller` | 60s interval | Checks tracked channels for new uploads |
-| `scheduledPostRunner` | 60s interval | Flushes due scheduled posts |
-| `weeklyReportHandler` | Monday 09:00 UTC | Posts weekly server health report |
-
----
-
-## ⏱️ Background Services
-
-| Service | Interval | Purpose |
-|---|---|---|
-| Twitch Poller | 15 seconds | Check tracked streamers for live status |
-| YouTube Poller | 60 seconds | Check tracked channels for new uploads |
-| Scheduler | 60 seconds | Send due scheduled posts; close expired polls and giveaways; fire bump reminders |
-| Stats Runner | 5 minutes | Check if it's Monday 09:00 UTC and post weekly report |
-| Weekly XP Reset | Sunday 00:00 UTC | Reset `weekly_xp` for all guilds; self-schedules recursively |
-
----
-
-## 🕒 Scheduling Time Formats
-
-`/schedule post` accepts natural time strings for the `when` parameter:
-
-| Format | Example |
-|---|---|
-| Relative | `in 2 hours`, `in 30 minutes`, `in 1 day` |
-| Named | `tomorrow 9am`, `tomorrow 14:30` |
-| Time today | `3pm`, `15:00` |
-| ISO-style | `2026-06-20 15:00` |
-
----
-
 ## ⭐ XP Formula
 
-Level `n` requires `5n² + 50n + 100` XP to reach.
+Level `n` requires `5n² + 50n + 100` XP.
 
-| Level | XP Required |
+| Level | XP Needed |
 |---|---|
 | 1 | 155 |
 | 5 | 475 |
 | 10 | 1,100 |
 | 20 | 3,100 |
 
-Default rate: ~15 XP/message with slight variance, 60s cooldown per user.  
-`weekly_xp` resets every Sunday at 00:00 UTC automatically.
+Default: ~15 XP per message, 60s cooldown. Weekly XP resets every Sunday at 00:00 UTC.
 
 ---
 
@@ -380,41 +335,16 @@ Default rate: ~15 XP/message with slight variance, 60s cooldown per user.
 ```
 Sigil/
 ├── src/
+│   ├── commands/          # All slash command handlers
+│   ├── events/            # Discord gateway events
 │   ├── automation/        # Event-driven background handlers
-│   │   ├── boostHandler.js
-│   │   ├── eventBannerHandler.js
-│   │   ├── eventRecapHandler.js
-│   │   ├── goodbyeHandler.js
-│   │   ├── milestoneHandler.js
-│   │   ├── scheduledPostRunner.js
-│   │   ├── twitchPoller.js
-│   │   ├── webhookHandler.js
-│   │   ├── weeklyReportHandler.js
-│   │   ├── welcomeHandler.js
-│   │   └── youtubePoller.js
-│   ├── commands/          # All slash command handlers (60+ commands)
-│   ├── events/            # Discord gateway event handlers
 │   ├── services/          # Timed background runners
-│   │   ├── pollers.js     # Twitch (15s) + YouTube (60s) polling
-│   │   ├── scheduler.js   # Scheduled posts (60s) + weekly XP reset (Sunday 00:00 UTC)
-│   │   └── statsRunner.js # Weekly stats runner (5min check)
-│   ├── utils/
-│   │   ├── db.js          # SQLite wrapper (better-sqlite3)
-│   │   ├── xp.js          # XP formula helpers
-│   │   ├── canvas.js      # Shared canvas render utilities
-│   │   ├── gemini.js      # Gemini AI helpers (retry, JSON extraction)
-│   │   ├── backgrounds.js # Canvas background registry
-│   │   ├── borders.js     # Canvas border registry
-│   │   └── fonts.js       # Font registration + family list
-│   ├── fonts/             # Custom font files for canvas rendering
-│   ├── images/            # Static image assets for canvas cards
-│   ├── deploy-commands.js # Slash command registration script
-│   └── index.js           # Bot entry point
+│   └── utils/             # DB, canvas, XP, AI helpers
 ├── data/
-│   └── sigil.db           # SQLite database (auto-created on first run)
-├── .env                   # Environment variables (never commit this)
-├── .env.example           # Environment variable template
-├── LICENSE
+│   └── sigil.db           # SQLite — auto-created on first run
+├── .env                   # Your secrets — never commit this
+├── .env.example
+├── SCHEDULER_INTEGRATION.md
 └── package.json
 ```
 
@@ -422,4 +352,12 @@ Sigil/
 
 ## 📄 License
 
-MIT — see [LICENSE](LICENSE)
+MIT — free to use, modify, and self-host. See [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+*Built with ⚡ by [ShadowWalkerNC](https://github.com/ShadowWalkerNC)*
+
+</div>
