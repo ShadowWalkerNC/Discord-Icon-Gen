@@ -91,7 +91,7 @@ client.on('interactionCreate', async (interaction) => {
     const command = client.commands.get(interaction.commandName);
     if (!command) {
         console.error(`[ERROR] No command found for: ${interaction.commandName}`);
-        await interaction.reply({ content: 'Unknown command.', ephemeral: true });
+        try { await interaction.reply({ content: 'Unknown command.', flags: 64 }); } catch (_) {}
         return;
     }
 
@@ -106,10 +106,17 @@ client.on('interactionCreate', async (interaction) => {
         const expiresAt = timestamps.get(interaction.user.id) + cooldownMs;
         if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            return interaction.reply({
-                content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
-                ephemeral: true,
-            });
+            // Wrap in try/catch — interaction token may have expired (10062) if bot
+            // was restarting; swallow silently rather than crashing the process.
+            try {
+                await interaction.reply({
+                    content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
+                    flags: 64, // ephemeral
+                });
+            } catch (cdErr) {
+                if (cdErr?.code !== 10062) console.warn('[cooldown] reply failed:', cdErr?.message);
+            }
+            return;
         }
     }
 
@@ -120,9 +127,11 @@ client.on('interactionCreate', async (interaction) => {
         await command.execute(interaction);
     } catch (error) {
         console.error(`[ERROR] Failed to execute '${interaction.commandName}':`, error);
-        const reply = { content: 'Something went wrong while running that command.', ephemeral: true };
-        if (interaction.replied || interaction.deferred) await interaction.followUp(reply);
-        else await interaction.reply(reply);
+        const reply = { content: 'Something went wrong while running that command.', flags: 64 };
+        try {
+            if (interaction.replied || interaction.deferred) await interaction.followUp(reply);
+            else await interaction.reply(reply);
+        } catch (_) {}
     }
 });
 
