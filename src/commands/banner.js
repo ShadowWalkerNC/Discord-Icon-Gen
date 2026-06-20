@@ -1,63 +1,46 @@
-const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { registerAllFonts, getAllFontFamilies, renderBanner } = require('../utils/canvas.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const { renderKit, registerAllFonts } = require('../utils/canvas.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
-const { getBorderChoices } = require('../utils/borders.js');
-const { saveEntry } = require('../utils/history.js');
-const { dispatchAutocomplete, autocompleteColor } = require('../utils/autocomplete.js');
+const { getAllFontFamilies } = require('../utils/canvas.js');
+const { getColorAutocomplete } = require('../utils/colors.js');
+const guard = require('../utils/packageGuard');
 
 registerAllFonts();
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('banner')
-        .setDescription('Generate a wide server banner')
-        .addStringOption(opt => opt.setName('text').setDescription('Main text').setRequired(true))
-        .addStringOption(opt => opt.setName('subtitle').setDescription('Subtitle / tagline'))
+        .setDescription('Generate a server banner')
+        .addStringOption(opt => opt.setName('text').setDescription('Banner text').setRequired(true))
+        .addStringOption(opt => opt.setName('primary').setDescription('Primary color').setAutocomplete(true))
+        .addStringOption(opt => opt.setName('secondary').setDescription('Secondary color').setAutocomplete(true))
         .addStringOption(opt => opt.setName('background').setDescription('Background style').addChoices(...getBackgroundChoices()))
-        .addStringOption(opt => opt.setName('border').setDescription('Border style').addChoices(...getBorderChoices()))
-        .addStringOption(opt => opt.setName('primary_color').setDescription('Primary hex color').setAutocomplete(true))
-        .addStringOption(opt => opt.setName('secondary_color').setDescription('Secondary hex color').setAutocomplete(true))
         .addStringOption(opt => opt.setName('font').setDescription('Font family').addChoices(...getAllFontFamilies().map(f => ({ name: f, value: f }))))
-        .addStringOption(opt => opt.setName('align').setDescription('Text alignment').addChoices(
-            { name: 'Center', value: 'center' },
-            { name: 'Left',   value: 'left'   },
-            { name: 'Right',  value: 'right'  },
+        .addStringOption(opt => opt.setName('border').setDescription('Border style').addChoices(
+            { name: 'None', value: 'none' },
+            { name: 'Glow', value: 'glow' },
+            { name: 'Solid', value: 'solid' },
+            { name: 'Dashed', value: 'dashed' },
         ))
-        .addNumberOption(opt => opt.setName('glow').setDescription('Glow intensity (0–25)').setMinValue(0).setMaxValue(25))
-        .addNumberOption(opt => opt.setName('opacity').setDescription('Background opacity (0.0–1.0)').setMinValue(0).setMaxValue(1)),
+        .addNumberOption(opt => opt.setName('glow').setDescription('Glow intensity (0-25)').setMinValue(0).setMaxValue(25)),
 
     async autocomplete(interaction) {
-        await dispatchAutocomplete(interaction, {
-            primary_color:   autocompleteColor,
-            secondary_color: autocompleteColor,
-        });
+        const focused = interaction.options.getFocused();
+        await interaction.respond(getColorAutocomplete(focused));
     },
 
     async execute(interaction) {
+        if (await guard(interaction, 'branding')) return;
         await interaction.deferReply();
-
         const text       = interaction.options.getString('text');
-        const subtitle   = interaction.options.getString('subtitle')       ?? '';
-        const background = interaction.options.getString('background')     ?? 'gradient-purple';
-        const border     = interaction.options.getString('border')         ?? 'none';
-        const primary    = interaction.options.getString('primary_color')  ?? '#ffffff';
-        const secondary  = interaction.options.getString('secondary_color') ?? '#aaaaaa';
-        const font       = interaction.options.getString('font')           ?? getAllFontFamilies()[0];
-        const align      = interaction.options.getString('align')          ?? 'center';
-        const glow       = interaction.options.getNumber('glow')           ?? 0;
-        const opacity    = interaction.options.getNumber('opacity')        ?? 1.0;
-
-        const buf = await renderBanner({ text, subtitle, background, border, primary, secondary, font, align, glow, opacity });
-        const attachment = new AttachmentBuilder(buf, { name: 'banner.png' });
-
-        const embed = new EmbedBuilder()
-            .setTitle(`🏳️ ${text}`)
-            .setDescription(subtitle || 'Your custom server banner is ready!')
-            .setImage('attachment://banner.png')
-            .setColor(primary)
-            .setFooter({ text: 'Sigil • banner' });
-
-        await interaction.editReply({ embeds: [embed], files: [attachment] });
-        saveEntry(interaction.user.id, { command: 'banner', text, subtitle, background, border, primary_color: primary, secondary_color: secondary, font, align, glow, opacity });
+        const primary    = interaction.options.getString('primary')    ?? '#8B0000';
+        const secondary  = interaction.options.getString('secondary')  ?? '#4B0082';
+        const background = interaction.options.getString('background') ?? 'midnight-gradient';
+        const font       = interaction.options.getString('font')       ?? 'Arial Black';
+        const border     = interaction.options.getString('border')     ?? 'none';
+        const glow       = interaction.options.getNumber('glow')       ?? 10;
+        const { bannerBuf } = await renderKit({ text, bannerText: text, background, primary, secondary, font, border, glow });
+        const attachment = new AttachmentBuilder(bannerBuf, { name: 'sigil-banner.png' });
+        await interaction.editReply({ content: '🎨 Here\'s your server banner!', files: [attachment] });
     },
 };
