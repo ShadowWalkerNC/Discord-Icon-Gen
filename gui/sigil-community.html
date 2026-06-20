@@ -1,595 +1,760 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Sigil — Community Tools</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg:#08080f; --surface:#111118; --surface2:#18181f; --surface3:#202028;
-      --border:rgba(255,255,255,.1); --divider:rgba(255,255,255,.06);
-      --text:#f0f2f8; --muted:#9299b0; --faint:#555d78;
-      --primary:#5865F2; --secondary:#eb459e;
-      --success:#39ff14; --warning:#ffbf00; --error:#ff4444;
-      --radius:.75rem; --radiuslg:1.25rem;
-      --font:'Inter',sans-serif; --fontd:'Orbitron',sans-serif;
-      --ease:cubic-bezier(.16,1,.3,1);
-    }
-    [data-theme="light"] {
-      --bg:#f0f2f8; --surface:#fff; --surface2:#e8eaf2; --surface3:#dde0ee;
-      --border:rgba(0,0,0,.1); --divider:rgba(0,0,0,.06);
-      --text:#0e0e1a; --muted:#555d78; --faint:#9299b0;
-    }
+    :root{--bg:#08080f;--surface:#111118;--surface2:#18181f;--surface3:#202028;--border:rgba(255,255,255,.1);--text:#f0f2f8;--muted:#9299b0;--faint:#555d78;--primary:#8b0000;--secondary:#4b0082;--success:#39ff14;--warn:#f59e0b;--error:#ff4444;--radius:.75rem;--radiuslg:1.25rem;--font:'Inter',sans-serif;--fontd:'Orbitron',sans-serif;--ease:cubic-bezier(.16,1,.3,1);}
+    [data-theme=light]{--bg:#f0f2f8;--surface:#fff;--surface2:#e8eaf2;--surface3:#dde0ee;--border:rgba(0,0,0,.1);--text:#0e0e1a;--muted:#555d78;--faint:#9299b0;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html{scroll-behavior:smooth;}
-    body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--bg);line-height:1.55;min-height:100dvh;}
+    body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.55;min-height:100dvh;}
     button,input,select,textarea{font:inherit;color:inherit;}
     button{cursor:pointer;border:none;background:none;}
-    fieldset{border:none;}
 
-    /* ── Navbar ── */
+    /* NAV */
     .navbar{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.6rem 1rem;}
-    .nav-logo{font-family:var(--fontd);font-weight:900;font-size:1.1rem;background:linear-gradient(135deg,#5865F2,#eb459e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .nav-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+    .nav-logo{font-family:var(--fontd);font-weight:900;font-size:1.1rem;background:linear-gradient(135deg,#ff4444,#8b0000,#4b0082);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+    .nav-sep{width:1px;height:20px;background:var(--border);}
     .nav-subtitle{font-size:.8rem;color:var(--muted);font-weight:600;}
     .nav-pill{padding:.25rem .7rem;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--muted);display:flex;align-items:center;gap:5px;}
-    .nav-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex-shrink:0;}
+    .nav-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);}
     .nav-pill.online .dot{background:var(--success);box-shadow:0 0 7px var(--success);}
     .nav-actions{margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap;}
-    .nav-btn{padding:.35rem .8rem;border-radius:.5rem;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--surface2);transition:background 150ms;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;}
+    .nav-btn{padding:.35rem .8rem;border-radius:.5rem;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--surface2);transition:background 150ms;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;color:var(--text);}
     .nav-btn:hover{background:var(--surface3);}
-    .nav-btn.active{background:linear-gradient(135deg,rgba(88,101,242,.3),rgba(235,69,158,.3));border-color:rgba(255,255,255,.2);color:var(--text);}
-    @media(max-width:480px){.nav-subtitle,.nav-sep{display:none;}}
+    .nav-btn.active{background:linear-gradient(135deg,rgba(139,0,0,.3),rgba(75,0,130,.3));border-color:rgba(255,255,255,.2);}
+    .nav-btn.primary-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:#fff;}
 
-    /* ── Sub-tabs ── */
-    .sub-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1rem;background:var(--surface);overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .sub-tabs::-webkit-scrollbar{display:none;}
-    .stab{padding:.7rem 1.1rem;font-size:.82rem;font-weight:700;color:var(--faint);border-bottom:2px solid transparent;transition:all 150ms;cursor:pointer;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:.4rem;}
-    .stab.on{color:var(--text);border-bottom-color:var(--primary);}
+    /* LAYOUT */
+    .page{display:flex;min-height:calc(100dvh - 52px);}
+    .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:1rem .75rem;display:flex;flex-direction:column;gap:.25rem;position:sticky;top:52px;height:calc(100dvh - 52px);overflow-y:auto;}
+    @media(max-width:700px){.sidebar{display:none;}}
+    .main{flex:1;overflow-y:auto;}
 
-    /* ── Layout ── */
-    .page{display:flex;flex-direction:column;}
-    @media(min-width:900px){.page{flex-direction:row;min-height:calc(100dvh - 100px);}}
+    /* SIDEBAR */
+    .sgroup-label{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);padding:.6rem .5rem .2rem;}
+    .slink{display:flex;align-items:center;gap:.5rem;padding:.45rem .65rem;border-radius:.5rem;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all 150ms;border:1px solid transparent;background:none;width:100%;text-align:left;}
+    .slink:hover{background:var(--surface2);color:var(--text);}
+    .slink.active{background:linear-gradient(135deg,rgba(139,0,0,.25),rgba(75,0,130,.25));color:var(--text);border-color:rgba(255,255,255,.1);}
+    .slink-icon{font-size:1rem;width:20px;text-align:center;}
 
-    .controls{background:var(--surface);border-right:1px solid var(--border);padding:1.25rem;overflow-y:auto;}
-    @media(min-width:900px){.controls{width:360px;flex-shrink:0;position:sticky;top:100px;max-height:calc(100dvh - 100px);}}
+    /* PANELS */
+    .panel{display:none;padding:2rem;}
+    .panel.active{display:block;}
+    @media(max-width:700px){.panel{padding:1rem;}}
+    .panel-header{margin-bottom:1.75rem;}
+    .panel-title{font-family:var(--fontd);font-size:1.4rem;font-weight:900;margin-bottom:.35rem;}
+    .panel-sub{color:var(--muted);font-size:.9rem;line-height:1.7;}
 
-    .preview-area{flex:1;padding:1.25rem;display:flex;flex-direction:column;gap:1rem;}
-
-    .spanel{display:none;}
-    .spanel.on{display:contents;}
-
-    /* ── Form elements ── */
-    .field{margin-bottom:.9rem;}
+    /* FORMS */
+    .field{margin-bottom:1.1rem;}
     .field>label{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:600;margin-bottom:.35rem;color:var(--muted);}
     .field>label span{font-weight:400;color:var(--faint);font-size:.75rem;}
-    .inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .8rem;font-size:.88rem;transition:border-color 150ms;outline:none;}
-    .inp:focus{border-color:rgba(255,255,255,.3);}
+    .inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .85rem;font-size:.88rem;outline:none;transition:border-color 150ms;}
+    .inp:focus{border-color:rgba(255,255,255,.25);}
+    textarea.inp{min-height:72px;resize:vertical;}
     select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;padding-right:2rem;}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;}
+    @media(max-width:500px){.grid2,.grid3{grid-template-columns:1fr;}}
     .color-row{display:flex;gap:.4rem;align-items:center;}
     .color-row input[type=color]{width:38px;height:36px;border-radius:.4rem;border:1px solid var(--border);padding:2px;background:var(--surface2);cursor:pointer;flex-shrink:0;}
     .color-row .inp{flex:1;}
-    .sh{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin:.8rem 0 .35rem;}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.55rem .85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.65rem;}
+    .toggle-row label:first-child{font-size:.85rem;font-weight:600;}
+    .toggle{position:relative;width:38px;height:22px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;inset:0;background:var(--surface3);border-radius:999px;cursor:pointer;transition:background .2s;}
+    .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;transition:transform .2s;}
+    .toggle input:checked~.toggle-slider{background:var(--primary);}
+    .toggle input:checked~.toggle-slider::before{transform:translateX(16px);}
+    .range-row{display:grid;grid-template-columns:1fr 46px;gap:.5rem;align-items:center;}
+    input[type=range]{width:100%;accent-color:var(--primary);cursor:pointer;}
+    .range-val{font-size:.85rem;font-weight:800;text-align:right;}
+    .sh{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin:1.2rem 0 .55rem;}
     .sh:first-child{margin-top:0;}
-    .chip-wrap{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.8rem;}
-    .chip{padding:.3rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;border:1px solid var(--border);background:var(--surface2);transition:all 140ms var(--ease);white-space:nowrap;cursor:pointer;}
-    .chip.on{background:linear-gradient(135deg,rgba(88,101,242,.4),rgba(235,69,158,.3));border-color:rgba(255,255,255,.25);color:#fff;}
+    .hdivider{height:1px;background:var(--border);margin:1.5rem 0;}
 
-    /* ── Preview card ── */
-    .preview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiuslg);overflow:hidden;}
-    .preview-card-head{padding:.8rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-    .preview-card-head h3{font-size:.88rem;font-weight:800;}
-    .preview-card-body{padding:1rem;min-height:160px;display:flex;align-items:center;justify-content:center;position:relative;}
-    .preview-card-body img{width:100%;border-radius:.6rem;display:block;}
-    .preview-placeholder{color:var(--faint);font-size:.82rem;text-align:center;padding:2rem;}
-    .preview-spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;position:absolute;}
+    /* CARDS */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiuslg);padding:1.5rem;margin-bottom:1.25rem;}
+    .card-title{font-size:.95rem;font-weight:800;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+    @media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+    /* PREVIEW */
+    .preview-box{background:#000;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-height:100px;display:flex;align-items:center;justify-content:center;position:relative;}
+    .preview-box img{width:100%;display:block;}
+    .preview-placeholder{color:var(--faint);font-size:.82rem;padding:2rem;text-align:center;}
+    .spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;position:absolute;display:none;}
     @keyframes spin{to{transform:rotate(360deg);}}
 
-    /* ── Action bar ── */
-    .action-bar{display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border);background:var(--surface2);}
-    .abtn{padding:.42rem .9rem;border-radius:.45rem;font-size:.78rem;font-weight:700;border:1px solid var(--border);background:var(--surface3);transition:background 140ms;display:inline-flex;align-items:center;gap:.35rem;}
-    .abtn:hover{background:var(--surface);}
-    .abtn.primary{background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:#fff;}
-    .abtn:disabled{opacity:.4;cursor:not-allowed;}
+    /* BUTTONS */
+    .btn{padding:.55rem 1.2rem;border-radius:.55rem;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem;transition:all 160ms var(--ease);border:1px solid var(--border);background:var(--surface2);cursor:pointer;text-decoration:none;color:var(--text);}
+    .btn:hover{background:var(--surface3);}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;color:#fff;}
+    .btn.primary:hover{opacity:.88;transform:translateY(-1px);}
+    .btn.success{background:rgba(57,255,20,.12);border-color:rgba(57,255,20,.3);color:var(--success);}
+    .btn.warn-btn{background:rgba(255,68,68,.1);border-color:rgba(255,68,68,.3);color:var(--error);}
+    .btn.sm{padding:.35rem .75rem;font-size:.76rem;}
+    .btn:disabled{opacity:.35;cursor:not-allowed;}
+    .btn-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;}
 
-    /* ── Command box ── */
+    /* CHIPS */
+    .chip-wrap{display:flex;flex-wrap:wrap;gap:.35rem;}
+    .chip{padding:.3rem .7rem;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 140ms;}
+    .chip.on{background:linear-gradient(135deg,rgba(139,0,0,.4),rgba(75,0,130,.4));border-color:rgba(255,255,255,.25);color:#fff;}
+
+    /* STATUS */
+    .status-bar{padding:.45rem .9rem;border-radius:.45rem;font-size:.8rem;font-weight:700;display:none;margin-top:.65rem;}
+    .status-bar.ok{display:block;background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.2);color:var(--success);}
+    .status-bar.err{display:block;background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);color:var(--error);}
+    .status-bar.inf{display:block;background:var(--surface2);border:1px solid var(--border);color:var(--muted);}
+
+    /* RULE LIST */
+    .rule-list{display:flex;flex-direction:column;gap:.5rem;}
+    .rule-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+    .rule-name{flex:1;font-size:.85rem;font-weight:700;min-width:100px;}
+    .rule-desc{font-size:.75rem;color:var(--muted);flex:2;min-width:120px;}
+
+    /* CMD BOX */
     .cmd-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.65rem .9rem;font-family:monospace;font-size:.78rem;color:var(--muted);word-break:break-all;line-height:1.6;margin-top:.5rem;}
+    .cmd-box code{display:block;margin-bottom:.3rem;}
 
-    /* ── Status ── */
-    .status-bar{font-size:.78rem;padding:.4rem .8rem;border-radius:.4rem;display:none;}
-    .status-bar.ok{display:block;color:var(--success);background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.2);}
-    .status-bar.err{display:block;color:var(--error);background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);}
-    .status-bar.info{display:block;color:var(--muted);background:var(--surface2);border:1px solid var(--border);}
+    /* TOAST */
+    #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(4rem);opacity:0;transition:all 320ms var(--ease);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.55rem 1.1rem;font-size:.82rem;font-weight:700;pointer-events:none;z-index:200;white-space:nowrap;}
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
-    /* ── Responsive ── */
-    @media(max-width:899px){
-      .controls{border-right:none;border-bottom:1px solid var(--border);}
-    }
+    /* MOBILE TABS */
+    .mobile-tabs{display:none;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--surface);padding:.25rem .5rem;gap:.25rem;}
+    @media(max-width:700px){.mobile-tabs{display:flex;}}
+    .mtab{padding:.4rem .75rem;border-radius:.45rem;font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap;border:1px solid transparent;}
+    .mtab.active{background:var(--surface2);border-color:var(--border);color:var(--text);}
   </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <span class="nav-logo">SIGIL</span>
+  <a class="nav-logo" href="/">SIGIL</a>
   <div class="nav-sep"></div>
   <span class="nav-subtitle">Community Tools</span>
-  <div id="serverPill" class="nav-pill"><span class="dot"></span><span id="serverLabel">Offline</span></div>
-  <div class="nav-actions nav-links">
-    <a class="nav-btn" href="/brand">&#127912; Brand Builder</a>
-    <a class="nav-btn active" href="/community">&#127942; Community Tools</a>
-    <a class="nav-btn" href="/developers">&#128279; Developers</a>
-    <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
+  <div id="serverPill" class="nav-pill"><span class="dot"></span><span id="serverLabel">Checking...</span></div>
+  <div class="nav-actions">
+    <a class="nav-btn" href="/brand">&#127912; Brand</a>
+    <a class="nav-btn active" href="/community">&#127942; Community</a>
+    <a class="nav-btn" href="/developers">&#128196; Developers</a>
+    <button class="nav-btn" id="themeBtn">&#9680;</button>
+    <a class="nav-btn primary-btn" href="/">&#8592; Home</a>
   </div>
 </nav>
 
-<div class="sub-tabs" role="tablist">
-  <button class="stab on" role="tab" data-panel="welcome">&#127881; Welcome Card</button>
-  <button class="stab" role="tab" data-panel="rank">&#127942; Rank Card</button>
-  <button class="stab" role="tab" data-panel="stats">&#128202; Server Stats</button>
-</div>
+<div id="toast"></div>
+<div class="mobile-tabs" id="mobileTabs"></div>
 
 <div class="page">
+  <aside class="sidebar">
+    <div class="sgroup-label">Previews</div>
+    <button class="slink active" data-panel="welcome"><span class="slink-icon">&#128075;</span> Welcome Card</button>
+    <button class="slink" data-panel="rankcard"><span class="slink-icon">&#127941;</span> Rank Card</button>
+    <button class="slink" data-panel="serverstats"><span class="slink-icon">&#128202;</span> Server Stats</button>
 
-  <!-- ═══════════════ CONTROLS ═══════════════ -->
-  <aside class="controls">
+    <div class="sgroup-label">Community</div>
+    <button class="slink" data-panel="reactionroles"><span class="slink-icon">&#127919;</span> Reaction Roles</button>
+    <button class="slink" data-panel="giveaway"><span class="slink-icon">&#127881;</span> Giveaway</button>
+    <button class="slink" data-panel="starboard"><span class="slink-icon">&#11088;</span> Starboard</button>
+    <button class="slink" data-panel="polls"><span class="slink-icon">&#128202;</span> Polls</button>
 
-    <!-- Welcome Card Controls -->
-    <div class="spanel on" id="ctrl-welcome">
-      <div class="sh" style="margin-top:0">Member info</div>
-      <div class="field"><label for="wc-username">Username</label><input id="wc-username" class="inp" value="ShadowWalker" /></div>
-      <div class="field"><label for="wc-message">Welcome message</label><input id="wc-message" class="inp" value="Welcome to the server!" /></div>
-      <div class="field"><label for="wc-count">Member count <span>optional</span></label><input id="wc-count" class="inp" placeholder="e.g. You are member #1,042" /></div>
-      <div class="sh">Style</div>
-      <div class="field">
-        <label for="wc-color">Accent color</label>
-        <div class="color-row"><input type="color" id="wc-color-picker" value="#39ff14" /><input id="wc-color" class="inp" value="#39FF14" /></div>
-      </div>
-      <div class="field"><label for="wc-font">Font</label>
-        <select id="wc-font" class="inp">
-          <option value="Arial">Arial (default)</option>
-          <option value="Arial Black">Arial Black</option>
-          <option value="Impact">Impact</option>
-          <option value="Bebas Neue">Bebas Neue</option>
-          <option value="Oswald">Oswald</option>
-          <option value="Playfair Display">Playfair Display</option>
-          <option value="Source Code Pro">Source Code Pro</option>
-          <option value="Dancing Script">Dancing Script</option>
-        </select>
-      </div>
-      <div class="sh">Background</div>
-      <div id="wc-bg-chips" class="chip-wrap"></div>
-    </div>
+    <div class="sgroup-label">Moderation</div>
+    <button class="slink" data-panel="automod"><span class="slink-icon">&#128737;&#65039;</span> AutoMod</button>
+    <button class="slink" data-panel="tickets"><span class="slink-icon">&#127981;</span> Tickets</button>
+    <button class="slink" data-panel="logging"><span class="slink-icon">&#128196;</span> Logging</button>
 
-    <!-- Rank Card Controls -->
-    <div class="spanel" id="ctrl-rank">
-      <div class="sh" style="margin-top:0">Player info</div>
-      <div class="field"><label for="rc-username">Username</label><input id="rc-username" class="inp" value="ShadowWalker" /></div>
-      <div class="grid2">
-        <div class="field"><label for="rc-level">Level</label><input id="rc-level" class="inp" type="number" min="1" value="42" /></div>
-        <div class="field"><label for="rc-rank">Rank #</label><input id="rc-rank" class="inp" type="number" min="1" value="7" /></div>
-      </div>
-      <div class="sh">XP progress</div>
-      <div class="grid2">
-        <div class="field"><label for="rc-xp-cur">Current XP</label><input id="rc-xp-cur" class="inp" type="number" min="0" value="3400" /></div>
-        <div class="field"><label for="rc-xp-req">Required XP</label><input id="rc-xp-req" class="inp" type="number" min="1" value="5000" /></div>
-      </div>
-      <div class="sh">Style</div>
-      <div class="field">
-        <label for="rc-color">Accent color</label>
-        <div class="color-row"><input type="color" id="rc-color-picker" value="#5865F2" /><input id="rc-color" class="inp" value="#5865F2" /></div>
-      </div>
-      <div class="field"><label for="rc-font">Font</label>
-        <select id="rc-font" class="inp">
-          <option value="Arial">Arial (default)</option>
-          <option value="Arial Black">Arial Black</option>
-          <option value="Impact">Impact</option>
-          <option value="Bebas Neue">Bebas Neue</option>
-          <option value="Oswald">Oswald</option>
-          <option value="Source Code Pro">Source Code Pro</option>
-        </select>
-      </div>
-      <div class="sh">Background</div>
-      <div id="rc-bg-chips" class="chip-wrap"></div>
-    </div>
+    <div class="sgroup-label">XP &amp; Levels</div>
+    <button class="slink" data-panel="xp"><span class="slink-icon">&#11088;</span> XP Settings</button>
+    <button class="slink" data-panel="levelroles"><span class="slink-icon">&#127775;</span> Level Roles</button>
 
-    <!-- Server Stats Controls -->
-    <div class="spanel" id="ctrl-stats">
-      <div class="sh" style="margin-top:0">Server info</div>
-      <div class="field"><label for="ss-name">Server name</label><input id="ss-name" class="inp" value="My Awesome Server" /></div>
-      <div class="grid2">
-        <div class="field"><label for="ss-members">Members</label><input id="ss-members" class="inp" type="number" min="0" value="1042" /></div>
-        <div class="field"><label for="ss-channels">Channels</label><input id="ss-channels" class="inp" type="number" min="0" value="24" /></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label for="ss-roles">Roles</label><input id="ss-roles" class="inp" type="number" min="0" value="18" /></div>
-        <div class="field"><label for="ss-emoji">Emoji</label><input id="ss-emoji" class="inp" type="number" min="0" value="50" /></div>
-      </div>
-      <div class="sh">Boosts &amp; age</div>
-      <div class="grid2">
-        <div class="field"><label for="ss-boost-level">Boost level <span>0–3</span></label><input id="ss-boost-level" class="inp" type="number" min="0" max="3" value="2" /></div>
-        <div class="field"><label for="ss-boost-count">Boost count</label><input id="ss-boost-count" class="inp" type="number" min="0" value="14" /></div>
-      </div>
-      <div class="field"><label for="ss-age">Server age <span>days</span></label><input id="ss-age" class="inp" type="number" min="0" value="365" /></div>
-      <div class="sh">Style</div>
-      <div class="field">
-        <label for="ss-color">Accent color</label>
-        <div class="color-row"><input type="color" id="ss-color-picker" value="#5865F2" /><input id="ss-color" class="inp" value="#5865F2" /></div>
-      </div>
-    </div>
-
+    <div class="sgroup-label">Scheduler</div>
+    <button class="slink" data-panel="schedule"><span class="slink-icon">&#128197;</span> Scheduled Posts</button>
+    <button class="slink" data-panel="shifts"><span class="slink-icon">&#128188;</span> Shift Board</button>
   </aside>
 
-  <!-- ═══════════════ PREVIEW ═══════════════ -->
-  <main class="preview-area">
+  <main class="main">
 
-    <!-- Welcome Card Preview -->
-    <div class="spanel on" id="prev-welcome">
-      <div class="preview-card">
-        <div class="preview-card-head">
-          <h3>&#127881; Welcome Card Preview</h3>
-          <div id="wc-status" class="status-bar"></div>
+    <!-- WELCOME PREVIEW -->
+    <div class="panel active" id="panel-welcome">
+      <div class="panel-header"><div class="panel-title">&#128075; Welcome Card</div><div class="panel-sub">Preview and configure the welcome card. Renders live from the Sigil canvas engine.</div></div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">&#9881;&#65039; Card Settings</div>
+            <div class="field"><label>Username</label><input class="inp" id="wc-user" value="NewMember"/></div>
+            <div class="field"><label>Welcome message</label><input class="inp" id="wc-msg" value="Welcome to the server!"/></div>
+            <div class="field"><label>Member count <span>optional</span></label><input class="inp" id="wc-count" placeholder="You are member #1,042"/></div>
+            <div class="sh">Background</div>
+            <div class="chip-wrap" id="wc-bg-chips"></div>
+            <div class="sh">Accent color</div>
+            <div class="color-row"><input type="color" id="wc-cpick" value="#39FF14"><input class="inp" id="wc-color" value="#39FF14"></div>
+            <div class="sh">Font</div>
+            <div class="chip-wrap" id="wc-font-chips"></div>
+            <div class="btn-row">
+              <button class="btn primary" id="wc-render">&#9889; Render</button>
+              <button class="btn success" id="wc-dl" disabled>&#8595; PNG</button>
+              <button class="btn" id="wc-copy">&#128203; Copy /cmd</button>
+            </div>
+            <div class="status-bar" id="wc-status"></div>
+          </div>
         </div>
-        <div class="preview-card-body" id="wc-body">
-          <div class="preview-placeholder">Fill in the fields and the card renders live &#8594;</div>
-          <div class="preview-spinner" id="wc-spinner" style="display:none"></div>
-        </div>
-        <div class="action-bar">
-          <button class="abtn primary" id="wc-render">&#9889; Render</button>
-          <button class="abtn" id="wc-dl" disabled>&#8595; Download PNG</button>
-          <button class="abtn" id="wc-copy-cmd">&#128203; Copy Command</button>
-        </div>
-      </div>
-      <div class="preview-card" style="margin-top:0">
-        <div class="preview-card-head"><h3>&#128203; Discord Command</h3></div>
-        <div style="padding:.75rem 1rem">
-          <div class="cmd-box" id="wc-cmd">/welcomecard username:ShadowWalker message:Welcome to the server!</div>
+        <div>
+          <div class="card">
+            <div class="card-title">&#128247; Preview</div>
+            <div class="preview-box" id="wc-box"><div class="preview-placeholder">Hit Render &#8594;</div><div class="spinner" id="wc-spin"></div></div>
+            <div style="margin-top:.75rem;font-size:.78rem;color:var(--faint);">900×300 — canvas engine</div>
+          </div>
+          <div class="card">
+            <div class="card-title">&#128203; Discord Command</div>
+            <div class="cmd-box" id="wc-cmd">/welcomecard username:NewMember message:Welcome to the server!</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Rank Card Preview -->
-    <div class="spanel" id="prev-rank">
-      <div class="preview-card">
-        <div class="preview-card-head">
-          <h3>&#127942; Rank Card Preview</h3>
-          <div id="rc-status" class="status-bar"></div>
+    <!-- RANK CARD PREVIEW -->
+    <div class="panel" id="panel-rankcard">
+      <div class="panel-header"><div class="panel-title">&#127941; Rank Card</div><div class="panel-sub">Preview rank cards with custom XP, level, background and colour.</div></div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">&#9881;&#65039; Card Settings</div>
+            <div class="field"><label>Username</label><input class="inp" id="rc-user" value="ShadowWalker"/></div>
+            <div class="grid3">
+              <div class="field"><label>Level</label><input class="inp" id="rc-level" type="number" value="12"/></div>
+              <div class="field"><label>Rank #</label><input class="inp" id="rc-rank" type="number" value="4"/></div>
+              <div class="field"><label>Current XP</label><input class="inp" id="rc-xp" type="number" value="3200"/></div>
+            </div>
+            <div class="field"><label>XP to next level</label><input class="inp" id="rc-req" type="number" value="5000"/></div>
+            <div class="sh">Background</div>
+            <div class="chip-wrap" id="rc-bg-chips"></div>
+            <div class="sh">Accent color</div>
+            <div class="color-row"><input type="color" id="rc-cpick" value="#5865F2"><input class="inp" id="rc-color" value="#5865F2"></div>
+            <div class="btn-row">
+              <button class="btn primary" id="rc-render">&#9889; Render</button>
+              <button class="btn success" id="rc-dl" disabled>&#8595; PNG</button>
+              <button class="btn" id="rc-copy">&#128203; Copy /cmd</button>
+            </div>
+            <div class="status-bar" id="rc-status"></div>
+          </div>
         </div>
-        <div class="preview-card-body" id="rc-body">
-          <div class="preview-placeholder">Fill in the fields and the card renders live &#8594;</div>
-          <div class="preview-spinner" id="rc-spinner" style="display:none"></div>
-        </div>
-        <div class="action-bar">
-          <button class="abtn primary" id="rc-render">&#9889; Render</button>
-          <button class="abtn" id="rc-dl" disabled>&#8595; Download PNG</button>
-          <button class="abtn" id="rc-copy-cmd">&#128203; Copy Command</button>
-        </div>
-      </div>
-      <div class="preview-card" style="margin-top:0">
-        <div class="preview-card-head"><h3>&#128203; Discord Command</h3></div>
-        <div style="padding:.75rem 1rem">
-          <div class="cmd-box" id="rc-cmd">/rankcard username:ShadowWalker level:42 rank:7 current_xp:3400 required_xp:5000</div>
+        <div>
+          <div class="card">
+            <div class="card-title">&#128247; Preview</div>
+            <div class="preview-box" id="rc-box"><div class="preview-placeholder">Hit Render &#8594;</div><div class="spinner" id="rc-spin"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">&#128203; Discord Command</div>
+            <div class="cmd-box" id="rc-cmd">/rankcard username:ShadowWalker level:12 rank:4</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Server Stats Preview -->
-    <div class="spanel" id="prev-stats">
-      <div class="preview-card">
-        <div class="preview-card-head">
-          <h3>&#128202; Server Stats Preview</h3>
-          <div id="ss-status" class="status-bar"></div>
+    <!-- SERVER STATS PREVIEW -->
+    <div class="panel" id="panel-serverstats">
+      <div class="panel-header"><div class="panel-title">&#128202; Server Stats</div><div class="panel-sub">Preview the server stats card rendered by Sigil.</div></div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">&#9881;&#65039; Server Info</div>
+            <div class="field"><label>Server name</label><input class="inp" id="ss-name" value="My Awesome Server"/></div>
+            <div class="grid2">
+              <div class="field"><label>Members</label><input class="inp" id="ss-members" type="number" value="1042"/></div>
+              <div class="field"><label>Channels</label><input class="inp" id="ss-channels" type="number" value="24"/></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><label>Roles</label><input class="inp" id="ss-roles" type="number" value="18"/></div>
+              <div class="field"><label>Emoji</label><input class="inp" id="ss-emoji" type="number" value="50"/></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><label>Boost level <span>0–3</span></label><input class="inp" id="ss-blv" type="number" min="0" max="3" value="2"/></div>
+              <div class="field"><label>Boost count</label><input class="inp" id="ss-bcnt" type="number" value="14"/></div>
+            </div>
+            <div class="field"><label>Age (days)</label><input class="inp" id="ss-age" type="number" value="365"/></div>
+            <div class="sh">Accent color</div>
+            <div class="color-row"><input type="color" id="ss-cpick" value="#5865F2"><input class="inp" id="ss-color" value="#5865F2"></div>
+            <div class="btn-row">
+              <button class="btn primary" id="ss-render">&#9889; Render</button>
+              <button class="btn success" id="ss-dl" disabled>&#8595; PNG</button>
+            </div>
+            <div class="status-bar" id="ss-status"></div>
+          </div>
         </div>
-        <div class="preview-card-body" id="ss-body">
-          <div class="preview-placeholder">Fill in the fields and the card renders live &#8594;</div>
-          <div class="preview-spinner" id="ss-spinner" style="display:none"></div>
-        </div>
-        <div class="action-bar">
-          <button class="abtn primary" id="ss-render">&#9889; Render</button>
-          <button class="abtn" id="ss-dl" disabled>&#8595; Download PNG</button>
-          <button class="abtn" id="ss-copy-cmd">&#128203; Copy Command</button>
+        <div>
+          <div class="card">
+            <div class="card-title">&#128247; Preview</div>
+            <div class="preview-box" id="ss-box"><div class="preview-placeholder">Hit Render &#8594;</div><div class="spinner" id="ss-spin"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">&#128203; Discord Command</div>
+            <div class="cmd-box"><code>/serverstats</code></div>
+          </div>
         </div>
       </div>
-      <div class="preview-card" style="margin-top:0">
-        <div class="preview-card-head"><h3>&#128203; Discord Command</h3></div>
-        <div style="padding:.75rem 1rem">
-          <div class="cmd-box" id="ss-cmd">/serverstats</div>
+    </div>
+
+    <!-- REACTION ROLES -->
+    <div class="panel" id="panel-reactionroles">
+      <div class="panel-header"><div class="panel-title">&#127919; Reaction Roles</div><div class="panel-sub">Build a button-based role assignment panel. Members click to get or remove a role.</div></div>
+      <div class="card">
+        <div class="card-title">&#43; New Role Panel</div>
+        <div class="grid2">
+          <div class="field"><label>Post to channel</label><input class="inp" id="rr-ch" placeholder="#roles"/></div>
+          <div class="field"><label>Panel title</label><input class="inp" id="rr-title" placeholder="Choose your roles"/></div>
         </div>
+        <div class="field"><label>Description</label><textarea class="inp" id="rr-desc" placeholder="Click a button to assign yourself a role."></textarea></div>
+        <div class="sh">Buttons</div>
+        <div id="rr-list" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem;"></div>
+        <button class="btn sm" id="rr-add">&#43; Add button</button>
+        <div class="btn-row"><button class="btn primary" id="rr-post">&#128279; Post Panel</button></div>
+        <div class="status-bar" id="rr-status"></div>
       </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/reactionroles create channel:#roles title:"Choose Roles"</code><code>/reactionroles add label:"Gamer" role:@Gamer emoji:🎮</code></div></div>
+    </div>
+
+    <!-- GIVEAWAY -->
+    <div class="panel" id="panel-giveaway">
+      <div class="panel-header"><div class="panel-title">&#127881; Giveaway</div><div class="panel-sub">Launch a timed giveaway. Sigil posts the embed and draws a winner when time expires.</div></div>
+      <div class="card">
+        <div class="card-title">&#127775; Create Giveaway</div>
+        <div class="grid2">
+          <div class="field"><label>Channel</label><input class="inp" id="gw-ch" placeholder="#giveaways"/></div>
+          <div class="field"><label>Prize</label><input class="inp" id="gw-prize" placeholder="Discord Nitro"/></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label>Duration (min)</label><input class="inp" id="gw-dur" type="number" value="60"/></div>
+          <div class="field"><label>Winners</label><input class="inp" id="gw-win" type="number" value="1"/></div>
+          <div class="field"><label>Required role <span>opt</span></label><input class="inp" id="gw-role" placeholder="@Member"/></div>
+        </div>
+        <div class="field"><label>Extra description <span>optional</span></label><textarea class="inp" id="gw-desc" placeholder="Requirements, sponsor info..."></textarea></div>
+        <div class="btn-row"><button class="btn primary" id="gw-start">&#127775; Start Giveaway</button></div>
+        <div class="status-bar" id="gw-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/giveaway start prize:"Nitro" duration:60 winners:1</code><code>/giveaway end</code><code>/giveaway reroll</code></div></div>
+    </div>
+
+    <!-- STARBOARD -->
+    <div class="panel" id="panel-starboard">
+      <div class="panel-header"><div class="panel-title">&#11088; Starboard</div><div class="panel-sub">Messages that hit the star threshold get pinned to your starboard highlight channel automatically.</div></div>
+      <div class="card">
+        <div class="card-title">&#9881;&#65039; Settings</div>
+        <div class="toggle-row"><label>Enable starboard</label><label class="toggle"><input type="checkbox" id="sb-on" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><label>Allow self-stars</label><label class="toggle"><input type="checkbox" id="sb-self"><span class="toggle-slider"></span></label></div>
+        <div class="grid2">
+          <div class="field"><label>Starboard channel</label><input class="inp" id="sb-ch" placeholder="#starboard"/></div>
+          <div class="field"><label>Star threshold</label><input class="inp" id="sb-thresh" type="number" value="3" min="1"/></div>
+        </div>
+        <div class="field"><label>Reaction emoji <span>default ⭐</span></label><input class="inp" id="sb-emoji" value="⭐"/></div>
+        <div class="btn-row"><button class="btn primary" id="sb-save">&#10003; Save</button></div>
+        <div class="status-bar" id="sb-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/starboard channel:#starboard threshold:3</code><code>/starboard disable</code></div></div>
+    </div>
+
+    <!-- POLLS -->
+    <div class="panel" id="panel-polls">
+      <div class="panel-header"><div class="panel-title">&#128202; Polls</div><div class="panel-sub">Create multi-option polls with live vote tracking and auto-close.</div></div>
+      <div class="card">
+        <div class="card-title">&#128202; New Poll</div>
+        <div class="grid2">
+          <div class="field"><label>Channel</label><input class="inp" id="pl-ch" placeholder="#polls"/></div>
+          <div class="field"><label>Duration (min)</label><input class="inp" id="pl-dur" type="number" value="60"/></div>
+        </div>
+        <div class="field"><label>Question</label><input class="inp" id="pl-q" placeholder="What should we play tonight?"/></div>
+        <div class="sh">Options (up to 5)</div>
+        <div id="pl-opts" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.65rem;"></div>
+        <button class="btn sm" id="pl-addopt">&#43; Add option</button>
+        <div class="toggle-row" style="margin-top:.75rem;"><label>Anonymous voting</label><label class="toggle"><input type="checkbox" id="pl-anon"><span class="toggle-slider"></span></label></div>
+        <div class="btn-row"><button class="btn primary" id="pl-create">&#128202; Create Poll</button></div>
+        <div class="status-bar" id="pl-status"></div>
+      </div>
+    </div>
+
+    <!-- AUTOMOD -->
+    <div class="panel" id="panel-automod">
+      <div class="panel-header"><div class="panel-title">&#128737;&#65039; AutoMod</div><div class="panel-sub">Toggle rules and configure thresholds. Each rule can be individually tuned.</div></div>
+      <div class="card">
+        <div class="card-title">&#128737;&#65039; Rules</div>
+        <div class="rule-list">
+          <div class="rule-item"><div class="rule-name">Anti-Spam</div><div class="rule-desc">Delete messages sent too fast</div><input class="inp" style="width:68px;" type="number" id="am-spam-n" value="5" title="Max msgs before action"/><label class="toggle"><input type="checkbox" id="am-spam" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Anti-Links</div><div class="rule-desc">Block external URLs</div><label class="toggle"><input type="checkbox" id="am-links" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Anti-Mentions</div><div class="rule-desc">Limit mass @mentions</div><input class="inp" style="width:68px;" type="number" id="am-ment-n" value="5"/><label class="toggle"><input type="checkbox" id="am-ment" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Anti-Caps</div><div class="rule-desc">Remove mostly-caps messages</div><input class="inp" style="width:68px;" type="number" id="am-caps-n" value="80" title="% threshold"/><label class="toggle"><input type="checkbox" id="am-caps"><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Bad Words Filter</div><div class="rule-desc">Delete messages with blocked words</div><label class="toggle"><input type="checkbox" id="am-bad" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Anti-Invite</div><div class="rule-desc">Delete Discord invite links</div><label class="toggle"><input type="checkbox" id="am-inv" checked><span class="toggle-slider"></span></label></div>
+        </div>
+        <div class="sh">Mod log channel</div>
+        <input class="inp" id="am-log" placeholder="#mod-log"/>
+        <div class="sh">Bypass role</div>
+        <input class="inp" id="am-bypass" placeholder="@Moderator"/>
+        <div class="sh">Allowed domains <span style="font-size:.75rem;color:var(--faint);font-weight:400;">(comma separated)</span></div>
+        <input class="inp" id="am-domains" placeholder="youtube.com, twitch.tv"/>
+        <div class="btn-row"><button class="btn primary" id="am-save">&#10003; Save AutoMod Config</button></div>
+        <div class="status-bar" id="am-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/automod spam enable:true threshold:5</code><code>/automod links enable:true</code><code>/automod badwords add word:example</code></div></div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="panel" id="panel-tickets">
+      <div class="panel-header"><div class="panel-title">&#127981; Tickets</div><div class="panel-sub">Configure the support ticket system. Creates private thread channels for member support.</div></div>
+      <div class="card">
+        <div class="card-title">&#9881;&#65039; Ticket Settings</div>
+        <div class="toggle-row"><label>Enable tickets</label><label class="toggle"><input type="checkbox" id="tk-on" checked><span class="toggle-slider"></span></label></div>
+        <div class="grid2">
+          <div class="field"><label>Ticket category</label><input class="inp" id="tk-cat" placeholder="Support"/></div>
+          <div class="field"><label>Log channel</label><input class="inp" id="tk-log" placeholder="#ticket-logs"/></div>
+        </div>
+        <div class="field"><label>Support role</label><input class="inp" id="tk-role" placeholder="@Support"/></div>
+        <div class="field"><label>Opening message</label><textarea class="inp" id="tk-msg" placeholder="Thanks for opening a ticket! Staff will be with you shortly."></textarea></div>
+        <div class="btn-row"><button class="btn primary" id="tk-save">&#10003; Save</button></div>
+        <div class="status-bar" id="tk-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/ticket setup support-role:@Support log:#ticket-logs</code><code>/ticket open</code><code>/ticket close</code></div></div>
+    </div>
+
+    <!-- LOGGING -->
+    <div class="panel" id="panel-logging">
+      <div class="panel-header"><div class="panel-title">&#128196; Logging</div><div class="panel-sub">Choose what events get logged and where. Each category can go to a different channel.</div></div>
+      <div class="card">
+        <div class="card-title">&#9881;&#65039; Log Channels</div>
+        <div class="grid2">
+          <div class="field"><label>Mod actions</label><input class="inp" id="lg-mod" placeholder="#mod-log"/></div>
+          <div class="field"><label>Member join/leave</label><input class="inp" id="lg-mem" placeholder="#member-log"/></div>
+          <div class="field"><label>Message edits/deletes</label><input class="inp" id="lg-msg" placeholder="#message-log"/></div>
+          <div class="field"><label>Voice activity</label><input class="inp" id="lg-vc" placeholder="#voice-log"/></div>
+        </div>
+        <div class="sh">Events</div>
+        <div class="rule-list">
+          <div class="rule-item"><div class="rule-name">Bans &amp; Kicks</div><div class="rule-desc">Manual mod actions</div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Message Deletes</div><div class="rule-desc">Deleted messages with content</div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Member Join/Leave</div><div class="rule-desc">New and departing members</div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Role Changes</div><div class="rule-desc">Role assignments and removals</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          <div class="rule-item"><div class="rule-name">Voice Events</div><div class="rule-desc">Join, leave, move</div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+        </div>
+        <div class="btn-row"><button class="btn primary" id="lg-save">&#10003; Save Logging Config</button></div>
+        <div class="status-bar" id="lg-status"></div>
+      </div>
+    </div>
+
+    <!-- XP SETTINGS -->
+    <div class="panel" id="panel-xp">
+      <div class="panel-header"><div class="panel-title">&#11088; XP Settings</div><div class="panel-sub">Configure XP gain rate, cooldown, level-up announcements and channel exclusions.</div></div>
+      <div class="card">
+        <div class="card-title">&#9881;&#65039; XP Configuration</div>
+        <div class="toggle-row"><label>Enable XP system</label><label class="toggle"><input type="checkbox" id="xp-on" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><label>Announce level-ups</label><label class="toggle"><input type="checkbox" id="xp-ann" checked><span class="toggle-slider"></span></label></div>
+        <div class="grid2">
+          <div class="field"><label>XP per message <span>default 15</span></label><div class="range-row"><input type="range" id="xp-rate" min="1" max="100" value="15"/><div class="range-val" id="xp-rate-val">15</div></div></div>
+          <div class="field"><label>Cooldown (sec) <span>default 60</span></label><div class="range-row"><input type="range" id="xp-cd" min="5" max="300" value="60"/><div class="range-val" id="xp-cd-val">60</div></div></div>
+        </div>
+        <div class="field"><label>Level-up channel <span>optional</span></label><input class="inp" id="xp-ch" placeholder="#level-up"/></div>
+        <div class="field"><label>Excluded channels <span>comma separated</span></label><input class="inp" id="xp-excl" placeholder="#bot-spam, #commands"/></div>
+        <div class="btn-row"><button class="btn primary" id="xp-save">&#10003; Save XP Config</button></div>
+        <div class="status-bar" id="xp-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/xpadmin set-rate rate:20 cooldown:45</code><code>/xprank</code><code>/xpleaderboard</code><code>/weeklyleaderboard</code></div></div>
+    </div>
+
+    <!-- LEVEL ROLES -->
+    <div class="panel" id="panel-levelroles">
+      <div class="panel-header"><div class="panel-title">&#127775; Level Roles</div><div class="panel-sub">Automatically assign roles when members reach a level threshold.</div></div>
+      <div class="card">
+        <div class="card-title">&#43; Add Level Role</div>
+        <div class="grid2">
+          <div class="field"><label>At level</label><input class="inp" id="lr-lv" type="number" placeholder="10"/></div>
+          <div class="field"><label>Assign role</label><input class="inp" id="lr-role" placeholder="@Level 10"/></div>
+        </div>
+        <div class="toggle-row"><label>Keep previous level roles</label><label class="toggle"><input type="checkbox" id="lr-keep" checked><span class="toggle-slider"></span></label></div>
+        <div class="btn-row"><button class="btn primary" id="lr-add">&#43; Add Rule</button></div>
+        <div id="lr-list" style="margin-top:1rem;display:flex;flex-direction:column;gap:.5rem;"></div>
+        <div class="status-bar" id="lr-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/levelroles add level:10 role:@Level10</code><code>/levelroles list</code></div></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="panel" id="panel-schedule">
+      <div class="panel-header"><div class="panel-title">&#128197; Scheduled Posts</div><div class="panel-sub">Queue any message to post in any channel at a future time.</div></div>
+      <div class="card">
+        <div class="card-title">&#43; New Scheduled Post</div>
+        <div class="grid2">
+          <div class="field"><label>Channel</label><input class="inp" id="sc-ch" placeholder="#announcements"/></div>
+          <div class="field"><label>When <span>local time</span></label><input class="inp" id="sc-dt" type="datetime-local"/></div>
+        </div>
+        <div class="field"><label>Message content</label><textarea class="inp" id="sc-msg" placeholder="Your scheduled message..."></textarea></div>
+        <div class="toggle-row"><label>Pin when posted</label><label class="toggle"><input type="checkbox" id="sc-pin"><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><label>Mention @everyone</label><label class="toggle"><input type="checkbox" id="sc-ev"><span class="toggle-slider"></span></label></div>
+        <div class="btn-row"><button class="btn primary" id="sc-queue">&#128197; Queue Post</button></div>
+        <div class="status-bar" id="sc-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/schedule post channel:#ann time:"2026-07-01 18:00" message:"Hello!"</code><code>/schedule list</code><code>/schedule cancel id:12</code></div></div>
+    </div>
+
+    <!-- SHIFTS -->
+    <div class="panel" id="panel-shifts">
+      <div class="panel-header"><div class="panel-title">&#128188; Shift Board</div><div class="panel-sub">Manage staff shifts, daily auto-post roster, and callout notifications.</div></div>
+      <div class="card">
+        <div class="card-title">&#9881;&#65039; Shift Settings</div>
+        <div class="toggle-row"><label>Enable shift board</label><label class="toggle"><input type="checkbox" id="sh-on" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><label>Daily auto-post roster</label><label class="toggle"><input type="checkbox" id="sh-auto" checked><span class="toggle-slider"></span></label></div>
+        <div class="grid2">
+          <div class="field"><label>Shift channel</label><input class="inp" id="sh-ch" placeholder="#shifts"/></div>
+          <div class="field"><label>Auto-post time <span>24h</span></label><input class="inp" id="sh-time" type="time" value="08:00"/></div>
+        </div>
+        <div class="field"><label>Manager role <span>can edit all shifts</span></label><input class="inp" id="sh-mgr" placeholder="@Manager"/></div>
+        <div class="btn-row"><button class="btn primary" id="sh-save">&#10003; Save Shift Config</button></div>
+        <div class="status-bar" id="sh-status"></div>
+      </div>
+      <div class="card"><div class="card-title">&#128203; Discord Commands</div><div class="cmd-box"><code>/shift claim slot:"Monday 9am"</code><code>/shift drop</code><code>/myshift</code><code>/callout reason:"Sick" coverage:@Backup</code></div></div>
     </div>
 
   </main>
 </div>
 
 <script>
-const SERVER = window.location.origin;
-const $ = id => document.getElementById(id);
-let serverAlive = false;
+const SERVER=window.location.origin;
+const $=id=>document.getElementById(id);
+let alive=false;
 
-// ── Server health ping ────────────────────────────────────────────────
-async function pingServer() {
-  try { const r = await fetch(`${SERVER}/health`, { signal: AbortSignal.timeout(2500) }); serverAlive = r.ok; } catch { serverAlive = false; }
-  const pill = $('serverPill'), lbl = $('serverLabel');
-  pill.classList.toggle('online', serverAlive);
-  lbl.textContent = serverAlive ? 'Online' : 'Offline';
+// HEALTH
+async function ping(){
+  try{const r=await fetch(`${SERVER}/health`,{signal:AbortSignal.timeout(2500)});alive=r.ok;}catch{alive=false;}
+  $('serverPill').classList.toggle('online',alive);
+  $('serverLabel').textContent=alive?'Online':'Offline';
 }
-pingServer(); setInterval(pingServer, 9000);
+ping();setInterval(ping,9000);
 
-// ── Theme toggle ───────────────────────────────────────────────────
-$('themeBtn').addEventListener('click', () => {
-  const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  if (typeof sigilSetTheme === 'function') { sigilSetTheme(theme); } else { document.documentElement.setAttribute('data-theme', theme); }
+// THEME
+$('themeBtn').addEventListener('click',()=>{
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  $('themeBtn').textContent=t==='dark'?'☀️':'☽';
 });
 
-// ── Tab switching ──────────────────────────────────────────────────
-const PANELS = ['welcome', 'rank', 'stats'];
-document.querySelectorAll('.stab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.stab').forEach(t => t.classList.remove('on'));
-    tab.classList.add('on');
-    const p = tab.dataset.panel;
-    PANELS.forEach(id => {
-      $(`ctrl-${id}`).classList.toggle('on', id === p);
-      $(`prev-${id}`).classList.toggle('on', id === p);
-    });
+// TOAST
+function toast(msg,type='ok'){
+  const t=$('toast');t.textContent=msg;
+  t.style.borderColor=type==='ok'?'rgba(57,255,20,.3)':type==='err'?'rgba(255,68,68,.3)':'rgba(255,255,255,.1)';
+  t.style.color=type==='ok'?'var(--success)':type==='err'?'var(--error)':'var(--text)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);
+}
+function setStatus(id,msg,type){const el=$(id);el.className='status-bar '+type;el.textContent=msg;}
+
+// PANEL NAV
+const PANELS=['welcome','rankcard','serverstats','reactionroles','giveaway','starboard','polls','automod','tickets','logging','xp','levelroles','schedule','shifts'];
+const LABELS={welcome:'Welcome',rankcard:'Rank Card',serverstats:'Server Stats',reactionroles:'Reaction Roles',giveaway:'Giveaway',starboard:'Starboard',polls:'Polls',automod:'AutoMod',tickets:'Tickets',logging:'Logging',xp:'XP Settings',levelroles:'Level Roles',schedule:'Scheduler',shifts:'Shifts'};
+
+function activatePanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.slink').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
+  const p=$('panel-'+id);if(p)p.classList.add('active');
+  document.querySelectorAll(`.slink[data-panel="${id}"]`).forEach(s=>s.classList.add('active'));
+  document.querySelectorAll(`.mtab[data-panel="${id}"]`).forEach(t=>t.classList.add('active'));
+}
+document.querySelectorAll('.slink[data-panel]').forEach(s=>s.addEventListener('click',()=>activatePanel(s.dataset.panel)));
+
+// Mobile tabs
+const mt=$('mobileTabs');
+PANELS.forEach(id=>{
+  const t=document.createElement('button');t.className='mtab'+(id==='welcome'?' active':'');
+  t.dataset.panel=id;t.textContent=LABELS[id];
+  t.addEventListener('click',()=>activatePanel(id));mt.appendChild(t);
+});
+
+// CHIP BUILDER
+function buildChips(cid,items,cur,onChange){
+  const w=$(cid);if(!w)return;w.innerHTML='';
+  items.forEach(item=>{
+    const k=typeof item==='string'?item:item.k,l=typeof item==='string'?item:item.l;
+    const b=document.createElement('button');b.className='chip'+(cur===k?' on':'');b.textContent=l;
+    b.addEventListener('click',()=>{onChange(k);buildChips(cid,items,k,onChange);});w.appendChild(b);
   });
-});
+}
 
-// ── Backgrounds ───────────────────────────────────────────────────
-const BACKGROUNDS = [
-  { k: 'gradient-purple', l: 'Purple',    css: 'linear-gradient(135deg,#1a0a2e,#2a0a3a)' },
-  { k: 'midnight-gradient', l: 'Midnight', css: 'linear-gradient(135deg,#0a0a1a,#1a0a2e)' },
-  { k: 'inferno',          l: 'Inferno',   css: 'linear-gradient(135deg,#1a0000,#3d0000)' },
-  { k: 'ocean-depth',      l: 'Ocean',     css: 'linear-gradient(135deg,#001020,#002040)' },
-  { k: 'neon-city',        l: 'Neon City', css: 'linear-gradient(135deg,#000010,#0a0020)' },
-  { k: 'forest-night',     l: 'Forest',    css: 'linear-gradient(135deg,#001008,#002010)' },
-  { k: 'deep-space',       l: 'Deep Space',css: 'linear-gradient(135deg,#000010,#050020)' },
-  { k: 'solid-dark',       l: 'Dark',      css: '#1e1f22' },
-  { k: 'storm',            l: 'Storm',     css: 'linear-gradient(135deg,#0a0a0a,#1a1a2a)' },
-  { k: 'polar',            l: 'Polar',     css: 'linear-gradient(135deg,#0a1520,#0a2030)' },
+const BG=[
+  {k:'gradient-purple',l:'Purple'},{k:'midnight-gradient',l:'Midnight'},{k:'inferno',l:'Inferno'},
+  {k:'ocean-depth',l:'Ocean'},{k:'neon-city',l:'Neon'},{k:'forest-night',l:'Forest'},
+  {k:'deep-space',l:'Space'},{k:'solid-dark',l:'Dark'},{k:'storm',l:'Storm'},{k:'polar',l:'Polar'}
 ];
+const FONTS=['Arial','Arial Black','Impact','Oswald','Inter','Source Code Pro'];
+let wcBg='gradient-purple',wcFont='Arial',wcB64=null;
+let rcBg='solid-dark',rcB64=null,ssB64=null;
 
-function buildBgChips(containerId, stateKey, onPick) {
-  const wrap = $(containerId); wrap.innerHTML = '';
-  BACKGROUNDS.forEach(bg => {
-    const b = document.createElement('button');
-    b.className = 'chip' + (bgState[stateKey] === bg.k ? ' on' : '');
-    b.style.cssText = `background:${bg.css};color:#fff;font-size:.7rem;`;
-    b.textContent = bg.l;
-    b.addEventListener('click', () => { bgState[stateKey] = bg.k; buildBgChips(containerId, stateKey, onPick); onPick(); });
-    wrap.appendChild(b);
+buildChips('wc-bg-chips',BG,wcBg,v=>{wcBg=v;});
+buildChips('wc-font-chips',FONTS,wcFont,v=>{wcFont=v;});
+buildChips('rc-bg-chips',BG,rcBg,v=>{rcBg=v;});
+
+// COLOR SYNC
+function syncColor(pid,hid,cb){
+  $(pid).addEventListener('input',e=>{$(hid).value=e.target.value.toUpperCase();cb();});
+  $(hid).addEventListener('input',e=>{try{$(pid).value=e.target.value;}catch{}cb();});
+}
+syncColor('wc-cpick','wc-color',()=>{});
+syncColor('rc-cpick','rc-color',()=>{});
+syncColor('ss-cpick','ss-color',()=>{});
+
+// RENDER HELPERS
+function showSpin(id,on){$(id).style.display=on?'block':'none';}
+function setImg(boxId,b64){const b=$(boxId);b.innerHTML='';const img=document.createElement('img');img.src='data:image/png;base64,'+b64;b.appendChild(img);}
+function dlB64(b64,name){const a=document.createElement('a');a.href='data:image/png;base64,'+b64;a.download=name;a.click();}
+
+// WELCOME
+function updateWcCmd(){
+  const u=$('wc-user').value||'NewMember',m=$('wc-msg').value||'Welcome!';
+  $('wc-cmd').textContent=`/welcomecard username:${u} message:${m}`;
+}
+async function renderWelcome(){
+  if(!alive){setStatus('wc-status','⚠ Server offline — start gui-server.js','err');return;}
+  updateWcCmd();showSpin('wc-spin',true);setStatus('wc-status','Rendering…','inf');
+  try{
+    const r=await fetch(`${SERVER}/preview/welcome`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:$('wc-user').value||'NewMember',message:$('wc-msg').value||'Welcome!',
+        member_count:$('wc-count').value,primary_color:$('wc-color').value,background:wcBg,font:wcFont}),
+      signal:AbortSignal.timeout(15000)});
+    const d=await r.json();if(!d.ok)throw new Error(d.error);
+    wcB64=d.image_b64;setImg('wc-box',wcB64);$('wc-dl').disabled=false;
+    setStatus('wc-status','✓ Rendered','ok');toast('✓ Welcome card rendered!');
+  }catch(e){setStatus('wc-status','⚠ '+(e.message||e).slice(0,80),'err');toast('⚠ '+(e.message||e).slice(0,60),'err');}
+  showSpin('wc-spin',false);
+}
+$('wc-render').addEventListener('click',renderWelcome);
+$('wc-dl').addEventListener('click',()=>wcB64&&dlB64(wcB64,'welcome-card.png'));
+$('wc-copy').addEventListener('click',()=>{navigator.clipboard.writeText($('wc-cmd').textContent);toast('✓ Copied!');});
+['wc-user','wc-msg','wc-count'].forEach(id=>$(id).addEventListener('input',updateWcCmd));
+
+// RANK CARD
+function updateRcCmd(){
+  const u=$('rc-user').value||'Player',lv=$('rc-level').value||1,rk=$('rc-rank').value||1;
+  $('rc-cmd').textContent=`/rankcard username:${u} level:${lv} rank:${rk} current_xp:${$('rc-xp').value||0} required_xp:${$('rc-req').value||100}`;
+}
+async function renderRank(){
+  if(!alive){setStatus('rc-status','⚠ Server offline','err');return;}
+  updateRcCmd();showSpin('rc-spin',true);setStatus('rc-status','Rendering…','inf');
+  try{
+    const r=await fetch(`${SERVER}/preview/rankcard`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:$('rc-user').value||'Player',level:+$('rc-level').value||1,rank:+$('rc-rank').value||1,
+        current_xp:+$('rc-xp').value||0,required_xp:+$('rc-req').value||100,primary_color:$('rc-color').value,background:rcBg}),
+      signal:AbortSignal.timeout(15000)});
+    const d=await r.json();if(!d.ok)throw new Error(d.error);
+    rcB64=d.image_b64;setImg('rc-box',rcB64);$('rc-dl').disabled=false;
+    setStatus('rc-status','✓ Rendered','ok');toast('✓ Rank card rendered!');
+  }catch(e){setStatus('rc-status','⚠ '+(e.message||e).slice(0,80),'err');}
+  showSpin('rc-spin',false);
+}
+$('rc-render').addEventListener('click',renderRank);
+$('rc-dl').addEventListener('click',()=>rcB64&&dlB64(rcB64,'rank-card.png'));
+$('rc-copy').addEventListener('click',()=>{navigator.clipboard.writeText($('rc-cmd').textContent);toast('✓ Copied!');});
+
+// SERVER STATS
+async function renderStats(){
+  if(!alive){setStatus('ss-status','⚠ Server offline','err');return;}
+  showSpin('ss-spin',true);setStatus('ss-status','Rendering…','inf');
+  try{
+    const r=await fetch(`${SERVER}/preview/serverstats`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({server_name:$('ss-name').value||'My Server',member_count:+$('ss-members').value||0,
+        channel_count:+$('ss-channels').value||0,role_count:+$('ss-roles').value||0,emoji_count:+$('ss-emoji').value||0,
+        boost_level:+$('ss-blv').value||0,boost_count:+$('ss-bcnt').value||0,age_days:+$('ss-age').value||0,
+        accent_color:$('ss-color').value}),signal:AbortSignal.timeout(15000)});
+    const d=await r.json();if(!d.ok)throw new Error(d.error);
+    ssB64=d.image_b64;setImg('ss-box',ssB64);$('ss-dl').disabled=false;
+    setStatus('ss-status','✓ Rendered','ok');toast('✓ Stats rendered!');
+  }catch(e){setStatus('ss-status','⚠ '+(e.message||e).slice(0,80),'err');}
+  showSpin('ss-spin',false);
+}
+$('ss-render').addEventListener('click',renderStats);
+$('ss-dl').addEventListener('click',()=>ssB64&&dlB64(ssB64,'server-stats.png'));
+
+// XP SLIDERS
+$('xp-rate').addEventListener('input',e=>$('xp-rate-val').textContent=e.target.value);
+$('xp-cd').addEventListener('input',e=>$('xp-cd-val').textContent=e.target.value);
+
+// STUB SAVES
+function stub(btnId,statusId,msg){$(btnId).addEventListener('click',()=>{setStatus(statusId,msg,'ok');toast('✓ Saved');});}
+stub('am-save','am-status','✓ AutoMod config saved — use /automod in Discord to apply.');
+stub('tk-save','tk-status','✓ Ticket settings saved — use /ticket setup in Discord to apply.');
+stub('lg-save','lg-status','✓ Logging config saved — use /logging in Discord to apply.');
+stub('sb-save','sb-status','✓ Starboard settings saved — use /starboard in Discord to apply.');
+stub('sh-save','sh-status','✓ Shift config saved — use /shift setup in Discord to apply.');
+stub('xp-save','xp-status','✓ XP config saved — use /xpadmin set-rate in Discord to apply.');
+
+// REACTION ROLES
+let rrBtns=[];
+function renderRR(){
+  const l=$('rr-list');l.innerHTML='';
+  rrBtns.forEach((b,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:.5rem;align-items:center;';
+    row.innerHTML=`<input class="inp" value="${b.label}" placeholder="Label" style="flex:2;" data-i="${i}" data-f="label"/>
+      <input class="inp" value="${b.role}" placeholder="@Role" style="flex:2;" data-i="${i}" data-f="role"/>
+      <input class="inp" value="${b.emoji}" placeholder="🎮" style="width:60px;" data-i="${i}" data-f="emoji"/>
+      <button class="btn sm warn-btn" data-del="${i}">✕</button>`;
+    row.querySelectorAll('[data-f]').forEach(inp=>inp.addEventListener('input',e=>{rrBtns[+e.target.dataset.i][e.target.dataset.f]=e.target.value;}));
+    row.querySelector('[data-del]').addEventListener('click',e=>{rrBtns.splice(+e.target.dataset.del,1);renderRR();});l.appendChild(row);
   });
 }
+$('rr-add').addEventListener('click',()=>{if(rrBtns.length<10){rrBtns.push({label:'',role:'',emoji:'🎮'});renderRR();}});
+$('rr-post').addEventListener('click',()=>setStatus('rr-status','✓ Panel ready — use /reactionroles create in Discord to post it.','ok'));
+renderRR();
 
-const bgState = { wc: 'gradient-purple', rc: 'solid-dark' };
-buildBgChips('wc-bg-chips', 'wc', () => debounce(renderWelcome, 'wc')());
-buildBgChips('rc-bg-chips', 'rc', () => debounce(renderRank, 'rc')());
-
-// ── Debounce ─────────────────────────────────────────────────────────────
-const timers = {};
-function debounce(fn, key, delay = 350) {
-  return (...args) => {
-    clearTimeout(timers[key]);
-    timers[key] = setTimeout(() => fn(...args), delay);
-  };
+// POLL OPTIONS
+let plOpts=['Option A','Option B'];
+function renderPoll(){
+  const c=$('pl-opts');c.innerHTML='';
+  plOpts.forEach((o,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:.5rem;';
+    row.innerHTML=`<input class="inp" value="${o}" placeholder="Option ${i+1}" style="flex:1;" data-i="${i}"/><button class="btn sm warn-btn" data-del="${i}">✕</button>`;
+    row.querySelector('[data-i]').addEventListener('input',e=>plOpts[+e.target.dataset.i]=e.target.value);
+    row.querySelector('[data-del]').addEventListener('click',e=>{plOpts.splice(+e.target.dataset.del,1);renderPoll();});c.appendChild(row);
+  });
 }
+$('pl-addopt').addEventListener('click',()=>{if(plOpts.length<5){plOpts.push('');renderPoll();}});
+$('pl-create').addEventListener('click',()=>setStatus('pl-status','✓ Poll config ready — use /poll in Discord to post it.','ok'));
+renderPoll();
 
-// ── Color pickers sync ────────────────────────────────────────────────
-function syncColor(pickerId, hexId, callback) {
-  const picker = $(pickerId), hex = $(hexId);
-  picker.addEventListener('input', e => { hex.value = e.target.value.toUpperCase(); callback(); });
-  hex.addEventListener('input', e => { try { picker.value = e.target.value; } catch {} callback(); });
-}
-syncColor('wc-color-picker', 'wc-color', () => debounce(renderWelcome, 'wc')());
-syncColor('rc-color-picker', 'rc-color', () => debounce(renderRank, 'rc')());
-syncColor('ss-color-picker', 'ss-color', () => debounce(renderStats, 'ss')());
-
-// ── Render helpers ────────────────────────────────────────────────────────
-function setStatus(id, msg, type) {
-  const el = $(id);
-  el.className = 'status-bar ' + type;
-  el.textContent = msg;
-}
-function showSpinner(id, on) { $(id).style.display = on ? 'block' : 'none'; }
-function setImg(bodyId, b64) {
-  const body = $(bodyId);
-  body.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = `data:image/png;base64,${b64}`;
-  img.style.borderRadius = '.6rem';
-  body.appendChild(img);
-}
-function dlBlob(b64, name) {
-  const a = document.createElement('a');
-  a.href = `data:image/png;base64,${b64}`;
-  a.download = name; a.click();
-}
-
-// ── Welcome Card ────────────────────────────────────────────────────────────
-let wcB64 = null;
-
-function updateWcCmd() {
-  const u = $('wc-username').value.trim() || 'NewMember';
-  const m = $('wc-message').value.trim() || 'Welcome to the server!';
-  const cnt = $('wc-count').value.trim();
-  const col = $('wc-color').value.trim();
-  const bg = bgState.wc;
-  const font = $('wc-font').value;
-  let cmd = `/welcomecard username:${u} message:${m}`;
-  if (cnt) cmd += ` member_count:${cnt}`;
-  if (col !== '#39FF14') cmd += ` primary_color:${col}`;
-  if (bg !== 'gradient-purple') cmd += ` background:${bg}`;
-  if (font !== 'Arial') cmd += ` font:${font}`;
-  $('wc-cmd').textContent = cmd;
-}
-
-async function renderWelcome() {
-  if (!serverAlive) { setStatus('wc-status', '⚠ Server offline', 'err'); showToast('Server offline — start the GUI server', 'error'); return; }
-  updateWcCmd();
-  showSpinner('wc-spinner', true);
-  setStatus('wc-status', 'Rendering…', 'info');
-  try {
-    const res = await fetch(`${SERVER}/preview/welcome`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: $('wc-username').value.trim() || 'NewMember',
-        message: $('wc-message').value.trim() || 'Welcome to the server!',
-        member_count: $('wc-count').value.trim(),
-        primary_color: $('wc-color').value.trim(),
-        background: bgState.wc,
-        font: $('wc-font').value,
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
-    wcB64 = data.image_b64;
-    setImg('wc-body', wcB64);
-    $('wc-dl').disabled = false;
-    setStatus('wc-status', '✓ Rendered', 'ok');
-    showToast('Welcome card rendered!', 'success');
-  } catch (e) {
-    const msg = String(e.message || e).slice(0, 80);
-    setStatus('wc-status', '⚠ ' + msg, 'err');
-    showToast(msg, 'error');
-  } finally { showSpinner('wc-spinner', false); }
-}
-
-$('wc-render').addEventListener('click', renderWelcome);
-$('wc-dl').addEventListener('click', () => wcB64 && dlBlob(wcB64, `welcome-${$('wc-username').value.trim() || 'card'}.png`));
-$('wc-copy-cmd').addEventListener('click', () => { navigator.clipboard.writeText($('wc-cmd').textContent); showToast('✓ Command copied!', 'success'); });
-
-['wc-username', 'wc-message', 'wc-count', 'wc-font'].forEach(id =>
-  $(id).addEventListener('input', () => { updateWcCmd(); debounce(renderWelcome, 'wc')(); })
-);
-
-// ── Rank Card ────────────────────────────────────────────────────────────
-let rcB64 = null;
-
-function updateRcCmd() {
-  const u = $('rc-username').value.trim() || 'Player';
-  const lv = $('rc-level').value || '1';
-  const rk = $('rc-rank').value || '1';
-  const cur = $('rc-xp-cur').value || '0';
-  const req = $('rc-xp-req').value || '100';
-  const col = $('rc-color').value.trim();
-  const bg = bgState.rc;
-  const font = $('rc-font').value;
-  let cmd = `/rankcard username:${u} level:${lv} rank:${rk} current_xp:${cur} required_xp:${req}`;
-  if (col !== '#5865F2') cmd += ` primary_color:${col}`;
-  if (bg !== 'solid-dark') cmd += ` background:${bg}`;
-  if (font !== 'Arial') cmd += ` font:${font}`;
-  $('rc-cmd').textContent = cmd;
-}
-
-async function renderRank() {
-  if (!serverAlive) { setStatus('rc-status', '⚠ Server offline', 'err'); showToast('Server offline — start the GUI server', 'error'); return; }
-  updateRcCmd();
-  showSpinner('rc-spinner', true);
-  setStatus('rc-status', 'Rendering…', 'info');
-  try {
-    const res = await fetch(`${SERVER}/preview/rankcard`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: $('rc-username').value.trim() || 'Player',
-        level: Number($('rc-level').value) || 1,
-        rank: Number($('rc-rank').value) || 1,
-        current_xp: Number($('rc-xp-cur').value) || 0,
-        required_xp: Number($('rc-xp-req').value) || 100,
-        primary_color: $('rc-color').value.trim(),
-        background: bgState.rc,
-        font: $('rc-font').value,
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
-    rcB64 = data.image_b64;
-    setImg('rc-body', rcB64);
-    $('rc-dl').disabled = false;
-    setStatus('rc-status', '✓ Rendered', 'ok');
-    showToast('Rank card rendered!', 'success');
-  } catch (e) {
-    const msg = String(e.message || e).slice(0, 80);
-    setStatus('rc-status', '⚠ ' + msg, 'err');
-    showToast(msg, 'error');
-  } finally { showSpinner('rc-spinner', false); }
-}
-
-$('rc-render').addEventListener('click', renderRank);
-$('rc-dl').addEventListener('click', () => rcB64 && dlBlob(rcB64, `rankcard-${$('rc-username').value.trim() || 'card'}.png`));
-$('rc-copy-cmd').addEventListener('click', () => { navigator.clipboard.writeText($('rc-cmd').textContent); showToast('✓ Command copied!', 'success'); });
-
-['rc-username', 'rc-level', 'rc-rank', 'rc-xp-cur', 'rc-xp-req', 'rc-font'].forEach(id =>
-  $(id).addEventListener('input', () => { updateRcCmd(); debounce(renderRank, 'rc')(); })
-);
-
-// ── Server Stats ──────────────────────────────────────────────────────────
-let ssB64 = null;
-
-function updateSsCmd() {
-  $('ss-cmd').textContent = '/serverstats';
-}
-
-async function renderStats() {
-  if (!serverAlive) { setStatus('ss-status', '⚠ Server offline', 'err'); showToast('Server offline — start the GUI server', 'error'); return; }
-  updateSsCmd();
-  showSpinner('ss-spinner', true);
-  setStatus('ss-status', 'Rendering…', 'info');
-  try {
-    const res = await fetch(`${SERVER}/preview/serverstats`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        server_name: $('ss-name').value.trim() || 'My Server',
-        member_count: Number($('ss-members').value) || 0,
-        channel_count: Number($('ss-channels').value) || 0,
-        role_count: Number($('ss-roles').value) || 0,
-        emoji_count: Number($('ss-emoji').value) || 0,
-        boost_level: Number($('ss-boost-level').value) || 0,
-        boost_count: Number($('ss-boost-count').value) || 0,
-        age_days: Number($('ss-age').value) || 0,
-        accent_color: $('ss-color').value.trim(),
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
-    ssB64 = data.image_b64;
-    setImg('ss-body', ssB64);
-    $('ss-dl').disabled = false;
-    setStatus('ss-status', '✓ Rendered', 'ok');
-    showToast('Server stats rendered!', 'success');
-  } catch (e) {
-    const msg = String(e.message || e).slice(0, 80);
-    setStatus('ss-status', '⚠ ' + msg, 'err');
-    showToast(msg, 'error');
-  } finally { showSpinner('ss-spinner', false); }
-}
-
-$('ss-render').addEventListener('click', renderStats);
-$('ss-dl').addEventListener('click', () => ssB64 && dlBlob(ssB64, `serverstats-${$('ss-name').value.trim().replace(/\s+/g,'-') || 'card'}.png`));
-$('ss-copy-cmd').addEventListener('click', () => { navigator.clipboard.writeText($('ss-cmd').textContent); showToast('✓ Command copied!', 'success'); });
-
-['ss-name','ss-members','ss-channels','ss-roles','ss-emoji','ss-boost-level','ss-boost-count','ss-age'].forEach(id =>
-  $(id).addEventListener('input', () => { updateSsCmd(); debounce(renderStats, 'ss')(); })
-);
-
-// ── Boot: auto-render all panels ────────────────────────────────────────────
-pingServer().then(() => {
-  if (serverAlive) {
-    renderWelcome();
-    renderRank();
-    renderStats();
-  }
+// GIVEAWAY
+$('gw-start').addEventListener('click',()=>{
+  const p=$('gw-prize').value||'Prize',ch=$('gw-ch').value||'#giveaways',d=$('gw-dur').value||60;
+  setStatus('gw-status',`✓ Giveaway "${p}" in ${ch} for ${d}min — use /giveaway start in Discord to launch.`,'ok');
 });
+
+// LEVEL ROLES
+let lrRules=[];
+$('lr-add').addEventListener('click',()=>{
+  const lv=$('lr-lv').value,role=$('lr-role').value;
+  if(!lv||!role){toast('⚠ Fill in level and role','err');return;}
+  lrRules.push({level:lv,role});renderLR();
+  $('lr-lv').value='';$('lr-role').value='';
+});
+function renderLR(){
+  const c=$('lr-list');c.innerHTML='';
+  lrRules.forEach((r,i)=>{
+    const row=document.createElement('div');row.className='rule-item';
+    row.innerHTML=`<div class="rule-name">Level ${r.level}</div><div class="rule-desc">${r.role}</div><button class="btn sm warn-btn" data-del="${i}">✕</button>`;
+    row.querySelector('[data-del]').addEventListener('click',e=>{lrRules.splice(+e.target.dataset.del,1);renderLR();});c.appendChild(row);
+  });
+  if(lrRules.length)setStatus('lr-status',`${lrRules.length} rule(s) — use /levelroles add in Discord to apply.`,'inf');
+}
+
+// SCHEDULER
+$('sc-queue').addEventListener('click',()=>{
+  const ch=$('sc-ch').value||'#channel',dt=$('sc-dt').value;
+  if(!dt){toast('⚠ Set a date/time','err');return;}
+  setStatus('sc-status',`✓ Queued for ${ch} at ${dt} — use /schedule post in Discord to confirm.`,'ok');
+});
+
+// AUTO-RENDER on load
+ping().then(()=>{ if(alive){renderWelcome();renderRank();renderStats();} });
 </script>
-
-<!-- Sigil shared UX: toast notifications, loading overlay, mobile hamburger nav -->
-<script src="/js/shared.js"></script>
-
 </body>
 </html>
