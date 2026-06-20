@@ -280,6 +280,38 @@ app.post('/api/media/loop', mediaLimiter, async (req, res) => {
 });
 
 /**
+ * POST /api/media/mode
+ * Body: { mode: 1-5 } — change ASCII render mode on the fly
+ */
+app.post('/api/media/mode', mediaLimiter, async (req, res) => {
+    try {
+        const mode = Number(req.body?.mode ?? 0);
+        if (!mode || mode < 1 || mode > 5) return res.status(400).json({ ok: false, error: '"mode" must be 1-5.' });
+        const result = await proxyToStream('/api/mode', { mode });
+        res.status(result.status).json(result.body);
+    } catch (err) {
+        console.error('[POST /api/media/mode]', err);
+        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
+    }
+});
+
+/**
+ * POST /api/media/cols
+ * Body: { cols: 40-500 } — change terminal column width on the fly
+ */
+app.post('/api/media/cols', mediaLimiter, async (req, res) => {
+    try {
+        const cols = Number(req.body?.cols ?? 0);
+        if (!cols || cols < 40 || cols > 500) return res.status(400).json({ ok: false, error: '"cols" must be 40-500.' });
+        const result = await proxyToStream('/api/cols', { cols });
+        res.status(result.status).json(result.body);
+    } catch (err) {
+        console.error('[POST /api/media/cols]', err);
+        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
+    }
+});
+
+/**
  * GET /api/media/status
  * Returns now-playing info: current video, queue length, fps, mode, etc.
  */
