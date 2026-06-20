@@ -4,6 +4,9 @@ const { getConfig, setConfig } = require('../utils/db.js');
 const { getBackgroundChoices } = require('../utils/backgrounds.js');
 const { getAllFontFamilies } = require('../utils/canvas.js');
 const { getColorAutocomplete } = require('../utils/colors.js');
+const { PACKAGES, enablePackage, disablePackage, getAllPackageStates } = require('../utils/packages.js');
+
+const PKG_CHOICES = Object.values(PACKAGES).map(p => ({ name: `${p.emoji} ${p.label}`, value: p.key }));
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -72,6 +75,27 @@ module.exports = {
                 )
             )
         )
+        // ── Package management ────────────────────────────────────────────
+        .addSubcommand(sub => sub
+            .setName('packages')
+            .setDescription('Enable or disable a feature package, or list current states')
+            .addStringOption(opt => opt
+                .setName('action')
+                .setDescription('What to do')
+                .setRequired(true)
+                .addChoices(
+                    { name: '📋 list   — show all packages and their states', value: 'list'   },
+                    { name: '✅ enable  — turn a package on',                  value: 'enable'  },
+                    { name: '❌ disable — turn a package off',                 value: 'disable' },
+                )
+            )
+            .addStringOption(opt => opt
+                .setName('package')
+                .setDescription('Package to enable/disable (required for enable/disable)')
+                .setRequired(false)
+                .addChoices(...PKG_CHOICES)
+            )
+        )
         .addSubcommand(sub => sub
             .setName('status')
             .setDescription('Show current automation status for this server')
@@ -89,7 +113,12 @@ module.exports = {
 
         // ── STATUS ──────────────────────────────────────────────────────────
         if (sub === 'status') {
-            const cfg = getConfig(guildId);
+            const cfg      = getConfig(guildId);
+            const pkgStates = getAllPackageStates(guildId);
+            const pkgLines  = pkgStates.map(p =>
+                `${p.enabled ? '🟢' : '🔴'} ${p.emoji} **${p.label}**`
+            ).join('\n');
+
             const embed = new EmbedBuilder()
                 .setTitle('⚙️ Sigil Automation Status')
                 .setColor('#5865F2')
@@ -103,9 +132,64 @@ module.exports = {
                     { name: '🔗 Webhooks',     value: cfg.webhook_channel      ? `🟢 On — <#${cfg.webhook_channel}>${cfg.webhook_secret ? ' 🔒 HMAC set' : ' ⚠️ No secret'}` : '🔴 Off', inline: true },
                     { name: '🛡️ Mod Log',      value: cfg.mod_log_channel      ? `🟢 On — <#${cfg.mod_log_channel}>`      : '🔴 Off', inline: true },
                     { name: '⭐ XP / Levels',  value: cfg.xp_enabled           ? `🟢 On — ${cfg.xp_channel ? `<#${cfg.xp_channel}>` : 'no channel set'} • rate: ${cfg.xp_rate ?? 15} • cd: ${cfg.xp_cooldown ?? 60}s` : '🔴 Off', inline: false },
+                    { name: '📦 Packages',     value: pkgLines,                  inline: false },
                 )
                 .setFooter({ text: 'Sigil • sigilconfig status' });
             return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+
+        // ── PACKAGES ─────────────────────────────────────────────────────────
+        if (sub === 'packages') {
+            const action  = interaction.options.getString('action');
+            const pkgKey  = interaction.options.getString('package');
+
+            // LIST
+            if (action === 'list') {
+                const states = getAllPackageStates(guildId);
+                const lines  = states.map(p =>
+                    `${p.enabled ? '🟢' : '🔴'} ${p.emoji} **${p.label}** — ${p.description}`
+                ).join('\n');
+                const embed = new EmbedBuilder()
+                    .setTitle('📦 Sigil — Feature Packages')
+                    .setDescription(lines)
+                    .setColor('#5865F2')
+                    .setFooter({ text: 'Use /sigilconfig packages enable/disable <package> to change a state.' });
+                return interaction.reply({ embeds: [embed], ephemeral: true });
+            }
+
+            // ENABLE / DISABLE — require package option
+            if (!pkgKey) {
+                return interaction.reply({
+                    content: '❌ You must specify a **package** when using `enable` or `disable`.',
+                    ephemeral: true,
+                });
+            }
+
+            if (action === 'enable') {
+                const result = enablePackage(guildId, pkgKey);
+                const pkg    = PACKAGES[pkgKey];
+                if (result === 'unknown')    return interaction.reply({ content: '❌ Unknown package key.', ephemeral: true });
+                if (result === 'already_on') return interaction.reply({ content: `ℹ️ **${pkg.emoji} ${pkg.label}** is already enabled.`, ephemeral: true });
+                const embed = new EmbedBuilder()
+                    .setTitle('✅ Package Enabled')
+                    .setDescription(`**${pkg.emoji} ${pkg.label}** is now **enabled** on this server.\n\nCommands: ${pkg.commands.join(' • ')}`)
+                    .setColor('#39FF14')
+                    .setFooter({ text: 'Sigil • sigilconfig packages' });
+                return interaction.reply({ embeds: [embed], ephemeral: true });
+            }
+
+            if (action === 'disable') {
+                const result = disablePackage(guildId, pkgKey);
+                const pkg    = PACKAGES[pkgKey];
+                if (result === 'unknown')     return interaction.reply({ content: '❌ Unknown package key.', ephemeral: true });
+                if (result === 'already_off') return interaction.reply({ content: `ℹ️ **${pkg.emoji} ${pkg.label}** is already disabled.`, ephemeral: true });
+                const embed = new EmbedBuilder()
+                    .setTitle('❌ Package Disabled')
+                    .setDescription(`**${pkg.emoji} ${pkg.label}** has been **disabled** on this server.\n\nAffected commands: ${pkg.commands.join(' • ')}\n\nRe-enable anytime with \`/sigilconfig packages enable\`.`)
+                    .setColor('#ff4444')
+                    .setFooter({ text: 'Sigil • sigilconfig packages' });
+                return interaction.reply({ embeds: [embed], ephemeral: true });
+            }
         }
 
         // ── STATS ────────────────────────────────────────────────────────────

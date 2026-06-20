@@ -88,7 +88,6 @@ db.exec(`
 `);
 
 // ── Migrations (safe to re-run — each is wrapped in a try/catch) ─────────────
-// ALTER TABLE fails if column already exists, so we catch and ignore.
 const migrate = (sql) => { try { db.exec(sql); } catch (_) {} };
 
 // welcome_config v2 — added embed support + DM
@@ -96,5 +95,10 @@ migrate(`ALTER TABLE welcome_config ADD COLUMN embed_title  TEXT`);
 migrate(`ALTER TABLE welcome_config ADD COLUMN embed_color  TEXT DEFAULT '#5865F2'`);
 migrate(`ALTER TABLE welcome_config ADD COLUMN dm_enabled   INTEGER DEFAULT 0`);
 migrate(`ALTER TABLE welcome_config ADD COLUMN dm_message   TEXT`);
+
+// guild_config v2 — package system
+// packages_disabled stores a JSON array of package keys that are OFF for this guild.
+// Omitted = all packages enabled (default-on behaviour).
+migrate(`ALTER TABLE guild_config ADD COLUMN packages_disabled TEXT DEFAULT '[]'`);
 
 module.exports = db;
