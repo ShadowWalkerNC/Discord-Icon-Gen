@@ -1,4 +1,4 @@
-// gui-server.js — Sigil GUI bridge server v2.3
+// gui-server.js — Sigil GUI bridge server v2.4
 // Run with: node gui/gui-server.js
 
 const express    = require('express');
@@ -21,14 +21,13 @@ logBuffer.patch();
 
 registerAllFonts();
 
-const app    = express();
-const server = http.createServer(app);   // needed for WS upgrade
-const PORT   = Number(process.env.PORT) || 8080;
+const app       = express();
+const server    = http.createServer(app);
+const PORT      = Number(process.env.PORT) || 8080;
+const START_TS  = Date.now();
 
 // ── ASCILINE stream_server.py base URL (co-hosted, local only) ───────────────
 const STREAM_URL = (process.env.STREAM_SERVER_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
-
-// AI generation is disabled until further notice
 const AI_ENABLED = false;
 
 // ── Raw body capture BEFORE json middleware (needed for HMAC) ────────────────
@@ -51,31 +50,19 @@ app.use(express.json({ limit: '4mb' }));
 
 // ── Rate limiting ────────────────────────────────────────────────────────────
 const renderLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 20,
-    standardHeaders: true,
-    legacyHeaders: false,
+    windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false,
     message: { ok: false, error: '⏳ Too many requests — slow down and try again in a minute.' },
 });
 const webhookLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 60,
-    standardHeaders: true,
-    legacyHeaders: false,
+    windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false,
     message: { ok: false, error: 'Rate limit exceeded.' },
 });
 const apiLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 60,
-    standardHeaders: true,
-    legacyHeaders: false,
+    windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false,
     message: { ok: false, error: 'Rate limit exceeded.' },
 });
 const mediaLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 30,
-    standardHeaders: true,
-    legacyHeaders: false,
+    windowMs: 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false,
     message: { ok: false, error: 'Media rate limit exceeded.' },
 });
 
@@ -86,9 +73,9 @@ app.get('/community',   (req, res) => res.sendFile(path.join(__dirname, 'sigil-c
 app.get('/developers',  (req, res) => res.sendFile(path.join(__dirname, 'developers.html')));
 app.get('/packages',    (req, res) => res.sendFile(path.join(__dirname, 'packages.html')));
 app.get('/setup',       (req, res) => res.sendFile(path.join(__dirname, '..', 'setup.html')));
-app.get('/health',      (req, res) => res.json({ ok: true, version: '2.3.0', ai_enabled: AI_ENABLED }));
+app.get('/health',      (req, res) => res.json({ ok: true, version: '2.4.0', ai_enabled: AI_ENABLED }));
 
-// ── GET /api/packages?guild_id=... ───────────────────────────────────────────
+// ── GET /api/packages ─────────────────────────────────────────────────────────────
 app.get('/api/packages', apiLimiter, (req, res) => {
     try {
         const guildId = String(req.query.guild_id || '').trim();
@@ -104,7 +91,7 @@ app.get('/api/packages', apiLimiter, (req, res) => {
     }
 });
 
-// ── POST /api/packages ────────────────────────────────────────────────────────
+// ── POST /api/packages ─────────────────────────────────────────────────────────
 app.post('/api/packages', apiLimiter, (req, res) => {
     try {
         const { guild_id, package: pkgKey, enabled } = req.body || {};
@@ -139,35 +126,8 @@ function proxyToStream(streamPath, body) {
         const payload = JSON.stringify(body);
         const url     = new URL(streamPath, STREAM_URL);
         const options = {
-            method:   'POST',
-            hostname: url.hostname,
-            port:     url.port || 8000,
-            path:     url.pathname,
-            headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
-        };
-        const req = http.request(options, (res) => {
-            let data = '';
-            res.on('data', chunk => { data += chunk; });
-            res.on('end', () => {
-                try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
-                catch { resolve({ status: res.statusCode, body: { ok: false, error: 'Non-JSON response from stream server.' } }); }
-            });
-        });
-        req.setTimeout(8000, () => { req.destroy(); reject(new Error('Stream server timeout')); });
-        req.on('error', reject);
-        req.write(payload);
-        req.end();
-    });
-}
-
-function proxyGetToStream(streamPath) {
-    return new Promise((resolve, reject) => {
-        const url     = new URL(streamPath, STREAM_URL);
-        const options = {
-            method:   'GET',
-            hostname: url.hostname,
-            port:     url.port || 8000,
-            path:     url.pathname + (url.search || ''),
+            method: 'POST', hostname: url.hostname, port: url.port || 8000, path: url.pathname,
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
         };
         const req = http.request(options, (res) => {
             let data = '';
@@ -179,170 +139,187 @@ function proxyGetToStream(streamPath) {
         });
         req.setTimeout(8000, () => { req.destroy(); reject(new Error('Stream server timeout')); });
         req.on('error', reject);
-        req.end();
+        req.write(payload); req.end();
+    });
+}
+
+function proxyGetToStream(streamPath) {
+    return new Promise((resolve, reject) => {
+        const url     = new URL(streamPath, STREAM_URL);
+        const options = {
+            method: 'GET', hostname: url.hostname, port: url.port || 8000,
+            path: url.pathname + (url.search || ''),
+        };
+        const req = http.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => { data += chunk; });
+            res.on('end', () => {
+                try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+                catch { resolve({ status: res.statusCode, body: { ok: false, error: 'Non-JSON response.' } }); }
+            });
+        });
+        req.setTimeout(8000, () => { req.destroy(); reject(new Error('Stream server timeout')); });
+        req.on('error', reject); req.end();
     });
 }
 
 app.post('/api/media/enqueue', mediaLimiter, async (req, res) => {
     try {
         const { url, mode = 1, cols, vol = 1, pixel = false, loop = false } = req.body || {};
-        if (!url || typeof url !== 'string' || !url.trim()) {
-            return res.status(400).json({ ok: false, error: 'Missing or invalid "url".' });
-        }
+        if (!url || typeof url !== 'string' || !url.trim()) return res.status(400).json({ ok: false, error: 'Missing or invalid "url".' });
         const result = await proxyToStream('/api/enqueue', { url: url.trim(), mode, cols, vol, pixel, loop });
         res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/enqueue]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' });
-    }
+    } catch (err) { console.error('[POST /api/media/enqueue]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' }); }
 });
 
 app.post('/api/media/skip', mediaLimiter, async (req, res) => {
-    try {
-        const result = await proxyToStream('/api/skip', {});
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/skip]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+    try { const result = await proxyToStream('/api/skip', {}); res.status(result.status).json(result.body); }
+    catch (err) { console.error('[POST /api/media/skip]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.post('/api/media/stop', mediaLimiter, async (req, res) => {
-    try {
-        const result = await proxyToStream('/api/stop', {});
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/stop]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+    try { const result = await proxyToStream('/api/stop', {}); res.status(result.status).json(result.body); }
+    catch (err) { console.error('[POST /api/media/stop]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.post('/api/media/seek', mediaLimiter, async (req, res) => {
     try {
         const time = Number(req.body?.time ?? -1);
         if (time < 0) return res.status(400).json({ ok: false, error: '"time" must be >= 0.' });
-        const result = await proxyToStream('/api/seek', { time });
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/seek]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+        const result = await proxyToStream('/api/seek', { time }); res.status(result.status).json(result.body);
+    } catch (err) { console.error('[POST /api/media/seek]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.post('/api/media/volume', mediaLimiter, async (req, res) => {
     try {
         const vol = Number(req.body?.vol ?? -1);
         if (vol < 0 || vol > 5) return res.status(400).json({ ok: false, error: '"vol" must be 0-5.' });
-        const result = await proxyToStream('/api/volume', { vol });
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/volume]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+        const result = await proxyToStream('/api/volume', { vol }); res.status(result.status).json(result.body);
+    } catch (err) { console.error('[POST /api/media/volume]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.post('/api/media/loop', mediaLimiter, async (req, res) => {
     try {
         const enabled = req.body?.enabled;
         if (typeof enabled !== 'boolean') return res.status(400).json({ ok: false, error: '"enabled" must be a boolean.' });
-        const result = await proxyToStream('/api/loop', { enabled });
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/loop]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+        const result = await proxyToStream('/api/loop', { enabled }); res.status(result.status).json(result.body);
+    } catch (err) { console.error('[POST /api/media/loop]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.post('/api/media/mode', mediaLimiter, async (req, res) => {
     try {
         const mode = Number(req.body?.mode ?? 0);
         if (!mode || mode < 1 || mode > 5) return res.status(400).json({ ok: false, error: '"mode" must be 1-5.' });
-        const result = await proxyToStream('/api/mode', { mode });
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/mode]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+        const result = await proxyToStream('/api/mode', { mode }); res.status(result.status).json(result.body);
+    } catch (err) { console.error('[POST /api/media/mode]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.post('/api/media/cols', mediaLimiter, async (req, res) => {
     try {
         const cols = Number(req.body?.cols ?? 0);
         if (!cols || cols < 40 || cols > 500) return res.status(400).json({ ok: false, error: '"cols" must be 40-500.' });
-        const result = await proxyToStream('/api/cols', { cols });
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[POST /api/media/cols]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+        const result = await proxyToStream('/api/cols', { cols }); res.status(result.status).json(result.body);
+    } catch (err) { console.error('[POST /api/media/cols]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 app.get('/api/media/status', mediaLimiter, async (req, res) => {
-    try {
-        const result = await proxyGetToStream('/api/status');
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[GET /api/media/status]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' });
-    }
+    try { const result = await proxyGetToStream('/api/status'); res.status(result.status).json(result.body); }
+    catch (err) { console.error('[GET /api/media/status]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' }); }
 });
 
 app.get('/api/media/queue', mediaLimiter, async (req, res) => {
-    try {
-        const result = await proxyGetToStream('/api/queue');
-        res.status(result.status).json(result.body);
-    } catch (err) {
-        console.error('[GET /api/media/queue]', err);
-        res.status(503).json({ ok: false, error: 'Stream server unreachable.' });
-    }
+    try { const result = await proxyGetToStream('/api/queue'); res.status(result.status).json(result.body); }
+    catch (err) { console.error('[GET /api/media/queue]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║                  LOGS — /api/logs + WebSocket /ws/logs          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-/**
- * GET /api/logs?tail=N&level=info|warn|error
- * Returns last N lines from the in-memory ring buffer.
- */
 app.get('/api/logs', apiLimiter, (req, res) => {
     const n     = Math.max(1, Math.min(500, parseInt(req.query.tail || '50', 10)));
     const level = ['info', 'warn', 'error'].includes(req.query.level) ? req.query.level : null;
     res.json({ ok: true, lines: logBuffer.tail(n, level) });
 });
 
-/**
- * WebSocket /ws/logs?level=info|warn|error
- * Streams new log lines in real time to the connected client.
- * Used by `sigil logs` CLI.
- */
 const wssLogs = new WebSocketServer({ noServer: true });
 
 wssLogs.on('connection', (ws, req) => {
     const params = new URLSearchParams(req.url.replace('/ws/logs', '').replace('?', ''));
     const level  = ['info', 'warn', 'error'].includes(params.get('level')) ? params.get('level') : null;
-
     const listener = (entry) => {
         if (level && entry.level !== level) return;
-        if (ws.readyState === ws.OPEN) {
-            ws.send(JSON.stringify(entry));
-        }
+        if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(entry));
     };
-
     logBuffer.subscribe(listener);
     ws.on('close', () => logBuffer.unsubscribe(listener));
     ws.on('error', () => logBuffer.unsubscribe(listener));
 });
 
-// Upgrade handler — routes /ws/logs upgrades to wssLogs
 server.on('upgrade', (req, socket, head) => {
     if (req.url.startsWith('/ws/logs')) {
-        wssLogs.handleUpgrade(req, socket, head, (ws) => {
-            wssLogs.emit('connection', ws, req);
-        });
+        wssLogs.handleUpgrade(req, socket, head, (ws) => wssLogs.emit('connection', ws, req));
     } else {
         socket.destroy();
     }
+});
+
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║              STATUS — GET /api/status/full                      ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
+/**
+ * GET /api/status/full
+ * Aggregates health from:
+ *   - gui-server itself (uptime, version)
+ *   - bot (global.sigilClient guild count + ping)
+ *   - ASCILINE stream_server.py (proxies /api/status)
+ *   - logBuffer last error line
+ */
+app.get('/api/status/full', apiLimiter, async (req, res) => {
+    const result = { ok: true };
+
+    // ─ gui-server self ──────────────────────────────────────────
+    result.gui = {
+        ok:        true,
+        reachable: true,
+        version:   '2.4.0',
+        uptime_ms: Date.now() - START_TS,
+    };
+
+    // ─ bot client (available via global.sigilClient set by start.js) ───
+    const client = global.sigilClient;
+    if (client && client.isReady()) {
+        result.bot = {
+            ok:        true,
+            reachable: true,
+            guilds:    client.guilds.cache.size,
+            latency:   client.ws.ping,
+        };
+    } else {
+        result.bot = { ok: false, reachable: false };
+    }
+
+    // ─ ASCILINE ────────────────────────────────────────────
+    try {
+        const { body } = await proxyGetToStream('/api/status');
+        result.asciline = {
+            ok:        true,
+            reachable: true,
+            playing:   !!(body.current || body.playing),
+            mode:      body.mode ?? null,
+            cols:      body.cols ?? null,
+            queue_len: body.queue_length ?? body.queue?.length ?? 0,
+        };
+    } catch {
+        result.asciline = { ok: false, reachable: false };
+    }
+
+    // ─ Last error from log ring buffer ───────────────────────
+    const lastErrors = logBuffer.tail(1, 'error');
+    result.last_error = lastErrors.length ? lastErrors[0] : null;
+
+    res.json(result);
 });
 
 // ── POST /webhook/trigger ─────────────────────────────────────────────────────
@@ -358,26 +335,20 @@ app.post('/webhook/trigger', webhookLimiter, async (req, res) => {
             }
         }
         if (!config.webhook_channel) {
-            return res.status(400).json({ ok: false, error: 'No webhook channel configured for this guild. Use /sigilconfig webhook.' });
+            return res.status(400).json({ ok: false, error: 'No webhook channel configured. Use /sigilconfig webhook.' });
         }
         const { type, ...payload } = req.body;
         payload.guildId = guildId;
         payload.client  = global.sigilClient;
-        if (!payload.client) {
-            return res.status(503).json({ ok: false, error: 'Bot client not ready yet.' });
-        }
+        if (!payload.client) return res.status(503).json({ ok: false, error: 'Bot client not ready yet.' });
         switch (type) {
-            case 'twitch.live':      await handleTwitchLive(payload);    break;
-            case 'youtube.upload':   await handleYouTubeUpload(payload); break;
-            case 'github.push':      await handleGitHubPush(payload);    break;
-            default:
-                return res.status(400).json({ ok: false, error: `Unknown event type: ${type}` });
+            case 'twitch.live':    await handleTwitchLive(payload);    break;
+            case 'youtube.upload': await handleYouTubeUpload(payload); break;
+            case 'github.push':    await handleGitHubPush(payload);    break;
+            default: return res.status(400).json({ ok: false, error: `Unknown event type: ${type}` });
         }
         res.json({ ok: true, type });
-    } catch (err) {
-        console.error('[/webhook/trigger]', err);
-        res.status(500).json({ ok: false, error: 'Internal error.' });
-    }
+    } catch (err) { console.error('[/webhook/trigger]', err); res.status(500).json({ ok: false, error: 'Internal error.' }); }
 });
 
 // ── POST /preview ─────────────────────────────────────────────────────────────
@@ -431,10 +402,7 @@ app.post('/preview/welcome', renderLimiter, async (req, res) => {
         ctx.shadowColor = primary; ctx.shadowBlur = 8;
         ctx.fillText(username, TX, H * 0.30 + 48); ctx.shadowBlur = 0;
         ctx.font = `18px "${font}"`; ctx.fillStyle = '#cccccc'; ctx.fillText(message, TX, H * 0.30 + 80);
-        if (b.member_count) {
-            ctx.font = `13px Arial`; ctx.fillStyle = primary + 'cc';
-            ctx.fillText(String(b.member_count), TX, H * 0.30 + 106);
-        }
+        if (b.member_count) { ctx.font = `13px Arial`; ctx.fillStyle = primary + 'cc'; ctx.fillText(String(b.member_count), TX, H * 0.30 + 106); }
         ctx.font = '12px Arial'; ctx.fillStyle = '#ffffff18'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
         ctx.fillText('made with Sigil', W - 12, H - 8);
         res.json({ ok: true, image_b64: canvas.toBuffer('image/png').toString('base64') });
@@ -575,5 +543,4 @@ app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
-// Use server.listen (not app.listen) so WebSocket upgrades work
-server.listen(PORT, '0.0.0.0', () => console.log(`[GUI] Sigil GUI server v2.3.0 on http://localhost:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`[GUI] Sigil GUI server v2.4.0 on http://localhost:${PORT}`));
