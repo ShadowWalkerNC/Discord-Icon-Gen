@@ -2,26 +2,14 @@
  * YouTube upload poller — checks configured channels every 15 minutes.
  * Uses the YouTube Data API v3 "Search" endpoint (free tier: 10,000 units/day).
  * Requires env: YOUTUBE_API_KEY
+ *
+ * Subscriptions are stored in the youtube_subs table (managed by /youtube command):
+ *   guild_id, yt_channel_id, channel_name, post_channel_id, last_video_id
  */
-const { getGuildsWithFeature, setConfig } = require('../utils/db.js');
-const { handleYouTubeUpload } = require('./webhookHandler.js');
+const { getAllYoutubeSubs, setYoutubeLastVideo } = require('../utils/db.js');
 
 const YT_API_KEY    = process.env.YOUTUBE_API_KEY;
 const POLL_INTERVAL = 15 * 60 * 1000; // 15 minutes
-
-/**
- * Resolves a YouTube handle (@channel) or channel ID to a numeric channel ID.
- */
-async function resolveChannelId(handleOrId) {
-    // If it already looks like a UC... channel ID, use it directly
-    if (/^UC[\w-]{22}$/.test(handleOrId)) return handleOrId;
-
-    const handle = handleOrId.startsWith('@') ? handleOrId.slice(1) : handleOrId;
-    const url    = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(handle)}&key=${YT_API_KEY}`;
-    const res    = await fetch(url);
-    const data   = await res.json();
-    return data.items?.[0]?.id || null;
-}
 
 async function fetchLatestVideo(channelId) {
     const url  = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=1&type=video&key=${YT_API_KEY}`;
@@ -39,42 +27,32 @@ async function fetchLatestVideo(channelId) {
 }
 
 async function tick(client) {
-    const guilds = getGuildsWithFeature('youtube_enabled');
-    for (const cfg of guilds) {
+    const subs = getAllYoutubeSubs();
+    for (const sub of subs) {
         try {
-            if (!cfg.youtube_channel || !cfg.youtube_handles) continue;
-            const handles = JSON.parse(cfg.youtube_handles || '[]');
-            if (!handles.length) continue;
+            const video = await fetchLatestVideo(sub.yt_channel_id);
+            if (!video || video.videoId === sub.last_video_id) continue;
 
-            const lastSeen = new Set(JSON.parse(cfg.youtube_last_video_id || '[]'));
-            const newSeen  = new Set(lastSeen);
+            // Post to the configured Discord channel
+            const channel = await client.channels.fetch(sub.post_channel_id).catch(() => null);
+            if (!channel) continue;
 
-            for (const handle of handles) {
-                const channelId = await resolveChannelId(handle);
-                if (!channelId) {
-                    console.warn(`[youtubePoller] Could not resolve channel: ${handle}`);
-                    continue;
-                }
+            await channel.send({
+                content: `📺 **${video.channelTitle}** just uploaded a new video!`,
+                embeds: [{
+                    title:       video.title,
+                    url:         video.videoURL,
+                    color:       0xFF0000,
+                    image:       { url: video.thumbnailURL },
+                    footer:      { text: 'YouTube' },
+                    timestamp:   new Date().toISOString(),
+                }],
+            });
 
-                const video = await fetchLatestVideo(channelId);
-                if (!video || lastSeen.has(video.videoId)) continue;
-
-                newSeen.add(video.videoId);
-
-                await handleYouTubeUpload({
-                    guildId:      cfg.guild_id,
-                    channelName:  video.channelTitle,
-                    videoTitle:   video.title,
-                    videoURL:     video.videoURL,
-                    thumbnailURL: video.thumbnailURL,
-                    client,
-                });
-            }
-
-            setConfig(cfg.guild_id, { youtube_last_video_id: JSON.stringify([...newSeen].slice(-50)) });
+            setYoutubeLastVideo(sub.guild_id, sub.yt_channel_id, video.videoId);
 
         } catch (err) {
-            console.error(`[youtubePoller] Guild ${cfg.guild_id}:`, err.message);
+            console.error(`[youtubePoller] Sub ${sub.yt_channel_id} (guild ${sub.guild_id}):`, err.message);
         }
     }
 }
