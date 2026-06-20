@@ -4,8 +4,9 @@
  */
 const { EmbedBuilder } = require('discord.js');
 const { getAllTwitchSubs, setTwitchLastStream, getAllYoutubeSubs, setYoutubeLastVideo } = require('../utils/db.js');
-const { getLiveStreams } = require('./twitch.js');
+const { getLiveStreams }    = require('./twitch.js');
 const { getLatestVideoAPI } = require('./youtube.js');
+const registry              = require('../util/serviceRegistry.js');
 
 const TWITCH_INTERVAL  = 15_000;
 const YOUTUBE_INTERVAL = 60_000;
@@ -15,6 +16,9 @@ let twitchFailures  = 0;
 let twitchTick      = 0;
 let youtubeFailures = 0;
 let youtubeTick     = 0;
+
+registry.register('twitch-poller',  { interval: TWITCH_INTERVAL,  description: 'Polls Twitch API for live streams' });
+registry.register('youtube-poller', { interval: YOUTUBE_INTERVAL, description: 'Polls YouTube RSS for new videos'  });
 
 // ── Twitch poller ─────────────────────────────────────────────────────────────
 function buildTwitchEmbed(stream) {
@@ -48,15 +52,19 @@ async function runTwitchPoller(client) {
     }
 
     const subs = getAllTwitchSubs();
-    if (!subs.length) return;
+    if (!subs.length) { registry.heartbeat('twitch-poller'); return; }
 
     const logins = [...new Set(subs.map(s => s.streamer_login))];
     let liveStreams;
     try {
         liveStreams = await getLiveStreams(logins);
         twitchFailures = 0;
+        registry.heartbeat('twitch-poller');
+        registry.setMeta('twitch-poller', { subscriptions: subs.length, backoff: 0 });
     } catch (err) {
         twitchFailures = Math.min(twitchFailures + 1, MAX_BACKOFF);
+        registry.setError('twitch-poller', err);
+        registry.setMeta('twitch-poller', { backoff: twitchFailures });
         console.error(`[Twitch Poller] API error (backoff x${twitchFailures}):`, err.message);
         return;
     }
@@ -104,7 +112,7 @@ async function runYoutubePoller(client) {
     }
 
     const subs = getAllYoutubeSubs();
-    if (!subs.length) return;
+    if (!subs.length) { registry.heartbeat('youtube-poller'); return; }
 
     let anyError = false;
     for (const sub of subs) {
@@ -113,6 +121,7 @@ async function runYoutubePoller(client) {
             video = await getLatestVideoAPI(sub.yt_channel_id);
         } catch (err) {
             anyError = true;
+            registry.setError('youtube-poller', err);
             console.error(`[YouTube Poller] Error for ${sub.yt_channel_id}:`, err.message);
             continue;
         }
@@ -138,7 +147,14 @@ async function runYoutubePoller(client) {
         }
     }
 
-    youtubeFailures = anyError ? Math.min(youtubeFailures + 1, MAX_BACKOFF) : 0;
+    if (!anyError) {
+        youtubeFailures = 0;
+        registry.heartbeat('youtube-poller');
+        registry.setMeta('youtube-poller', { subscriptions: subs.length, backoff: 0 });
+    } else {
+        youtubeFailures = Math.min(youtubeFailures + 1, MAX_BACKOFF);
+        registry.setMeta('youtube-poller', { backoff: youtubeFailures });
+    }
 }
 
 // ── Start ───────────────────────────────────────────────────────────────────

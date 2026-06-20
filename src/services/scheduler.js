@@ -9,9 +9,13 @@ const {
     getGuildsWithFeature, getConfig, setConfig,
     resetWeeklyXP,
 } = require('../utils/db.js');
+const registry = require('../util/serviceRegistry.js');
 
 const BUMP_COOLDOWN_MS  = 2 * 60 * 60 * 1000; // 2 hours
 const DISBOARD_BOT_ID   = '302050872383242240';
+const SCHEDULER_INTERVAL = 60_000;
+
+registry.register('scheduler', { interval: SCHEDULER_INTERVAL, description: 'Scheduled posts, polls, giveaways, bump reminders' });
 
 /**
  * Returns ms until the next Sunday 00:00:00 UTC.
@@ -35,11 +39,13 @@ function scheduleWeeklyXpReset() {
             console.log('[Scheduler] Weekly XP reset complete.');
         } catch (err) {
             console.error('[Scheduler] Weekly XP reset failed:', err.message);
+            registry.setError('scheduler', err);
         }
         scheduleWeeklyXpReset();
     }, delay);
     const daysAway = Math.round(delay / 86_400_000 * 10) / 10;
     console.log(`[Scheduler] Weekly XP reset scheduled in ${daysAway}d (next Sunday 00:00 UTC).`);
+    registry.setMeta('scheduler', { nextXpResetIn: `${daysAway}d` });
 }
 
 async function runBumpReminders(client) {
@@ -98,6 +104,7 @@ async function runScheduler(client) {
             await channel.send({ content: embed ? undefined : (text ?? '\u200b'), embeds: embed ? [embed] : [] });
         } catch (err) {
             console.error(`[Scheduler] Failed to send post #${post.id}:`, err.message);
+            registry.setError('scheduler', err);
         }
     }
 
@@ -117,12 +124,19 @@ async function runScheduler(client) {
 
     // Bump reminders
     await runBumpReminders(client);
+
+    registry.heartbeat('scheduler');
+    registry.setMeta('scheduler', {
+        pendingPosts:     due.length,
+        expiredPolls:     expiredPolls.length,
+        expiredGiveaways: expiredGiveaways.length,
+    });
 }
 
 function startScheduler(client) {
     setTimeout(() => {
         runScheduler(client);
-        setInterval(() => runScheduler(client), 60_000);
+        setInterval(() => runScheduler(client), SCHEDULER_INTERVAL);
     }, 3_000);
     scheduleWeeklyXpReset();
     console.log('[Scheduler] Scheduled post + poll + giveaway + bump reminder runner started (60s interval).');

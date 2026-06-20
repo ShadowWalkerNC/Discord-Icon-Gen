@@ -5,10 +5,14 @@
  */
 const { EmbedBuilder } = require('discord.js');
 const { setConfig, getWeeklyTopXP } = require('../utils/db.js');
-const { calculateLevel } = require('../utils/xp.js');
+const { calculateLevel }            = require('../utils/xp.js');
+const registry                      = require('../util/serviceRegistry.js');
 const Database = require('better-sqlite3');
 const path     = require('path');
 const DB_PATH  = path.join(__dirname, '../../data/sigil.db');
+
+const STATS_CHECK_INTERVAL = 5 * 60_000;
+registry.register('stats-runner', { interval: STATS_CHECK_INTERVAL, description: 'Weekly server stats poster (Mon 09:00 UTC)' });
 
 function getGuildsWithStatsChannel() {
     try {
@@ -76,15 +80,19 @@ async function runStatsForGuild(client, guildId, channelId) {
         const embed = await buildStatsEmbed(guild);
         await channel.send({ embeds: [embed] });
         setConfig(guildId, { last_stats_at: new Date().toISOString() });
+        registry.heartbeat('stats-runner');
         return true;
     } catch (err) {
         console.error(`[Stats] Failed for guild ${guildId}:`, err.message);
+        registry.setError('stats-runner', err);
         return false;
     }
 }
 
 async function runWeeklyStats(client) {
     const now = new Date();
+    registry.heartbeat('stats-runner'); // alive even when it's not Monday
+
     if (now.getUTCDay() !== 1 || now.getUTCHours() !== 9) return;
 
     const rows = getGuildsWithStatsChannel();
@@ -105,7 +113,7 @@ async function runWeeklyStats(client) {
 }
 
 function startStatsRunner(client) {
-    setInterval(() => runWeeklyStats(client), 5 * 60_000);
+    setInterval(() => runWeeklyStats(client), STATS_CHECK_INTERVAL);
     console.log('[Stats] Weekly stats runner started (checks every 5 min).');
 }
 
