@@ -1,4 +1,4 @@
-// gui-server.js — Sigil GUI bridge server v2.4
+// gui-server.js — Sigil GUI bridge server v2.5
 // Run with: node gui/gui-server.js
 
 const express    = require('express');
@@ -13,7 +13,8 @@ const { getConfig }  = require('../src/utils/db.js');
 const { verifyHmac } = require('../src/utils/hmac.js');
 const { handleTwitchLive, handleYouTubeUpload, handleGitHubPush } = require('../src/automation/webhookHandler.js');
 const { enablePackage, disablePackage, getAllPackageStates } = require('../src/utils/packages.js');
-const logBuffer = require('../src/util/logBuffer.js');
+const logBuffer  = require('../src/util/logBuffer.js');
+const registry   = require('../src/util/serviceRegistry.js');
 require('dotenv').config();
 
 // Patch console so all output flows through the ring buffer
@@ -25,6 +26,7 @@ const app       = express();
 const server    = http.createServer(app);
 const PORT      = Number(process.env.PORT) || 8080;
 const START_TS  = Date.now();
+const VERSION   = '2.5.0';
 
 // ── ASCILINE stream_server.py base URL (co-hosted, local only) ───────────────
 const STREAM_URL = (process.env.STREAM_SERVER_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
@@ -73,7 +75,7 @@ app.get('/community',   (req, res) => res.sendFile(path.join(__dirname, 'sigil-c
 app.get('/developers',  (req, res) => res.sendFile(path.join(__dirname, 'developers.html')));
 app.get('/packages',    (req, res) => res.sendFile(path.join(__dirname, 'packages.html')));
 app.get('/setup',       (req, res) => res.sendFile(path.join(__dirname, '..', 'setup.html')));
-app.get('/health',      (req, res) => res.json({ ok: true, version: '2.4.0', ai_enabled: AI_ENABLED }));
+app.get('/health',      (req, res) => res.json({ ok: true, version: VERSION, ai_enabled: AI_ENABLED }));
 
 // ── GET /api/packages ─────────────────────────────────────────────────────────────
 app.get('/api/packages', apiLimiter, (req, res) => {
@@ -274,6 +276,7 @@ server.on('upgrade', (req, socket, head) => {
  *   - gui-server itself (uptime, version)
  *   - bot (global.sigilClient guild count + ping)
  *   - ASCILINE stream_server.py (proxies /api/status)
+ *   - service registry snapshot (scheduler, twitch-poller, youtube-poller, stats-runner)
  *   - logBuffer last error line
  */
 app.get('/api/status/full', apiLimiter, async (req, res) => {
@@ -283,7 +286,7 @@ app.get('/api/status/full', apiLimiter, async (req, res) => {
     result.gui = {
         ok:        true,
         reachable: true,
-        version:   '2.4.0',
+        version:   VERSION,
         uptime_ms: Date.now() - START_TS,
     };
 
@@ -300,7 +303,7 @@ app.get('/api/status/full', apiLimiter, async (req, res) => {
         result.bot = { ok: false, reachable: false };
     }
 
-    // ─ ASCILINE ────────────────────────────────────────────
+    // ─ ASCILINE ────────────────────────────────────────────────
     try {
         const { body } = await proxyGetToStream('/api/status');
         result.asciline = {
@@ -315,9 +318,21 @@ app.get('/api/status/full', apiLimiter, async (req, res) => {
         result.asciline = { ok: false, reachable: false };
     }
 
-    // ─ Last error from log ring buffer ───────────────────────
+    // ─ Service registry snapshot ────────────────────────────────
+    //   Populated by scheduler.js, pollers.js, statsRunner.js at runtime.
+    //   Empty array when the bot hasn't started yet (gui-server only mode).
+    result.services = registry.getSnapshot();
+
+    // Derive an overall services health flag
+    const degraded = result.services.filter(s => s.status !== 'ok' && s.status !== 'starting');
+    result.services_ok = degraded.length === 0;
+
+    // ─ Last error from log ring buffer ───────────────────────────
     const lastErrors = logBuffer.tail(1, 'error');
     result.last_error = lastErrors.length ? lastErrors[0] : null;
+
+    // ─ Overall ok flag ─────────────────────────────────────────
+    result.ok = result.bot.ok && result.services_ok;
 
     res.json(result);
 });
@@ -543,4 +558,4 @@ app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
-server.listen(PORT, '0.0.0.0', () => console.log(`[GUI] Sigil GUI server v2.4.0 on http://localhost:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`[GUI] Sigil GUI server v${VERSION} on http://localhost:${PORT}`));
