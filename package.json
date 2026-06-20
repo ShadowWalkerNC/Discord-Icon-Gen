@@ -3,6 +3,9 @@
     "version": "2.0.0",
     "description": "Sigil — The Discord God Mode Bot. Free branding, community tools, automation, and analytics for every Discord server.",
     "main": "src/index.js",
+    "bin": {
+        "sigil": "./src/cli/index.js"
+    },
     "engines": {
         "node": ">=20 <23"
     },

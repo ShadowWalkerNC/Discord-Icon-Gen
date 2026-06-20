@@ -1,0 +1,47 @@
+'use strict';
+
+function printHelp() {
+    console.log([
+        '  \x1b[1mUsage:\x1b[0m  sigil <command> [subcommand] [options]',
+        '',
+        '  \x1b[33m── Server ──────────────────────────────────────\x1b[0m',
+        '  \x1b[36mhealth\x1b[0m                     Check if gui-server is alive',
+        '',
+        '  \x1b[33m── Media (ASCILINE) ────────────────────────────\x1b[0m',
+        '  \x1b[36mmedia play\x1b[0m <url>            Enqueue a video or URL',
+        '    \x1b[90m--mode 1-5   --vol 0-5   --cols N   --pixel   --loop\x1b[0m',
+        '  \x1b[36mmedia skip\x1b[0m                  Skip current video',
+        '  \x1b[36mmedia stop\x1b[0m                  Stop playback & clear queue',
+        '  \x1b[36mmedia seek\x1b[0m <seconds>        Seek to timestamp',
+        '  \x1b[36mmedia volume\x1b[0m <0-5>          Set volume',
+        '  \x1b[36mmedia loop\x1b[0m <on|off>         Toggle loop mode',
+        '  \x1b[36mmedia status\x1b[0m                Show now-playing info',
+        '  \x1b[36mmedia queue\x1b[0m                 List the current queue',
+        '',
+        '  \x1b[33m── Packages ────────────────────────────────────\x1b[0m',
+        '  \x1b[36mpackages list\x1b[0m --guild <id>   List all package states',
+        '  \x1b[36mpackages enable\x1b[0m <key> --guild <id>',
+        '  \x1b[36mpackages disable\x1b[0m <key> --guild <id>',
+        '',
+        '  \x1b[33m── Preview (Canvas Renders) ─────────────────────\x1b[0m',
+        '  \x1b[36mpreview welcome\x1b[0m              Render a welcome card preview',
+        '    \x1b[90m--username NAME   --message TEXT   --color #hex   --bg ID\x1b[0m',
+        '  \x1b[36mpreview rankcard\x1b[0m             Render a rank card preview',
+        '    \x1b[90m--username NAME   --level N   --rank N   --color #hex\x1b[0m',
+        '  \x1b[36mpreview brand\x1b[0m                Render brand icon + banner',
+        '    \x1b[90m--text SIGIL   --primary #hex   --secondary #hex   --bg ID\x1b[0m',
+        '',
+        '  \x1b[33m── Logs ─────────────────────────────────────────\x1b[0m',
+        '  \x1b[36mlogs\x1b[0m                         Tail gui-server stdout (last 50 lines)',
+        '  \x1b[36mlogs --tail N\x1b[0m                Tail N lines',
+        '',
+        '  \x1b[33m── Global Options ───────────────────────────────\x1b[0m',
+        '  \x1b[90m--host HOST    GUI server host  (default: localhost)\x1b[0m',
+        '  \x1b[90m--port PORT    GUI server port  (default: 8080)\x1b[0m',
+        '  \x1b[90m--json         Raw JSON output (for scripting)\x1b[0m',
+        '  \x1b[90m--help  -h     Show this help\x1b[0m',
+        '',
+    ].join('\n'));
+}
+
+module.exports = { printHelp };
