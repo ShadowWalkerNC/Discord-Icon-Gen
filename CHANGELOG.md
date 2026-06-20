@@ -36,6 +36,30 @@ Format: [Semantic Versioning](https://semver.org/) — `[version] — YYYY-MM-DD
 
 ---
 
+## [2.4.0] — 2026-06-20
+
+### Added
+- **`src/util/logBuffer.js`** — In-memory ring buffer (1 000 entries) for all `console` output. `patch()` intercepts `console.log/warn/error`, stamps entries with `{ ts, level, text }`, and notifies subscribers. Supports `tail(n, level?)` and pub/sub via `subscribe(fn)` / `unsubscribe(fn)`.
+- **`GET /api/logs`** — Returns last N lines from the ring buffer. Query params: `tail` (1–500, default 50), `level` (`info` | `warn` | `error`). Rate-limited (60 req/min).
+- **`WS /ws/logs`** — WebSocket stream of real-time log entries. Optional `?level=` filter. Used by `sigil logs --live`. Upgrade handled by `ws` `WebSocketServer`.
+- **`GET /api/packages`** — Returns all package states for a guild. Requires `?guild_id=` (17–20 digit snowflake).
+- **`POST /api/packages`** — Enable or disable a named package for a guild. Body: `{ guild_id, package, enabled: bool }`.
+- **`POST /api/media/enqueue`** — Proxies to ASCILINE `stream_server.py /api/enqueue`. Supports `url`, `mode`, `cols`, `vol`, `pixel`, `loop`.
+- **`POST /api/media/skip|stop|seek|volume|loop|mode|cols`** — Full ASCILINE playback control surface, all proxied to `stream_server.py`.
+- **`GET /api/media/status`** — Proxies ASCILINE `/api/status` (now-playing info).
+- **`GET /api/media/queue`** — Proxies ASCILINE `/api/queue`.
+- **`GET /api/status/full`** — Aggregated health snapshot: `{ gui, bot, asciline, last_error }`. `gui` reports version + uptime; `bot` reads `global.sigilClient` for guild count and WebSocket latency; `asciline` proxies `stream_server.py /api/status`; `last_error` is the last `error`-level ring-buffer entry.
+- **`src/commands/status.js`** — `/status` Discord slash command. Ephemeral reply with a color-coded embed (green / yellow / red) showing the full stack health. Includes guild count, bot latency, gui-server version and uptime, ASCILINE playback state, and last error if present.
+- **`src/cli/status.js`** — `sigil status` CLI module. ANSI-colored terminal output with colored `●` indicators per layer. `--json` flag for raw JSON output (scripting / dashboards). Reads `GUI_SERVER_URL` env var.
+- **`src/cli/commands/status.js`** — CLI dispatcher adapter wiring `sigil status` into the existing command map.
+
+### Changed
+- **`gui-server.js`** bumped to **v2.4.0**. `START_TS = Date.now()` recorded at boot for uptime calculation. `logBuffer.patch()` called at startup so all server output flows through the ring buffer.
+- **`src/cli/index.js`** — `status` added to the `commands` map.
+- **`src/cli/lib/help.js`** — `sigil status` entry added under the **Server** section with `--json` flag description.
+
+---
+
 ## [1.11.1] — 2026-06-18
 
 ### Removed
