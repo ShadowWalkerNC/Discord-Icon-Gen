@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="/auth.js"></script>
   <style>
     :root {
       --bg:#08080f; --surface:#111118; --surface2:#18181f; --surface3:#202028;
@@ -35,19 +36,14 @@
     .nav-btn{padding:.35rem .8rem;border-radius:.5rem;font-size:.8rem;font-weight:600;border:1px solid var(--border);background:var(--surface2);transition:background 150ms;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;color:var(--text);}
     .nav-btn:hover{background:var(--surface3);}
     .nav-btn.active{background:linear-gradient(135deg,rgba(139,0,0,.3),rgba(75,0,130,.3));border-color:rgba(255,255,255,.2);}
-
-    /* Hamburger */
     .nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:34px;height:34px;padding:6px;border-radius:.5rem;border:1px solid var(--border);background:var(--surface2);cursor:pointer;flex-shrink:0;}
     .nav-hamburger span{display:block;height:2px;background:var(--text);border-radius:2px;transition:all 200ms var(--ease);}
     .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
     .nav-hamburger.open span:nth-child(2){opacity:0;}
     .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-
-    /* Mobile drawer */
     .nav-drawer{display:none;flex-direction:column;gap:.35rem;padding:.75rem 1rem;background:rgba(8,8,15,.95);border-bottom:1px solid var(--border);}
     .nav-drawer.open{display:flex;}
     .nav-drawer .nav-btn{justify-content:flex-start;}
-
     @media(max-width:700px){
       .nav-subtitle,.nav-sep{display:none;}
       .nav-actions{display:none;}
@@ -92,23 +88,18 @@
     .pkg-card:hover{border-color:rgba(255,255,255,.16);box-shadow:0 6px 30px rgba(0,0,0,.3);}
     .pkg-card.is-on  {border-color:rgba(57,255,20,.22);}
     .pkg-card.is-off {border-color:rgba(239,68,68,.2);}
-
     .pkg-card-header{padding:1.4rem 1.4rem 1rem;display:flex;align-items:flex-start;gap:.9rem;}
     .pkg-emoji{font-size:1.9rem;line-height:1;flex-shrink:0;margin-top:.1rem;}
     .pkg-info{flex:1;}
     .pkg-label{font-size:1rem;font-weight:800;margin-bottom:.2rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
     .pkg-desc{font-size:.82rem;color:var(--muted);line-height:1.65;}
     .new-badge{display:inline-flex;align-items:center;font-size:.65rem;font-weight:700;padding:.18rem .5rem;border-radius:999px;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.35);color:#67e8f9;}
-
-    /* Toggle switch */
     .pkg-toggle-row{padding:.9rem 1.4rem;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:1rem;}
     .toggle-label{font-size:.8rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;}
     .toggle-wrap{display:flex;align-items:center;gap:.65rem;}
     .toggle-state{font-size:.82rem;font-weight:700;min-width:52px;text-align:right;}
     .toggle-state.on {color:var(--success);}
     .toggle-state.off{color:var(--danger);}
-
-    /* iOS-style toggle */
     .toggle{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0;}
     .toggle input{opacity:0;width:0;height:0;position:absolute;}
     .toggle-track{position:absolute;inset:0;border-radius:999px;background:var(--surface3);border:1px solid var(--border);transition:background 200ms,border-color 200ms;}
@@ -116,12 +107,8 @@
     .toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--faint);transition:transform 200ms var(--ease),background 200ms;pointer-events:none;}
     .toggle input:checked ~ .toggle-thumb{transform:translateX(20px);background:var(--success);box-shadow:0 0 8px rgba(57,255,20,.6);}
     .toggle:has(input:disabled){opacity:.5;cursor:not-allowed;}
-
-    /* Commands pill strip */
     .pkg-commands{padding:.75rem 1.4rem 1rem;display:flex;flex-wrap:wrap;gap:.35rem;border-top:1px solid var(--border);}
     .cmd-chip{font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:999px;background:var(--surface3);border:1px solid var(--border);color:var(--faint);font-family:monospace;}
-
-    /* Saving overlay */
     .pkg-saving{position:absolute;inset:0;background:rgba(8,8,15,.7);display:flex;align-items:center;justify-content:center;border-radius:var(--radiuslg);opacity:0;pointer-events:none;transition:opacity 150ms;}
     .pkg-card{position:relative;}
     .pkg-card.saving .pkg-saving{opacity:1;pointer-events:auto;}
@@ -155,14 +142,14 @@
   <div class="nav-sep"></div>
   <span class="nav-subtitle">Packages</span>
   <div class="nav-actions">
-    <a class="nav-btn" href="/">&#127968; Dashboard</a>
-    <a class="nav-btn" href="/setup">&#9881;&#65039; Setup</a>
-    <a class="nav-btn active" href="/packages">&#128230; Packages</a>
-    <a class="nav-btn" href="/status">&#128268; Status</a>
-    <a class="nav-btn" href="/brand">&#127912; Brand</a>
-    <a class="nav-btn" href="/community">&#127942; Community</a>
-    <a class="nav-btn" href="/developers">&#128279; Developers</a>
-    <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
+    <a class="nav-btn" href="/">🏠 Dashboard</a>
+    <a class="nav-btn" href="/setup">⚙️ Setup</a>
+    <a class="nav-btn active" href="/packages">📦 Packages</a>
+    <a class="nav-btn" href="/status">🔌 Status</a>
+    <a class="nav-btn" href="/brand">🎨 Brand</a>
+    <a class="nav-btn" href="/community">🏆 Community</a>
+    <a class="nav-btn" href="/developers">🔗 Developers</a>
+    <button class="nav-btn" id="themeBtn">⮀ Theme</button>
   </div>
   <button class="nav-hamburger" id="hamburgerBtn" aria-label="Toggle menu">
     <span></span><span></span><span></span>
@@ -170,26 +157,26 @@
 </nav>
 
 <div class="nav-drawer" id="navDrawer">
-  <a class="nav-btn" href="/">&#127968; Dashboard</a>
-  <a class="nav-btn" href="/setup">&#9881;&#65039; Setup</a>
-  <a class="nav-btn active" href="/packages">&#128230; Packages</a>
-  <a class="nav-btn" href="/status">&#128268; Status</a>
-  <a class="nav-btn" href="/brand">&#127912; Brand Builder</a>
-  <a class="nav-btn" href="/community">&#127942; Community Tools</a>
-  <a class="nav-btn" href="/developers">&#128279; Developers</a>
-  <button class="nav-btn" id="themeBtnMobile">&#9680; Theme</button>
+  <a class="nav-btn" href="/">🏠 Dashboard</a>
+  <a class="nav-btn" href="/setup">⚙️ Setup</a>
+  <a class="nav-btn active" href="/packages">📦 Packages</a>
+  <a class="nav-btn" href="/status">🔌 Status</a>
+  <a class="nav-btn" href="/brand">🎨 Brand Builder</a>
+  <a class="nav-btn" href="/community">🏆 Community Tools</a>
+  <a class="nav-btn" href="/developers">🔗 Developers</a>
+  <button class="nav-btn" id="themeBtnMobile">⮀ Theme</button>
 </div>
 
 <div class="page-header">
-  <h1>&#128230; Feature Packages</h1>
-  <p>Enable or disable bundles of related features for your server. All packages are <strong>on by default</strong> — turn off anything you don't use to keep the bot focused.</p>
-  <p class="setup-hint">&#128161; First time here? Run the <a href="/setup">Setup Wizard</a> to configure your server before toggling packages.</p>
+  <h1>📦 Feature Packages</h1>
+  <p>Enable or disable bundles of related features for your server. All packages are <strong>on by default</strong> — turn off anything you don’t use to keep the bot focused.</p>
+  <p class="setup-hint">💡 First time here? Run the <a href="/setup">Setup Wizard</a> to configure your server before toggling packages.</p>
 </div>
 
 <div class="guild-bar">
   <label for="guildInput">Guild ID</label>
   <input id="guildInput" class="guild-input" type="text" placeholder="Enter your Discord Guild ID…" maxlength="20" />
-  <button class="btn btn-primary" id="loadBtn">&#128260; Load</button>
+  <button class="btn btn-primary" id="loadBtn">🔄 Load</button>
   <div id="statusBar" class="status-bar" style="margin:0;padding:0;">
     <span id="statusPill" class="status-pill idle"></span>
   </div>
@@ -197,7 +184,7 @@
 
 <div id="packagesGrid" class="packages-grid"></div>
 <div id="emptyState" class="empty-state" style="display:none">
-  <div style="font-size:2.5rem;">&#128230;</div>
+  <div style="font-size:2.5rem;">📦</div>
   <strong>Enter a Guild ID above and click Load</strong>
   <p>Package states are stored per server. You need a valid Guild ID to load and save settings.</p>
 </div>
@@ -214,7 +201,7 @@
     <a href="/community">Community</a>
     <a href="/developers">Developers</a>
   </nav>
-  <span class="footer-ver">Sigil GUI v2.6.0</span>
+  <span class="footer-ver">Sigil GUI v2.7.0</span>
 </footer>
 
 <script>
@@ -223,7 +210,7 @@ const PACKAGES = [
   { key:'nitrofree',   emoji:'🚀', label:'Nitro-Free',     description:'Stickers, emotes, reaction packs, role badges, and image tools — no Nitro needed.',                         commands:['/sticker','/emote','/reactionpack','/rolebadge','/resize','/splash','/namecard','/servercard','/profilecard','/texteffect','/themepreview'] },
   { key:'community',   emoji:'🏆', label:'Community',      description:'Welcome cards, rank cards, event banners, certificates, and invite cards.',                                  commands:['/welcomecard','/rankcard','/announcebanner','/eventbanner','/certificate','/invitecard'] },
   { key:'xp',          emoji:'⭐', label:'XP & Levels',    description:'Passive XP gain, rank cards, leaderboards, and level-up role rewards.',                                      commands:['/xprank','/xpleaderboard','/xpadmin','/levelroles'] },
-  { key:'tickets',     emoji:'🏟️', label:'Tickets',        description:'Thread-based private support channels with staff routing.',                                                   commands:['/ticket'] },
+  { key:'tickets',     emoji:'🏹️', label:'Tickets',        description:'Thread-based private support channels with staff routing.',                                                   commands:['/ticket'] },
   { key:'polls',       emoji:'🗳️', label:'Polls',          description:'Multi-option polls with live tracking and timed giveaways.',                                                  commands:['/poll','/giveaway'] },
   { key:'analytics',   emoji:'📊', label:'Analytics',      description:'Weekly server health reports and live server stats.',                                                          commands:['/serverstats'] },
   { key:'faith',       emoji:'📖', label:'Faith',          description:'Daily devotionals, Bible verse lookup, sermon posting, and prayer requests.',                                  commands:['/devotional','/sermon','/prayer'] },
@@ -263,7 +250,8 @@ async function loadPackages() {
   setStatus('loading', 'Loading package states…');
   document.getElementById('loadBtn').disabled = true;
   try {
-    const res  = await fetch(`/api/packages?guild_id=${encodeURIComponent(guildId)}`);
+    // authFetch automatically adds Authorization: Bearer <token>
+    const res  = await SigilAuth.authFetch(`/api/packages?guild_id=${encodeURIComponent(guildId)}`);
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || 'Server error');
     disabledPackages = data.disabled || [];
@@ -287,8 +275,6 @@ function renderGrid() {
     const card = document.createElement('div');
     card.className = `pkg-card ${enabled ? 'is-on' : 'is-off'}`;
     card.id = `card-${pkg.key}`;
-
-    // Header
     const header = document.createElement('div');
     header.className = 'pkg-card-header';
     const emojiEl = document.createElement('div');
@@ -312,8 +298,6 @@ function renderGrid() {
     info.appendChild(descEl);
     header.appendChild(emojiEl);
     header.appendChild(info);
-
-    // Commands
     const cmds = document.createElement('div');
     cmds.className = 'pkg-commands';
     pkg.commands.forEach(c => {
@@ -322,8 +306,6 @@ function renderGrid() {
       chip.textContent = c;
       cmds.appendChild(chip);
     });
-
-    // Toggle row
     const toggleRow = document.createElement('div');
     toggleRow.className = 'pkg-toggle-row';
     const toggleLbl = document.createElement('span');
@@ -353,19 +335,14 @@ function renderGrid() {
     toggleWrap.appendChild(label);
     toggleRow.appendChild(toggleLbl);
     toggleRow.appendChild(toggleWrap);
-
-    // Saving overlay
     const saving = document.createElement('div');
     saving.className = 'pkg-saving';
     saving.innerHTML = '<span class="spin" style="font-size:1.4rem;">&#9696;</span>';
-
     card.appendChild(header);
     card.appendChild(cmds);
     card.appendChild(toggleRow);
     card.appendChild(saving);
     grid.appendChild(card);
-
-    // Wire toggle via addEventListener — no inline onchange
     chk.addEventListener('change', () => togglePackage(pkg.key, chk.checked));
   });
 }
@@ -378,7 +355,8 @@ async function togglePackage(key, nowEnabled) {
   card.classList.add('saving');
   chk.disabled = true;
   try {
-    const res  = await fetch('/api/packages', {
+    // authFetch automatically adds Authorization: Bearer <token>
+    const res  = await SigilAuth.authFetch('/api/packages', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ guild_id: currentGuildId, package: key, enabled: nowEnabled }),
@@ -402,15 +380,11 @@ async function togglePackage(key, nowEnabled) {
   }
 }
 
-// Enter key on guild input
 document.getElementById('guildInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') loadPackages();
 });
-
-// Load button via addEventListener — no inline onclick
 document.getElementById('loadBtn').addEventListener('click', loadPackages);
 
-// Restore last guild ID from localStorage
 const savedGuild = localStorage.getItem(LS_GUILD_KEY);
 if (savedGuild) {
   document.getElementById('guildInput').value = savedGuild;
@@ -419,13 +393,11 @@ if (savedGuild) {
 document.getElementById('packagesGrid').style.display = 'none';
 document.getElementById('emptyState').style.display = 'block';
 
-// Hamburger
 document.getElementById('hamburgerBtn').addEventListener('click', () => {
   document.getElementById('hamburgerBtn').classList.toggle('open');
   document.getElementById('navDrawer').classList.toggle('open');
 });
 
-// Theme
 function toggleTheme() {
   const r = document.documentElement;
   r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
