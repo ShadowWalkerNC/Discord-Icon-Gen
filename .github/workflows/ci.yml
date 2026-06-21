@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  syntax-check:
-    name: Node.js Syntax Check
+  ci:
+    name: Lint · Syntax · Audit
     runs-on: ubuntu-latest
 
     steps:
@@ -19,11 +19,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Check syntax on all source files
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check (src/)
         run: |
-          echo "Checking syntax for all JS files in src/..."
-          find src -name "*.js" | while read file; do
+          echo "Checking syntax for all JS files in src/ and gui/..."
+          find src gui -name "*.js" | while read file; do
             node --check "$file" && echo "  OK: $file" || { echo "  FAIL: $file"; exit 1; }
           done
           echo "All files passed syntax check."
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Dependency security audit
+        run: npm audit --audit-level=high

@@ -1,10 +1,11 @@
-// gui-server.js — Sigil GUI bridge server v2.6
+// gui-server.js — Sigil GUI bridge server v2.7
 // Run with: node gui/gui-server.js
 
 const express    = require('express');
 const path       = require('path');
 const http       = require('http');
 const { spawn }  = require('child_process');
+const crypto     = require('crypto');
 const rateLimit  = require('express-rate-limit');
 const { WebSocketServer } = require('ws');
 const { createCanvas, loadImage } = require('canvas');
@@ -14,6 +15,9 @@ const { getConfig }  = require('../src/utils/db.js');
 const { verifyHmac } = require('../src/utils/hmac.js');
 const { handleTwitchLive, handleYouTubeUpload, handleGitHubPush } = require('../src/automation/webhookHandler.js');
 const { enablePackage, disablePackage, getAllPackageStates } = require('../src/utils/packages.js');
+const { guiAuthMiddleware } = require('../src/utils/guiAuth.js');
+const { assertSafeUrl }    = require('../src/utils/ssrfGuard.js');
+const { enqueueWebhook }   = require('../src/utils/webhookQueue.js');
 const logBuffer  = require('../src/util/logBuffer.js');
 const Database   = require('better-sqlite3');
 require('dotenv').config();
@@ -27,21 +31,28 @@ const app       = express();
 const server    = http.createServer(app);
 const PORT      = Number(process.env.PORT) || 8080;
 const START_TS  = Date.now();
-const VERSION   = '2.6.0';
+const VERSION   = '2.7.0';
 
-// ── SQLite IPC bridge (read-only) ─────────────────────────────────────────────
+// ── SQLite IPC bridge (read-only, single shared connection) ───────────────────
 const DB_PATH = path.join(__dirname, '..', 'data', 'sigil.db');
 
+// Single persistent read-only connection — avoids opening/closing per request
+let _ipcDb = null;
 function getIpcDb() {
-    try { return new Database(DB_PATH, { readonly: true, fileMustExist: true }); }
-    catch { return null; }
+    if (_ipcDb) return _ipcDb;
+    try {
+        _ipcDb = new Database(DB_PATH, { readonly: true, fileMustExist: true });
+        return _ipcDb;
+    } catch {
+        return null;
+    }
 }
 
 function readBotHeartbeat() {
     const ipc = getIpcDb();
     if (!ipc) return null;
     try { return ipc.prepare('SELECT * FROM bot_heartbeat WHERE id = 1').get() ?? null; }
-    catch { return null; } finally { ipc.close(); }
+    catch (err) { console.warn('[IPC] readBotHeartbeat:', err.message); return null; }
 }
 
 function readServiceRegistry() {
@@ -57,7 +68,7 @@ function readServiceRegistry() {
             meta:          JSON.parse(row.meta    || '{}'),
             options:       JSON.parse(row.options || '{}'),
         }));
-    } catch { return []; } finally { ipc.close(); }
+    } catch (err) { console.warn('[IPC] readServiceRegistry:', err.message); return []; }
 }
 
 function readLogBuffer(n = 50, level = null) {
@@ -73,12 +84,11 @@ function readLogBuffer(n = 50, level = null) {
         return ipc.prepare(
             'SELECT ts, level, text FROM log_buffer ORDER BY id DESC LIMIT ?'
         ).all(safeN).reverse();
-    } catch { return []; } finally { ipc.close(); }
+    } catch (err) { console.warn('[IPC] readLogBuffer:', err.message); return []; }
 }
 
 const BOT_STALE_MS = 90_000;
 
-// ── ASCILINE stream_server.py base URL ───────────────────────────────────────
 const STREAM_URL = (process.env.STREAM_SERVER_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const AI_ENABLED = false;
 
@@ -98,7 +108,11 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(express.json({ limit: '4mb' }));
+// Apply a smaller body limit to non-render endpoints
+app.use((req, res, next) => {
+    const isRenderPath = ['/preview', '/preview/welcome', '/preview/rankcard', '/preview/serverstats'].includes(req.path);
+    express.json({ limit: isRenderPath ? '4mb' : '32kb' })(req, res, next);
+});
 
 // ── Rate limiting ────────────────────────────────────────────────────────────
 const renderLimiter  = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Too many requests.' } });
@@ -108,7 +122,7 @@ const mediaLimiter   = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: t
 const controlLimiter = rateLimit({ windowMs: 60_000, max: 5,  standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Rate limit exceeded.' } });
 const setupLimiter   = rateLimit({ windowMs: 60_000, max: 10, standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Too many setup requests.' } });
 
-// ── Static pages ─────────────────────────────────────────────────────────────
+// ── Static pages (no auth required) ──────────────────────────────────────────
 app.get('/',           (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/brand',      (req, res) => res.sendFile(path.join(__dirname, 'sigil-gui-builder.html')));
 app.get('/community',  (req, res) => res.sendFile(path.join(__dirname, 'sigil-community.html')));
@@ -116,7 +130,16 @@ app.get('/developers', (req, res) => res.sendFile(path.join(__dirname, 'develope
 app.get('/packages',   (req, res) => res.sendFile(path.join(__dirname, 'packages.html')));
 app.get('/status',     (req, res) => res.sendFile(path.join(__dirname, 'status.html')));
 app.get('/setup',      (req, res) => res.sendFile(path.join(__dirname, 'setup.html')));
-app.get('/health',     (req, res) => res.json({ ok: true, version: VERSION, ai_enabled: AI_ENABLED }));
+app.get('/health',     (req, res) => {
+    // Unauthenticated — used by Railway health checks
+    const botReady = typeof global.sigilClient !== 'undefined' && global.sigilClient?.isReady?.();
+    res.json({ ok: true, version: VERSION, ai_enabled: AI_ENABLED, bot_ready: botReady });
+});
+
+// ── Auth middleware applied to ALL /api/* routes ──────────────────────────────
+// Render endpoints (/preview/*) also require auth since they're resource-heavy.
+app.use('/api',     guiAuthMiddleware);
+app.use('/preview', guiAuthMiddleware);
 
 // ── GET /api/packages ────────────────────────────────────────────────────────
 app.get('/api/packages', apiLimiter, (req, res) => {
@@ -130,7 +153,7 @@ app.get('/api/packages', apiLimiter, (req, res) => {
     } catch (err) { console.error('[GET /api/packages]', err); res.status(500).json({ ok: false, error: 'Internal error.' }); }
 });
 
-// ── POST /api/packages ────────────────────────────────────────────────────────
+// ── POST /api/packages ───────────────────────────────────────────────────────
 app.post('/api/packages', apiLimiter, (req, res) => {
     try {
         const { guild_id, package: pkgKey, enabled } = req.body || {};
@@ -150,11 +173,6 @@ app.post('/api/packages', apiLimiter, (req, res) => {
 // ║            SETUP WIZARD — /api/setup/*                          ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-/**
- * POST /api/setup/validate-token
- * Validates a Discord bot token by calling the Discord REST API.
- * Returns { ok: true, tag: 'BotName#0000' } or { ok: false, error: '...' }
- */
 app.post('/api/setup/validate-token', setupLimiter, async (req, res) => {
     const { token, clientId } = req.body || {};
 
@@ -182,19 +200,15 @@ app.post('/api/setup/validate-token', setupLimiter, async (req, res) => {
         }
 
         const tag = user.username + (user.discriminator && user.discriminator !== '0' ? `#${user.discriminator}` : '');
+        // SECURITY: never log the token, only the resolved tag
         console.log(`[setup] Token validated for ${tag} (${user.id})`);
         res.json({ ok: true, tag, id: user.id });
     } catch (err) {
-        console.error('[POST /api/setup/validate-token]', err);
+        console.error('[POST /api/setup/validate-token]', err.message);
         res.status(500).json({ ok: false, error: 'Could not reach Discord API.' });
     }
 });
 
-/**
- * POST /api/setup/save-config
- * Saves the wizard's package selection and channel/role map to the database.
- * Best-effort — the wizard continues even if this fails.
- */
 app.post('/api/setup/save-config', setupLimiter, (req, res) => {
     try {
         const { packages = [], channels = {} } = req.body || {};
@@ -283,7 +297,11 @@ function proxyGetToStream(streamPath) {
 app.post('/api/media/enqueue', mediaLimiter, async (req, res) => {
     try {
         const { url, mode = 1, cols, vol = 1, pixel = false, loop = false } = req.body || {};
-        if (!url || typeof url !== 'string' || !url.trim()) return res.status(400).json({ ok: false, error: 'Missing or invalid "url".' });
+        if (!url || typeof url !== 'string' || !url.trim())
+            return res.status(400).json({ ok: false, error: 'Missing or invalid "url".' });
+        // SSRF guard — block RFC-1918, loopback, metadata service addresses
+        try { await assertSafeUrl(url.trim()); }
+        catch (ssrfErr) { return res.status(400).json({ ok: false, error: ssrfErr.message }); }
         const result = await proxyToStream('/api/enqueue', { url: url.trim(), mode, cols, vol, pixel, loop });
         res.status(result.status).json(result.body);
     } catch (err) { console.error('[POST /api/media/enqueue]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' }); }
@@ -350,7 +368,7 @@ app.get('/api/media/queue', mediaLimiter, async (req, res) => {
 });
 
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║                  LOGS — /api/logs + WebSocket /ws/logs          ║
+// ║              LOGS — /api/logs + WebSocket /ws/logs              ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
 app.get('/api/logs', apiLimiter, (req, res) => {
@@ -366,10 +384,11 @@ app.get('/api/logs', apiLimiter, (req, res) => {
     res.json({ ok: true, lines: merged });
 });
 
+// WebSocket logs — auth via ?token= query param (Authorization header not available in WS upgrade)
 const wssLogs = new WebSocketServer({ noServer: true });
 
 wssLogs.on('connection', (ws, req) => {
-    const params   = new URLSearchParams(req.url.replace('/ws/logs', '').replace('?', ''));
+    const params   = new URLSearchParams((req.url || '').replace(/^\/ws\/logs/, '').replace(/^\?/, ''));
     const level    = ['info', 'warn', 'error'].includes(params.get('level')) ? params.get('level') : null;
     const listener = (entry) => {
         if (level && entry.level !== level) return;
@@ -382,6 +401,26 @@ wssLogs.on('connection', (ws, req) => {
 
 server.on('upgrade', (req, socket, head) => {
     if (req.url.startsWith('/ws/logs')) {
+        // Auth check for WebSocket upgrade — token passed as ?token=
+        const guiSecret = process.env.GUI_AUTH_TOKEN || '';
+        const params    = new URLSearchParams((req.url || '').split('?')[1] || '');
+        const provided  = String(params.get('token') || '').trim();
+        if (!guiSecret || !provided) {
+            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.destroy();
+            return;
+        }
+        let valid = false;
+        try {
+            const a = Buffer.from(provided);
+            const b = Buffer.from(guiSecret);
+            if (a.length === b.length) valid = crypto.timingSafeEqual(a, b);
+        } catch { valid = false; }
+        if (!valid) {
+            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.destroy();
+            return;
+        }
         wssLogs.handleUpgrade(req, socket, head, (ws) => wssLogs.emit('connection', ws, req));
     } else {
         socket.destroy();
@@ -422,14 +461,27 @@ function requireControlSecret(req, res) {
     const provided = String(req.headers['x-control-secret'] || '').trim();
     if (!secret)
         return res.status(503).json({ ok: false, error: 'CONTROL_SECRET is not configured — endpoint disabled.' });
-    if (!provided || provided !== secret)
-        return res.status(401).json({ ok: false, error: 'Invalid or missing x-control-secret.' });
+    if (!provided) {
+        res.status(401).json({ ok: false, error: 'Missing x-control-secret header.' });
+        return false;
+    }
+    // Constant-time comparison (ASVS V2.7 — prevent timing attacks)
+    let valid = false;
+    try {
+        const a = Buffer.from(provided);
+        const b = Buffer.from(secret);
+        if (a.length === b.length) valid = crypto.timingSafeEqual(a, b);
+    } catch { valid = false; }
+    if (!valid) {
+        res.status(401).json({ ok: false, error: 'Invalid x-control-secret.' });
+        return false;
+    }
     return null; // auth passed
 }
 
 app.post('/api/control/restart', controlLimiter, (req, res) => {
     const fail = requireControlSecret(req, res);
-    if (fail) return;
+    if (fail !== null) return;
     res.json({ ok: true, message: 'Restart signal accepted. Process exiting now.' });
     res.on('finish', () => {
         console.log('[GUI] Restart requested via /api/control/restart — exiting.');
@@ -437,15 +489,9 @@ app.post('/api/control/restart', controlLimiter, (req, res) => {
     });
 });
 
-/**
- * POST /api/control/deploy-commands
- * Spawns `node src/deploy-commands.js` and streams NDJSON progress lines back.
- * Each line: { level: 'info'|'ok'|'warn'|'err', text: '...' }
- * Used by the setup wizard Step 4 and `npx sigil deploy`.
- */
 app.post('/api/control/deploy-commands', controlLimiter, (req, res) => {
     const fail = requireControlSecret(req, res);
-    if (fail) return;
+    if (fail !== null) return;
 
     const deployScript = path.join(__dirname, '..', 'src', 'deploy-commands.js');
 
@@ -493,7 +539,6 @@ app.post('/api/control/deploy-commands', controlLimiter, (req, res) => {
         res.end();
     });
 
-    // Abort the child if the client disconnects mid-stream
     req.on('close', () => { if (child && !child.killed) child.kill('SIGTERM'); });
 });
 
@@ -504,23 +549,31 @@ app.post('/webhook/trigger', webhookLimiter, async (req, res) => {
         const signature = req.headers['x-sigil-signature'];
         if (!guildId) return res.status(400).json({ ok: false, error: 'Missing x-sigil-guild-id header.' });
         const config = getConfig(guildId);
-        if (config.webhook_secret) {
-            if (!verifyHmac(req.rawBody, config.webhook_secret, signature || ''))
-                return res.status(401).json({ ok: false, error: 'Invalid signature.' });
+
+        // SECURITY: HMAC verification is now MANDATORY.
+        // If webhook_secret is not configured for this guild, reject the request.
+        if (!config.webhook_secret) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Webhook secret not configured for this guild. Use /sigilconfig webhook to set one.',
+            });
         }
+        if (!verifyHmac(req.rawBody, config.webhook_secret, signature || '')) {
+            return res.status(401).json({ ok: false, error: 'Invalid signature.' });
+        }
+
         if (!config.webhook_channel)
             return res.status(400).json({ ok: false, error: 'No webhook channel configured. Use /sigilconfig webhook.' });
+
         const { type, ...payload } = req.body;
-        payload.guildId = guildId;
-        payload.client  = global.sigilClient;
-        if (!payload.client) return res.status(503).json({ ok: false, error: 'Bot client not ready yet.' });
-        switch (type) {
-            case 'twitch.live':    await handleTwitchLive(payload);    break;
-            case 'youtube.upload': await handleYouTubeUpload(payload); break;
-            case 'github.push':    await handleGitHubPush(payload);    break;
-            default: return res.status(400).json({ ok: false, error: `Unknown event type: ${type}` });
-        }
-        res.json({ ok: true, type });
+        const VALID_TYPES = new Set(['twitch.live', 'youtube.upload', 'github.push']);
+        if (!VALID_TYPES.has(type))
+            return res.status(400).json({ ok: false, error: `Unknown event type: ${type}` });
+
+        // Enqueue for the bot process via SQLite IPC — no global.sigilClient needed
+        enqueueWebhook(type, guildId, payload);
+
+        res.json({ ok: true, type, queued: true });
     } catch (err) { console.error('[/webhook/trigger]', err); res.status(500).json({ ok: false, error: 'Internal error.' }); }
 });
 

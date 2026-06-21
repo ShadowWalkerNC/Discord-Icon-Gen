@@ -1,18 +1,19 @@
 # Dependencies
 node_modules/
 
-# Environment — NEVER commit real tokens
+# Environment — NEVER commit real secrets
 .env
-.env.local
-.env.*.local
 
-# Data files (user history/kits — generated at runtime)
-data/history/
-data/kits/
+# SQLite database files
+data/*.db
+data/*.db-shm
+data/*.db-wal
 
-# OS
+# OS / editor
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
 # Logs
 *.log
@@ -21,7 +22,3 @@ npm-debug.log*
 # Build output
 dist/
 build/
-
-# Editor
-.vscode/
-.idea/

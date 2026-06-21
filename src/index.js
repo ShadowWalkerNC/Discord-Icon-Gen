@@ -4,10 +4,7 @@ const { join } = require('path');
 require('dotenv').config();
 
 // ── DB MUST be required first ─────────────────────────────────────────────────
-// This runs all CREATE TABLE IF NOT EXISTS statements before any command file
-// calls db.prepare() at module load time, regardless of load order.
 const db = require('./db');
-// ─────────────────────────────────────────────────────────────────────────────
 
 const TOKEN     = process.env.DISCORD_TOKEN || process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -64,7 +61,7 @@ for (const file of eventFiles) {
     }
 }
 
-// ── IPC: prepared statements for bot → SQLite → gui-server bridge ─────────────
+// ── IPC: prepared statements for bot -> SQLite -> gui-server bridge ──────────
 const _upsertHeartbeat = db.prepare(`
     INSERT INTO bot_heartbeat (id, ts, guilds, latency, tag)
     VALUES (1, ?, ?, ?, ?)
@@ -90,6 +87,9 @@ const _upsertService = db.prepare(`
 const _insertLog = db.prepare(
     'INSERT INTO log_buffer (ts, level, text) VALUES (?, ?, ?)'
 );
+
+// Trim is batched — only runs every 50 writes to avoid a DELETE on every log line
+let _logWriteCount = 0;
 const _trimLog = db.prepare(
     'DELETE FROM log_buffer WHERE id NOT IN (SELECT id FROM log_buffer ORDER BY id DESC LIMIT 500)'
 );
@@ -111,13 +111,11 @@ function flushServiceRegistry() {
             );
         }
     } catch (err) {
-        // Non-fatal — don't crash the bot if IPC write fails
         console.warn('[IPC] flushServiceRegistry error:', err.message);
     }
 }
 
 // Patch console so bot logs are written to the shared log_buffer table.
-// This lets gui-server's /api/logs and /ws/logs serve bot-side lines.
 (function patchConsole() {
     const _log   = console.log.bind(console);
     const _warn  = console.warn.bind(console);
@@ -127,7 +125,12 @@ function flushServiceRegistry() {
         try {
             const text = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
             _insertLog.run(Date.now(), level, text.slice(0, 2000));
-            _trimLog.run();
+            // Batch trim: only run every 50 writes
+            _logWriteCount++;
+            if (_logWriteCount >= 50) {
+                _trimLog.run();
+                _logWriteCount = 0;
+            }
         } catch { /* never crash bot over a log write */ }
     }
 
@@ -139,6 +142,19 @@ function flushServiceRegistry() {
 client.once('clientReady', () => {
     global.sigilClient = client;
 
+    const { handleTwitchLive, handleYouTubeUpload, handleGitHubPush } = require('./automation/webhookHandler.js');
+    const { processWebhookQueue } = require('./utils/webhookQueue.js');
+
+    // Webhook dispatch handlers keyed by event type
+    const webhookHandlers = {
+        'twitch.live':    handleTwitchLive,
+        'youtube.upload': handleYouTubeUpload,
+        'github.push':    handleGitHubPush,
+    };
+
+    // Poll webhook_queue every 5 s and dispatch events using the live client
+    setInterval(() => processWebhookQueue(client, webhookHandlers), 5_000);
+
     const { startPollers }                        = require('./services/pollers.js');
     const { startScheduler }                      = require('./services/scheduler.js');
     const { startStatsRunner }                    = require('./services/statsRunner.js');
@@ -146,14 +162,18 @@ client.once('clientReady', () => {
     const { startShiftScheduler }                 = require('./commands/shift.js');
     const { startMyShiftScheduler }               = require('./commands/myshift.js');
 
-    startPollers(client);
-    startScheduler(client);
-    startStatsRunner(client);
-    startDevotional(client);
-    startShiftScheduler(client);
-    startMyShiftScheduler(client);
+    for (const [name, fn] of [
+        ['pollers',     () => startPollers(client)],
+        ['scheduler',   () => startScheduler(client)],
+        ['statsRunner', () => startStatsRunner(client)],
+        ['devotional',  () => startDevotional(client)],
+        ['shift',       () => startShiftScheduler(client)],
+        ['myshift',     () => startMyShiftScheduler(client)],
+    ]) {
+        try { fn(); }
+        catch (err) { console.error(`[startup] Failed to start service "${name}":`, err.message); }
+    }
 
-    // Write initial heartbeat immediately, then every 30 s.
     function writeHeartbeat() {
         try {
             _upsertHeartbeat.run(
@@ -168,8 +188,6 @@ client.once('clientReady', () => {
     }
     writeHeartbeat();
     setInterval(writeHeartbeat, 30_000);
-
-    // Flush service registry snapshot every 60 s.
     setInterval(flushServiceRegistry, 60_000);
 
     console.log(`\x1b[32m\x1b[1m[Sigil] Ready! Logged in as ${client.user.tag}\x1b[0m`);

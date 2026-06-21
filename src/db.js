@@ -86,12 +86,11 @@ db.exec(`
         alert_channel   TEXT
     );
 
-    -- ── IPC bridge: bot → gui-server ─────────────────────────────────────────
+    -- ── IPC bridge: bot -> gui-server ─────────────────────────────────────────
     -- Single-row heartbeat written by the bot every 30 s.
-    -- gui-server reads this instead of global.sigilClient.
     CREATE TABLE IF NOT EXISTS bot_heartbeat (
         id          INTEGER PRIMARY KEY CHECK (id = 1),
-        ts          INTEGER NOT NULL,   -- epoch ms of last write
+        ts          INTEGER NOT NULL,
         guilds      INTEGER NOT NULL DEFAULT 0,
         latency     INTEGER NOT NULL DEFAULT 0,
         tag         TEXT    NOT NULL DEFAULT ''
@@ -109,27 +108,53 @@ db.exec(`
     );
 
     -- Rolling log buffer written by the bot process.
-    -- gui-server tails this for /api/logs and /ws/logs (bot-side lines).
     CREATE TABLE IF NOT EXISTS log_buffer (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         ts      INTEGER NOT NULL,
         level   TEXT    NOT NULL DEFAULT 'info',
         text    TEXT    NOT NULL
     );
+
+    -- ── Webhook dispatch queue: gui-server -> bot ─────────────────────────────
+    -- gui-server writes rows; bot polls and processes them.
+    -- This replaces the global.sigilClient IPC anti-pattern.
+    CREATE TABLE IF NOT EXISTS webhook_queue (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts         INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000),
+        type       TEXT NOT NULL,
+        guild_id   TEXT NOT NULL,
+        payload    TEXT NOT NULL DEFAULT '{}',
+        processed  INTEGER NOT NULL DEFAULT 0,
+        error      TEXT
+    );
 `);
 
-// ── Migrations (safe to re-run — each is wrapped in a try/catch) ─────────────
-const migrate = (sql) => { try { db.exec(sql); } catch (_) {} };
+// ── Indexes for query performance ─────────────────────────────────────────────
+db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_log_level ON log_buffer(level);
+    CREATE INDEX IF NOT EXISTS idx_log_ts    ON log_buffer(ts);
+    CREATE INDEX IF NOT EXISTS idx_wq_processed ON webhook_queue(processed, ts);
+`);
+
+// ── Migrations (safe to re-run) ───────────────────────────────────────────────
+// Only silences "duplicate column" errors — all other errors are logged.
+const migrate = (sql, label) => {
+    try {
+        db.exec(sql);
+    } catch (err) {
+        if (!err.message.includes('duplicate column name')) {
+            console.warn(`[db] migration warning${label ? ` (${label})` : ''}: ${err.message}`);
+        }
+    }
+};
 
 // welcome_config v2 — added embed support + DM
-migrate(`ALTER TABLE welcome_config ADD COLUMN embed_title  TEXT`);
-migrate(`ALTER TABLE welcome_config ADD COLUMN embed_color  TEXT DEFAULT '#5865F2'`);
-migrate(`ALTER TABLE welcome_config ADD COLUMN dm_enabled   INTEGER DEFAULT 0`);
-migrate(`ALTER TABLE welcome_config ADD COLUMN dm_message   TEXT`);
+migrate(`ALTER TABLE welcome_config ADD COLUMN embed_title  TEXT`,              'welcome_config.embed_title');
+migrate(`ALTER TABLE welcome_config ADD COLUMN embed_color  TEXT DEFAULT '#5865F2'`, 'welcome_config.embed_color');
+migrate(`ALTER TABLE welcome_config ADD COLUMN dm_enabled   INTEGER DEFAULT 0`, 'welcome_config.dm_enabled');
+migrate(`ALTER TABLE welcome_config ADD COLUMN dm_message   TEXT`,              'welcome_config.dm_message');
 
 // guild_config v2 — package system
-// packages_disabled stores a JSON array of package keys that are OFF for this guild.
-// Omitted = all packages enabled (default-on behaviour).
-migrate(`ALTER TABLE guild_config ADD COLUMN packages_disabled TEXT DEFAULT '[]'`);
+migrate(`ALTER TABLE guild_config ADD COLUMN packages_disabled TEXT DEFAULT '[]'`, 'guild_config.packages_disabled');
 
 module.exports = db;
