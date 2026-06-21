@@ -1,24 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sigil — Setup Wizard</title>
   <style>
-    /* =====================================================
-       SIGIL SETUP WIZARD — Discord-style UI
-       Customise by overriding any --theme-* variable below
-       ===================================================== */
-
-    /* === THEME === */
     :root {
-      --theme-blurple:      #5865f2;   /* primary action / accent */
+      --theme-blurple:      #5865f2;
       --theme-blurple-hover:#4752c4;
       --theme-blurple-glow: rgba(88,101,242,.35);
-      --theme-bg:           #313338;   /* main content area */
-      --theme-sidebar:      #2b2d31;   /* left sidebar */
-      --theme-deep:         #1e1f22;   /* deepest bg / inputs */
-      --theme-surface:      #383a40;   /* card surfaces */
+      --theme-bg:           #313338;
+      --theme-sidebar:      #2b2d31;
+      --theme-deep:         #1e1f22;
+      --theme-surface:      #383a40;
       --theme-surface-hover:#3e4047;
       --theme-border:       #1e1f22;
       --theme-text:         #dbdee1;
@@ -33,6 +27,12 @@
       --theme-radius:       4px;
       --theme-radius-lg:    8px;
       --sidebar-w:          232px;
+      /* site-wide nav vars */
+      --bg:#1e1f22;--surface:#2b2d31;--surface2:#313338;--surface3:#383a40;
+      --border-nav:rgba(255,255,255,.08);--text-nav:#dbdee1;--muted-nav:#949ba4;--faint-nav:#6d6f78;
+      --primary:#8b0000;--secondary:#4b0082;
+      --font:'gg sans','Noto Sans',Whitney,'Helvetica Neue',Helvetica,Arial,sans-serif;
+      --ease:cubic-bezier(.16,1,.3,1);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,58 +40,64 @@
     body {
       background: var(--theme-deep);
       color: var(--theme-text);
-      font-family: 'gg sans', 'Noto Sans', Whitney, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-family: var(--font);
       font-size: 16px;
       line-height: 1.5;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
+    button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
 
-    /* ---- Top bar ---- */
-    .topbar {
-      height: 48px;
-      background: var(--theme-sidebar);
-      border-bottom: 1px solid var(--theme-border);
-      display: flex;
-      align-items: center;
-      padding: 0 1rem;
-      gap: 1rem;
-      flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .topbar-brand {
-      font-size: .9rem;
-      font-weight: 700;
-      color: var(--theme-text);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-    }
-    .topbar-brand .sigil-icon {
-      width: 24px; height: 24px;
-      background: var(--theme-blurple);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .75rem;
-      color: #fff;
+    /* ---- Standard Navbar ---- */
+    .navbar {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(30,31,34,.95);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-nav);
+      display: flex; align-items: center; gap: .5rem;
+      padding: .6rem 1.25rem;
       flex-shrink: 0;
     }
-    .topbar-sep { width: 1px; height: 20px; background: var(--theme-muted2); }
-    .topbar-title { font-size: .875rem; color: var(--theme-muted); }
-    .topbar-nav { margin-left: auto; display: flex; gap: .25rem; }
-    .topbar-nav a {
-      color: var(--theme-muted);
-      text-decoration: none;
-      font-size: .8rem;
-      padding: .3rem .6rem;
-      border-radius: var(--theme-radius);
-      transition: color .15s, background .15s;
+    .nav-logo {
+      font-weight: 800; font-size: 1rem;
+      background: linear-gradient(135deg,#ff4444,#8b0000,#4b0082);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; text-decoration: none; white-space: nowrap;
     }
-    .topbar-nav a:hover { color: var(--theme-text); background: var(--theme-surface); }
+    .nav-sep  { width:1px; height:18px; background:var(--border-nav); flex-shrink:0; }
+    .nav-subtitle { font-size:.75rem; color:var(--muted-nav); font-weight:600; white-space:nowrap; }
+    .nav-actions  { margin-left:auto; display:flex; gap:.35rem; align-items:center; flex-wrap:nowrap; }
+    .nav-btn {
+      padding:.3rem .7rem; border-radius:4px; font-size:.78rem; font-weight:600;
+      border:1px solid var(--border-nav); background:var(--surface2);
+      color:var(--text-nav); text-decoration:none; display:inline-flex; align-items:center;
+      transition:background 150ms; white-space:nowrap;
+    }
+    .nav-btn:hover  { background:var(--surface3); }
+    .nav-btn.active { background:rgba(88,101,242,.18); border-color:rgba(88,101,242,.4); color:#a5b4fc; }
+    .nav-hamburger {
+      display:none; flex-direction:column; justify-content:center; gap:5px;
+      width:32px; height:32px; padding:5px; border-radius:4px;
+      border:1px solid var(--border-nav); background:var(--surface2);
+      cursor:pointer; flex-shrink:0;
+    }
+    .nav-hamburger span { display:block; height:2px; background:var(--text-nav); border-radius:2px; transition:all 200ms var(--ease); }
+    .nav-hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity:0; }
+    .nav-hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+    .nav-drawer {
+      display:none; flex-direction:column; gap:.3rem;
+      padding:.6rem 1rem; background:rgba(30,31,34,.98);
+      border-bottom:1px solid var(--border-nav); z-index:199;
+    }
+    .nav-drawer.open { display:flex; }
+    .nav-drawer .nav-btn { justify-content:flex-start; }
+    @media(max-width:700px) {
+      .nav-subtitle, .nav-sep { display:none; }
+      .nav-actions { display:none; }
+      .nav-hamburger { display:flex; }
+    }
 
     /* ---- App shell ---- */
     .app-shell {
@@ -109,123 +115,54 @@
       overflow-y: auto;
       border-right: 1px solid var(--theme-border);
     }
-    .sidebar-section {
-      margin-bottom: 1.25rem;
-    }
+    .sidebar-section { margin-bottom: 1.25rem; }
     .sidebar-heading {
-      font-size: .6875rem;
-      font-weight: 700;
-      color: var(--theme-muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      padding: .5rem .75rem .25rem;
+      font-size: .6875rem; font-weight: 700;
+      color: var(--theme-muted); text-transform: uppercase;
+      letter-spacing: .06em; padding: .5rem .75rem .25rem;
     }
     .sidebar-item {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      padding: .375rem .75rem;
-      border-radius: var(--theme-radius);
-      cursor: pointer;
-      color: var(--theme-muted);
-      font-size: .875rem;
+      display: flex; align-items: center; gap: .5rem;
+      padding: .375rem .75rem; border-radius: var(--theme-radius);
+      cursor: pointer; color: var(--theme-muted); font-size: .875rem;
       transition: background .1s, color .1s;
-      position: relative;
-      text-decoration: none;
-      user-select: none;
+      position: relative; text-decoration: none; user-select: none;
     }
-    .sidebar-item:hover {
-      background: var(--theme-surface);
-      color: var(--theme-text);
-    }
-    .sidebar-item.active {
-      background: var(--theme-surface-hover);
-      color: var(--theme-text);
-      font-weight: 500;
-    }
+    .sidebar-item:hover { background: var(--theme-surface); color: var(--theme-text); }
+    .sidebar-item.active { background: var(--theme-surface-hover); color: var(--theme-text); font-weight: 500; }
     .sidebar-item.active::before {
-      content: '';
-      position: absolute;
-      left: -8px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 4px;
-      height: 60%;
-      min-height: 16px;
-      max-height: 32px;
-      background: var(--theme-blurple);
-      border-radius: 0 4px 4px 0;
+      content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 60%; min-height: 16px; max-height: 32px;
+      background: var(--theme-blurple); border-radius: 0 4px 4px 0;
     }
     .sidebar-item.done { color: var(--theme-green); }
     .sidebar-item .step-num {
-      width: 20px; height: 20px;
-      border-radius: 50%;
+      width: 20px; height: 20px; border-radius: 50%;
       border: 1.5px solid currentColor;
       display: flex; align-items: center; justify-content: center;
-      font-size: .7rem;
-      font-weight: 700;
-      flex-shrink: 0;
-      transition: all .2s;
+      font-size: .7rem; font-weight: 700; flex-shrink: 0; transition: all .2s;
     }
-    .sidebar-item.done .step-num {
-      background: var(--theme-green);
-      border-color: var(--theme-green);
-      color: #fff;
-    }
+    .sidebar-item.done .step-num { background: var(--theme-green); border-color: var(--theme-green); color: #fff; }
     .sidebar-item.done .step-num::after { content: '\2713'; }
     .sidebar-item.done .step-num span { display: none; }
-    .sidebar-item.active .step-num {
-      background: var(--theme-blurple);
-      border-color: var(--theme-blurple);
-      color: #fff;
-    }
-    .sidebar-divider {
-      height: 1px;
-      background: var(--theme-border);
-      margin: .5rem .75rem;
-    }
+    .sidebar-item.active .step-num { background: var(--theme-blurple); border-color: var(--theme-blurple); color: #fff; }
+    .sidebar-divider { height: 1px; background: var(--theme-border); margin: .5rem .75rem; }
     .sidebar-link {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      padding: .375rem .75rem;
-      border-radius: var(--theme-radius);
-      color: var(--theme-muted);
-      font-size: .8rem;
-      text-decoration: none;
-      transition: color .15s, background .15s;
+      display: flex; align-items: center; gap: .5rem;
+      padding: .375rem .75rem; border-radius: var(--theme-radius);
+      color: var(--theme-muted); font-size: .8rem;
+      text-decoration: none; transition: color .15s, background .15s;
     }
     .sidebar-link:hover { color: var(--theme-text); background: var(--theme-surface); }
 
     /* ---- Main content ---- */
-    .content {
-      flex: 1;
-      background: var(--theme-bg);
-      overflow-y: auto;
-      padding: 2.5rem 2rem;
-      min-width: 0;
-    }
-    .content-inner {
-      max-width: 680px;
-    }
+    .content { flex: 1; background: var(--theme-bg); overflow-y: auto; padding: 2.5rem 2rem; min-width: 0; }
+    .content-inner { max-width: 680px; }
 
     /* ---- Section header ---- */
-    .section-header {
-      margin-bottom: 1.25rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--theme-border);
-    }
-    .section-header h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--theme-text);
-      margin-bottom: .2rem;
-    }
-    .section-header p {
-      font-size: .875rem;
-      color: var(--theme-muted);
-      line-height: 1.5;
-    }
+    .section-header { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--theme-border); }
+    .section-header h1 { font-size: 1.25rem; font-weight: 700; color: var(--theme-text); margin-bottom: .2rem; }
+    .section-header p { font-size: .875rem; color: var(--theme-muted); line-height: 1.5; }
     .section-header p a { color: var(--theme-blurple); text-decoration: none; }
     .section-header p a:hover { text-decoration: underline; }
 
@@ -234,78 +171,30 @@
     .step-panel.active { display: block; }
 
     /* ---- Form rows ---- */
-    .form-row {
-      margin-bottom: 1.25rem;
-    }
-    .form-label {
-      display: block;
-      font-size: .75rem;
-      font-weight: 700;
-      color: var(--theme-muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: .5rem;
-    }
+    .form-row { margin-bottom: 1.25rem; }
+    .form-label { display: block; font-size: .75rem; font-weight: 700; color: var(--theme-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }
     .form-label .required { color: var(--theme-red); margin-left: .2rem; }
     .form-input {
-      width: 100%;
-      padding: .625rem .75rem;
-      background: var(--theme-deep);
-      border: 1px solid var(--theme-deep);
-      border-radius: var(--theme-radius);
-      color: var(--theme-text);
-      font-size: .9375rem;
-      font-family: inherit;
-      outline: none;
+      width: 100%; padding: .625rem .75rem;
+      background: var(--theme-deep); border: 1px solid var(--theme-deep);
+      border-radius: var(--theme-radius); color: var(--theme-text);
+      font-size: .9375rem; font-family: inherit; outline: none;
       transition: border-color .15s, box-shadow .15s;
     }
-    .form-input:focus {
-      border-color: var(--theme-blurple);
-      box-shadow: 0 0 0 2px var(--theme-blurple-glow);
-    }
-    .form-input.valid { border-color: var(--theme-green); }
+    .form-input:focus { border-color: var(--theme-blurple); box-shadow: 0 0 0 2px var(--theme-blurple-glow); }
+    .form-input.valid   { border-color: var(--theme-green); }
     .form-input.invalid { border-color: var(--theme-red); }
-    .form-hint {
-      margin-top: .35rem;
-      font-size: .75rem;
-      color: var(--theme-muted);
-      line-height: 1.4;
-    }
+    .form-hint { margin-top: .35rem; font-size: .75rem; color: var(--theme-muted); line-height: 1.4; }
     .form-hint a { color: var(--theme-blurple); text-decoration: none; }
 
     /* ---- Validate row ---- */
-    .validate-row {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      margin-top: .75rem;
-      flex-wrap: wrap;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      font-size: .8rem;
-      padding: .25rem .65rem;
-      border-radius: 999px;
-      background: var(--theme-surface);
-      color: var(--theme-muted);
-      border: 1px solid transparent;
-    }
+    .validate-row { display: flex; align-items: center; gap: .75rem; margin-top: .75rem; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; padding: .25rem .65rem; border-radius: 999px; background: var(--theme-surface); color: var(--theme-muted); border: 1px solid transparent; }
     .badge.ok  { background: var(--theme-green-bg);  color: var(--theme-green);  border-color: var(--theme-green); }
     .badge.err { background: var(--theme-red-bg);    color: var(--theme-red);    border-color: var(--theme-red); }
 
-    /* ---- Alerts / banners ---- */
-    .banner {
-      display: none;
-      align-items: flex-start;
-      gap: .6rem;
-      padding: .75rem 1rem;
-      border-radius: var(--theme-radius);
-      font-size: .875rem;
-      margin-bottom: 1rem;
-      line-height: 1.45;
-    }
+    /* ---- Banners ---- */
+    .banner { display: none; align-items: flex-start; gap: .6rem; padding: .75rem 1rem; border-radius: var(--theme-radius); font-size: .875rem; margin-bottom: 1rem; line-height: 1.45; }
     .banner.show { display: flex; }
     .banner-warn  { background: var(--theme-yellow-bg); color: var(--theme-yellow); border-left: 3px solid var(--theme-yellow); }
     .banner-error { background: var(--theme-red-bg);    color: var(--theme-red);    border-left: 3px solid var(--theme-red); }
@@ -313,23 +202,9 @@
     .banner code { background: rgba(0,0,0,.25); padding: .1em .35em; border-radius: 3px; font-size: .85em; }
 
     /* ---- Buttons ---- */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      padding: .5rem 1.1rem;
-      border-radius: var(--theme-radius);
-      font-size: .875rem;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      border: none;
-      transition: background .15s, opacity .15s, box-shadow .15s;
-      text-decoration: none;
-      white-space: nowrap;
-    }
+    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1.1rem; border-radius: var(--theme-radius); font-size: .875rem; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: background .15s, opacity .15s, box-shadow .15s; text-decoration: none; white-space: nowrap; }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-primary  { background: var(--theme-blurple); color: #fff; }
+    .btn-primary   { background: var(--theme-blurple); color: #fff; }
     .btn-primary:hover:not(:disabled) { background: var(--theme-blurple-hover); }
     .btn-secondary { background: #4e5058; color: var(--theme-text); }
     .btn-secondary:hover:not(:disabled) { background: #57595f; }
@@ -337,143 +212,48 @@
     .btn-ghost:hover { color: var(--theme-text); background: var(--theme-surface); }
     .btn-danger { background: var(--theme-red); color: #fff; }
 
-    /* ---- Step footer nav ---- */
-    .step-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--theme-border);
-    }
+    /* ---- Step footer ---- */
+    .step-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--theme-border); }
     .step-footer.end { justify-content: flex-end; }
 
     /* ---- Package grid ---- */
-    .pkg-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
-      gap: .5rem;
-      margin-bottom: 1rem;
-    }
-    .pkg-card {
-      background: var(--theme-surface);
-      border: 1px solid var(--theme-border);
-      border-radius: var(--theme-radius-lg);
-      padding: .875rem 1rem;
-      cursor: pointer;
-      transition: background .12s, border-color .12s;
-      user-select: none;
-      position: relative;
-    }
+    .pkg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: .5rem; margin-bottom: 1rem; }
+    .pkg-card { background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--theme-radius-lg); padding: .875rem 1rem; cursor: pointer; transition: background .12s, border-color .12s; user-select: none; position: relative; }
     .pkg-card:hover { background: var(--theme-surface-hover); }
-    .pkg-card.selected {
-      border-color: var(--theme-blurple);
-      background: rgba(88,101,242,.08);
-    }
+    .pkg-card.selected { border-color: var(--theme-blurple); background: rgba(88,101,242,.08); }
     .pkg-card input[type=checkbox] { display: none; }
-    .pkg-check {
-      position: absolute;
-      top: .625rem; right: .625rem;
-      width: 18px; height: 18px;
-      border-radius: 4px;
-      border: 1.5px solid var(--theme-muted2);
-      background: var(--theme-deep);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .7rem;
-      transition: all .15s;
-      color: transparent;
-    }
-    .pkg-card.selected .pkg-check {
-      background: var(--theme-blurple);
-      border-color: var(--theme-blurple);
-      color: #fff;
-    }
+    .pkg-check { position: absolute; top: .625rem; right: .625rem; width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--theme-muted2); background: var(--theme-deep); display: flex; align-items: center; justify-content: center; font-size: .7rem; transition: all .15s; color: transparent; }
+    .pkg-card.selected .pkg-check { background: var(--theme-blurple); border-color: var(--theme-blurple); color: #fff; }
     .pkg-icon { font-size: 1.25rem; margin-bottom: .35rem; }
     .pkg-name { font-size: .875rem; font-weight: 600; color: var(--theme-text); margin-bottom: .2rem; }
     .pkg-desc { font-size: .75rem; color: var(--theme-muted); line-height: 1.4; }
 
-    /* ---- Channel mapper table ---- */
-    .mapper {
-      background: var(--theme-surface);
-      border-radius: var(--theme-radius-lg);
-      overflow: hidden;
-      border: 1px solid var(--theme-border);
-    }
-    .mapper-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      align-items: center;
-      padding: .625rem 1rem;
-      border-bottom: 1px solid var(--theme-border);
-    }
+    /* ---- Channel mapper ---- */
+    .mapper { background: var(--theme-surface); border-radius: var(--theme-radius-lg); overflow: hidden; border: 1px solid var(--theme-border); }
+    .mapper-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; padding: .625rem 1rem; border-bottom: 1px solid var(--theme-border); }
     .mapper-row:last-child { border-bottom: none; }
     .mapper-label { font-size: .8rem; color: var(--theme-text); }
-    .mapper-hint { font-size: .7rem; color: var(--theme-muted); margin-top: .1rem; }
-    .mapper-input {
-      width: 100%;
-      padding: .4rem .6rem;
-      background: var(--theme-deep);
-      border: 1px solid var(--theme-border);
-      border-radius: var(--theme-radius);
-      color: var(--theme-text);
-      font-size: .8rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color .15s;
-    }
+    .mapper-hint  { font-size: .7rem; color: var(--theme-muted); margin-top: .1rem; }
+    .mapper-input { width: 100%; padding: .4rem .6rem; background: var(--theme-deep); border: 1px solid var(--theme-border); border-radius: var(--theme-radius); color: var(--theme-text); font-size: .8rem; font-family: inherit; outline: none; transition: border-color .15s; }
     .mapper-input:focus { border-color: var(--theme-blurple); }
     .mapper-input::placeholder { color: var(--theme-muted2); }
 
     /* ---- Deploy log ---- */
-    .deploy-log {
-      background: var(--theme-deep);
-      border: 1px solid var(--theme-border);
-      border-radius: var(--theme-radius-lg);
-      padding: .875rem 1rem;
-      font-family: 'Consolas', 'Courier New', monospace;
-      font-size: .8125rem;
-      line-height: 1.75;
-      color: var(--theme-muted);
-      min-height: 120px;
-      max-height: 280px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin-top: .875rem;
-    }
+    .deploy-log { background: var(--theme-deep); border: 1px solid var(--theme-border); border-radius: var(--theme-radius-lg); padding: .875rem 1rem; font-family: 'Consolas','Courier New',monospace; font-size: .8125rem; line-height: 1.75; color: var(--theme-muted); min-height: 120px; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; margin-top: .875rem; }
     .log-ok   { color: var(--theme-green); }
     .log-warn { color: var(--theme-yellow); }
     .log-err  { color: var(--theme-red); }
     .log-info { color: #00a8fc; }
 
     /* ---- Done screen ---- */
-    .done-wrap {
-      text-align: center;
-      padding: 2rem 1rem;
-    }
-    .done-icon {
-      width: 72px; height: 72px;
-      background: var(--theme-green-bg);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem;
-      margin: 0 auto 1.25rem;
-    }
+    .done-wrap { text-align: center; padding: 2rem 1rem; }
+    .done-icon { width: 72px; height: 72px; background: var(--theme-green-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.25rem; }
     .done-wrap h2 { font-size: 1.375rem; font-weight: 700; color: var(--theme-text); margin-bottom: .4rem; }
     .done-wrap p  { font-size: .9rem; color: var(--theme-muted); margin-bottom: 1.5rem; line-height: 1.6; }
     .done-links   { display: flex; justify-content: center; gap: .625rem; flex-wrap: wrap; }
 
     /* ---- Spinner ---- */
-    .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .65s linear infinite;
-      flex-shrink: 0;
-    }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .65s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ---- Responsive ---- */
@@ -486,23 +266,46 @@
       .mapper-row { grid-template-columns: 1fr; gap: .35rem; }
       .pkg-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ---- Footer ---- */
+    .site-footer { border-top:1px solid var(--theme-border); background:var(--theme-sidebar); padding:1rem 1.25rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem; font-size:.75rem; color:var(--theme-muted); flex-shrink:0; }
+    .footer-links { display:flex; flex-wrap:wrap; gap:.4rem .8rem; }
+    .footer-links a { color:var(--theme-muted); text-decoration:none; font-weight:600; transition:color 150ms; }
+    .footer-links a:hover { color:var(--theme-text); }
+    .footer-links a.active { color:var(--theme-blurple); }
+    .footer-ver { font-size:.7rem; opacity:.55; }
   </style>
 </head>
 <body>
 
-<!-- Top bar -->
-<div class="topbar">
-  <a href="/" class="topbar-brand">
-    <div class="sigil-icon">✦</div>
-    <span>Sigil</span>
-  </a>
-  <div class="topbar-sep"></div>
-  <span class="topbar-title">Setup Wizard</span>
-  <nav class="topbar-nav">
-    <a href="/">Home</a>
-    <a href="/status">Status</a>
-    <a href="/developers">Docs</a>
-  </nav>
+<!-- Standard Navbar -->
+<nav class="navbar">
+  <a class="nav-logo" href="/">SIGIL</a>
+  <div class="nav-sep"></div>
+  <span class="nav-subtitle">Setup Wizard</span>
+  <div class="nav-actions">
+    <a class="nav-btn" href="/">&#127968; Dashboard</a>
+    <a class="nav-btn active" href="/setup">&#9881;&#65039; Setup</a>
+    <a class="nav-btn" href="/packages">&#128230; Packages</a>
+    <a class="nav-btn" href="/status">&#128268; Status</a>
+    <a class="nav-btn" href="/brand">&#127912; Brand</a>
+    <a class="nav-btn" href="/community">&#127942; Community</a>
+    <a class="nav-btn" href="/developers">&#128279; Developers</a>
+    <button class="nav-btn" id="themeBtn">&#9680; Theme</button>
+  </div>
+  <button class="nav-hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <a class="nav-btn" href="/">&#127968; Dashboard</a>
+  <a class="nav-btn active" href="/setup">&#9881;&#65039; Setup</a>
+  <a class="nav-btn" href="/packages">&#128230; Packages</a>
+  <a class="nav-btn" href="/status">&#128268; Status</a>
+  <a class="nav-btn" href="/brand">&#127912; Brand Builder</a>
+  <a class="nav-btn" href="/community">&#127942; Community Tools</a>
+  <a class="nav-btn" href="/developers">&#128279; Developers</a>
+  <button class="nav-btn" id="themeBtnMobile">&#9680; Theme</button>
 </div>
 
 <div class="app-shell">
@@ -511,31 +314,13 @@
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-heading">Setup Steps</div>
-
-      <div class="sidebar-item active" data-step="1" onclick="goStep(1)">
-        <div class="step-num"><span>1</span></div>
-        <span>Credentials</span>
-      </div>
-      <div class="sidebar-item" data-step="2" onclick="goStep(2)">
-        <div class="step-num"><span>2</span></div>
-        <span>Features</span>
-      </div>
-      <div class="sidebar-item" data-step="3" onclick="goStep(3)">
-        <div class="step-num"><span>3</span></div>
-        <span>Channels</span>
-      </div>
-      <div class="sidebar-item" data-step="4" onclick="goStep(4)">
-        <div class="step-num"><span>4</span></div>
-        <span>Deploy</span>
-      </div>
-      <div class="sidebar-item" data-step="5" onclick="goStep(5)">
-        <div class="step-num"><span>5</span></div>
-        <span>Done</span>
-      </div>
+      <div class="sidebar-item active" data-step="1"><div class="step-num"><span>1</span></div><span>Credentials</span></div>
+      <div class="sidebar-item" data-step="2"><div class="step-num"><span>2</span></div><span>Features</span></div>
+      <div class="sidebar-item" data-step="3"><div class="step-num"><span>3</span></div><span>Channels</span></div>
+      <div class="sidebar-item" data-step="4"><div class="step-num"><span>4</span></div><span>Deploy</span></div>
+      <div class="sidebar-item" data-step="5"><div class="step-num"><span>5</span></div><span>Done</span></div>
     </div>
-
     <div class="sidebar-divider"></div>
-
     <div class="sidebar-section">
       <div class="sidebar-heading">Navigation</div>
       <a href="/" class="sidebar-link"><span>🏠</span><span>Dashboard</span></a>
@@ -555,28 +340,23 @@
           <h1>Bot Credentials</h1>
           <p>Enter your bot token and application ID from the <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>. Your token is validated live before you can continue.</p>
         </div>
-
         <div class="banner banner-error" id="cred-banner"></div>
-
         <div class="form-row">
           <label class="form-label">Bot Token <span class="required">*</span></label>
           <input class="form-input" type="password" id="token-input" placeholder="Paste your bot token here" autocomplete="off" />
           <div class="form-hint">Bot → Token in the Developer Portal. Never share this with anyone.</div>
         </div>
-
         <div class="form-row">
           <label class="form-label">Application / Client ID <span class="required">*</span></label>
           <input class="form-input" type="text" id="client-id-input" placeholder="e.g. 1234567890123456789" autocomplete="off" />
           <div class="form-hint">General Information → Application ID in the Developer Portal.</div>
         </div>
-
         <div class="validate-row">
-          <button class="btn btn-secondary" id="validate-btn" onclick="validateCredentials()">Validate Token</button>
+          <button class="btn btn-secondary" id="validate-btn">Validate Token</button>
           <div class="badge" id="validate-badge">Not validated</div>
         </div>
-
         <div class="step-footer end">
-          <button class="btn btn-primary" id="step1-next" onclick="goStep(2)" disabled>Next &rarr;</button>
+          <button class="btn btn-primary" id="step1-next" disabled>Next &rarr;</button>
         </div>
       </div>
 
@@ -586,69 +366,19 @@
           <h1>Feature Packages</h1>
           <p>Choose which feature groups to enable. You can toggle any package later from the <a href="/packages">Packages</a> page.</p>
         </div>
-
         <div class="pkg-grid">
-          <label class="pkg-card selected" data-pkg="brand">
-            <input type="checkbox" checked />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">🎨</div>
-            <div class="pkg-name">Brand &amp; Identity</div>
-            <div class="pkg-desc">Icons, banners, palette cards, AI generation</div>
-          </label>
-          <label class="pkg-card selected" data-pkg="moderation">
-            <input type="checkbox" checked />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">🛡️</div>
-            <div class="pkg-name">Moderation</div>
-            <div class="pkg-desc">Automod, bans, warns, audit log, tickets</div>
-          </label>
-          <label class="pkg-card selected" data-pkg="community">
-            <input type="checkbox" checked />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">🎉</div>
-            <div class="pkg-name">Community</div>
-            <div class="pkg-desc">Welcome, reaction roles, giveaways, polls</div>
-          </label>
-          <label class="pkg-card selected" data-pkg="xp">
-            <input type="checkbox" checked />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">⭐</div>
-            <div class="pkg-name">XP &amp; Levels</div>
-            <div class="pkg-desc">XP economy, rank cards, leaderboards</div>
-          </label>
-          <label class="pkg-card selected" data-pkg="scheduler">
-            <input type="checkbox" checked />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">📅</div>
-            <div class="pkg-name">Scheduler &amp; Staff</div>
-            <div class="pkg-desc">Shifts, callouts, scheduled posts</div>
-          </label>
-          <label class="pkg-card" data-pkg="integrations">
-            <input type="checkbox" />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">🔗</div>
-            <div class="pkg-name">Integrations</div>
-            <div class="pkg-desc">YouTube, Twitch, GitHub alerts</div>
-          </label>
-          <label class="pkg-card" data-pkg="faith">
-            <input type="checkbox" />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">⛪</div>
-            <div class="pkg-name">Faith &amp; Devotional</div>
-            <div class="pkg-desc">Bible verses, devotionals, sermons</div>
-          </label>
-          <label class="pkg-card" data-pkg="culinaryos">
-            <input type="checkbox" />
-            <div class="pkg-check">✓</div>
-            <div class="pkg-icon">🍳</div>
-            <div class="pkg-name">CulinaryOS Bridge</div>
-            <div class="pkg-desc">Menu, recipe, inventory integration</div>
-          </label>
+          <label class="pkg-card selected" data-pkg="brand"><input type="checkbox" checked /><div class="pkg-check">✓</div><div class="pkg-icon">🎨</div><div class="pkg-name">Brand &amp; Identity</div><div class="pkg-desc">Icons, banners, palette cards, AI generation</div></label>
+          <label class="pkg-card selected" data-pkg="moderation"><input type="checkbox" checked /><div class="pkg-check">✓</div><div class="pkg-icon">🛡️</div><div class="pkg-name">Moderation</div><div class="pkg-desc">Automod, bans, warns, audit log, tickets</div></label>
+          <label class="pkg-card selected" data-pkg="community"><input type="checkbox" checked /><div class="pkg-check">✓</div><div class="pkg-icon">🎉</div><div class="pkg-name">Community</div><div class="pkg-desc">Welcome, reaction roles, giveaways, polls</div></label>
+          <label class="pkg-card selected" data-pkg="xp"><input type="checkbox" checked /><div class="pkg-check">✓</div><div class="pkg-icon">⭐</div><div class="pkg-name">XP &amp; Levels</div><div class="pkg-desc">XP economy, rank cards, leaderboards</div></label>
+          <label class="pkg-card selected" data-pkg="scheduler"><input type="checkbox" checked /><div class="pkg-check">✓</div><div class="pkg-icon">📅</div><div class="pkg-name">Scheduler &amp; Staff</div><div class="pkg-desc">Shifts, callouts, scheduled posts</div></label>
+          <label class="pkg-card" data-pkg="integrations"><input type="checkbox" /><div class="pkg-check">✓</div><div class="pkg-icon">🔗</div><div class="pkg-name">Integrations</div><div class="pkg-desc">YouTube, Twitch, GitHub alerts</div></label>
+          <label class="pkg-card" data-pkg="faith"><input type="checkbox" /><div class="pkg-check">✓</div><div class="pkg-icon">⛪</div><div class="pkg-name">Faith &amp; Devotional</div><div class="pkg-desc">Bible verses, devotionals, sermons</div></label>
+          <label class="pkg-card" data-pkg="culinaryos"><input type="checkbox" /><div class="pkg-check">✓</div><div class="pkg-icon">🍳</div><div class="pkg-name">CulinaryOS Bridge</div><div class="pkg-desc">Menu, recipe, inventory integration</div></label>
         </div>
-
         <div class="step-footer">
-          <button class="btn btn-ghost" onclick="goStep(1)">&larr; Back</button>
-          <button class="btn btn-primary" onclick="goStep(3)">Next &rarr;</button>
+          <button class="btn btn-ghost" id="s2-back">&larr; Back</button>
+          <button class="btn btn-primary" id="s2-next">Next &rarr;</button>
         </div>
       </div>
 
@@ -658,55 +388,18 @@
           <h1>Channels &amp; Roles</h1>
           <p>Map each feature to a Discord channel or role. Enable Developer Mode in Discord (Settings → Advanced), then right-click any channel or role to Copy ID. All fields are optional.</p>
         </div>
-
+        <div class="banner banner-error" id="ch-save-error"></div>
         <div class="mapper">
-          <div class="mapper-row">
-            <div>
-              <div class="mapper-label"># Welcome Channel</div>
-              <div class="mapper-hint">Where join messages post</div>
-            </div>
-            <input class="mapper-input" type="text" id="ch-welcome" placeholder="Channel ID" />
-          </div>
-          <div class="mapper-row">
-            <div>
-              <div class="mapper-label"># Mod Log Channel</div>
-              <div class="mapper-hint">Where mod actions are logged</div>
-            </div>
-            <input class="mapper-input" type="text" id="ch-modlog" placeholder="Channel ID" />
-          </div>
-          <div class="mapper-row">
-            <div>
-              <div class="mapper-label"># Announcements</div>
-              <div class="mapper-hint">For scheduled posts and alerts</div>
-            </div>
-            <input class="mapper-input" type="text" id="ch-announce" placeholder="Channel ID" />
-          </div>
-          <div class="mapper-row">
-            <div>
-              <div class="mapper-label"># Starboard Channel</div>
-              <div class="mapper-hint">Where starred messages post</div>
-            </div>
-            <input class="mapper-input" type="text" id="ch-starboard" placeholder="Channel ID" />
-          </div>
-          <div class="mapper-row">
-            <div>
-              <div class="mapper-label">@ Auto Role</div>
-              <div class="mapper-hint">Assigned to new members</div>
-            </div>
-            <input class="mapper-input" type="text" id="role-auto" placeholder="Role ID" />
-          </div>
-          <div class="mapper-row">
-            <div>
-              <div class="mapper-label">@ Mod Role</div>
-              <div class="mapper-hint">Bypasses automod rules</div>
-            </div>
-            <input class="mapper-input" type="text" id="role-mod" placeholder="Role ID" />
-          </div>
+          <div class="mapper-row"><div><div class="mapper-label"># Welcome Channel</div><div class="mapper-hint">Where join messages post</div></div><input class="mapper-input" type="text" id="ch-welcome" placeholder="Channel ID" /></div>
+          <div class="mapper-row"><div><div class="mapper-label"># Mod Log Channel</div><div class="mapper-hint">Where mod actions are logged</div></div><input class="mapper-input" type="text" id="ch-modlog" placeholder="Channel ID" /></div>
+          <div class="mapper-row"><div><div class="mapper-label"># Announcements</div><div class="mapper-hint">For scheduled posts and alerts</div></div><input class="mapper-input" type="text" id="ch-announce" placeholder="Channel ID" /></div>
+          <div class="mapper-row"><div><div class="mapper-label"># Starboard Channel</div><div class="mapper-hint">Where starred messages post</div></div><input class="mapper-input" type="text" id="ch-starboard" placeholder="Channel ID" /></div>
+          <div class="mapper-row"><div><div class="mapper-label">@ Auto Role</div><div class="mapper-hint">Assigned to new members</div></div><input class="mapper-input" type="text" id="role-auto" placeholder="Role ID" /></div>
+          <div class="mapper-row"><div><div class="mapper-label">@ Mod Role</div><div class="mapper-hint">Bypasses automod rules</div></div><input class="mapper-input" type="text" id="role-mod" placeholder="Role ID" /></div>
         </div>
-
         <div class="step-footer">
-          <button class="btn btn-ghost" onclick="goStep(2)">&larr; Back</button>
-          <button class="btn btn-primary" onclick="saveChannelsAndContinue()">Save &amp; Continue &rarr;</button>
+          <button class="btn btn-ghost" id="s3-back">&larr; Back</button>
+          <button class="btn btn-primary" id="s3-next">Save &amp; Continue &rarr;</button>
         </div>
       </div>
 
@@ -716,24 +409,20 @@
           <h1>Register Slash Commands</h1>
           <p>Registers all slash commands with Discord. Takes 10&ndash;30 seconds. Commands appear in your server within a minute.</p>
         </div>
-
-        <div class="banner banner-warn show" id="deploy-banner">
+        <div class="banner banner-warn" id="deploy-banner">
           <span>⚠️</span>
           <span>Requires <code>CONTROL_SECRET</code> in your environment. On Railway, add it as an env var and redeploy first.</span>
         </div>
-
         <div class="form-row">
           <label class="form-label">Control Secret <span class="required">*</span></label>
           <input class="form-input" type="password" id="control-secret-input" placeholder="Your CONTROL_SECRET value" autocomplete="off" />
           <div class="form-hint">Set in <code style="background:rgba(0,0,0,.3);padding:.1em .35em;border-radius:3px">.env</code> or your Railway dashboard.</div>
         </div>
-
         <div class="deploy-log" id="deploy-log">Waiting to deploy…
 </div>
-
         <div class="step-footer">
-          <button class="btn btn-ghost" onclick="goStep(3)">&larr; Back</button>
-          <button class="btn btn-primary" id="deploy-btn" onclick="runDeploy()">🚀 Deploy Commands</button>
+          <button class="btn btn-ghost" id="s4-back">&larr; Back</button>
+          <button class="btn btn-primary" id="deploy-btn">🚀 Deploy Commands</button>
         </div>
       </div>
 
@@ -756,19 +445,44 @@
   </main>
 </div>
 
+<footer class="site-footer">
+  <nav class="footer-links">
+    <a href="/">Dashboard</a>
+    <a href="/setup" class="active">Setup</a>
+    <a href="/packages">Packages</a>
+    <a href="/status">Status</a>
+    <a href="/brand">Brand Builder</a>
+    <a href="/community">Community</a>
+    <a href="/developers">Developers</a>
+  </nav>
+  <span class="footer-ver">Sigil GUI v2.6.0</span>
+</footer>
+
 <script>
+  // --- Nav ---
+  document.getElementById('hamburgerBtn').addEventListener('click', () => {
+    document.getElementById('hamburgerBtn').classList.toggle('open');
+    document.getElementById('navDrawer').classList.toggle('open');
+  });
+  function toggleTheme() {
+    const r = document.documentElement;
+    r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+  document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+  document.getElementById('themeBtnMobile').addEventListener('click', toggleTheme);
+
+  // --- Wizard state ---
   const state = { token: '', clientId: '', packages: [], channels: {} };
   let maxReached = 1;
 
   function goStep(n) {
-    // Don't allow jumping ahead past max reached
     if (n > maxReached) return;
     document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('step-' + n).classList.add('active');
     document.querySelectorAll('.sidebar-item[data-step]').forEach(item => {
       const s = parseInt(item.dataset.step);
       item.classList.remove('active', 'done');
-      if (s < n)       item.classList.add('done');
+      if (s < n)        item.classList.add('done');
       else if (s === n) item.classList.add('active');
     });
     document.querySelector('.content').scrollTop = 0;
@@ -779,58 +493,67 @@
     goStep(n);
   }
 
-  // Step 1 — validate token
+  // --- Sidebar step clicks via delegation ---
+  document.querySelectorAll('.sidebar-item[data-step]').forEach(item => {
+    item.addEventListener('click', () => goStep(parseInt(item.dataset.step)));
+  });
+
+  // --- Step nav buttons ---
+  document.getElementById('s2-back').addEventListener('click', () => goStep(1));
+  document.getElementById('s2-next').addEventListener('click', () => goStep(3));
+  document.getElementById('s3-back').addEventListener('click', () => goStep(2));
+  document.getElementById('s3-next').addEventListener('click', saveChannelsAndContinue);
+  document.getElementById('s4-back').addEventListener('click', () => goStep(3));
+  document.getElementById('deploy-btn').addEventListener('click', runDeploy);
+  document.getElementById('validate-btn').addEventListener('click', validateCredentials);
+  document.getElementById('step1-next').addEventListener('click', () => goStep(2));
+
+  // --- beforeunload guard for Step 3 ---
+  let step3Dirty = false;
+  document.querySelectorAll('.mapper-input').forEach(inp => {
+    inp.addEventListener('input', () => { step3Dirty = true; });
+  });
+  window.addEventListener('beforeunload', e => {
+    if (step3Dirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // --- Step 1: validate token ---
   async function validateCredentials() {
     const token    = document.getElementById('token-input').value.trim();
     const clientId = document.getElementById('client-id-input').value.trim();
     const badge    = document.getElementById('validate-badge');
     const btn      = document.getElementById('validate-btn');
     const banner   = document.getElementById('cred-banner');
-
-    if (!token || !clientId) {
-      showBanner(banner, 'Enter both a token and a Client ID.', 'error');
-      return;
-    }
+    if (!token || !clientId) { showBanner(banner, 'Enter both a token and a Client ID.', 'error'); return; }
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Validating…';
-    badge.className = 'badge';
-    badge.textContent = 'Checking…';
-
+    badge.className = 'badge'; badge.textContent = 'Checking…';
     try {
-      const res  = await fetch('/api/setup/validate-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, clientId }),
-      });
+      const res  = await fetch('/api/setup/validate-token', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token,clientId}) });
       const data = await res.json();
-
       if (data.ok) {
-        badge.className = 'badge ok';
-        badge.textContent = '\u2713 ' + data.tag;
+        badge.className = 'badge ok'; badge.textContent = '\u2713 ' + data.tag;
         document.getElementById('step1-next').disabled = false;
         document.getElementById('token-input').classList.add('valid');
         document.getElementById('client-id-input').classList.add('valid');
-        state.token = token;
-        state.clientId = clientId;
-        hideBanner(banner);
-        buildInviteLink(clientId);
+        state.token = token; state.clientId = clientId;
+        hideBanner(banner); buildInviteLink(clientId);
       } else {
-        badge.className = 'badge err';
-        badge.textContent = '\u2717 Invalid';
+        badge.className = 'badge err'; badge.textContent = '\u2717 Invalid';
         document.getElementById('token-input').classList.add('invalid');
         showBanner(banner, data.error || 'Token validation failed.', 'error');
       }
     } catch {
-      badge.className = 'badge err';
-      badge.textContent = '\u2717 Network error';
+      badge.className = 'badge err'; badge.textContent = '\u2717 Network error';
       showBanner(banner, 'Could not reach the server. Is Sigil running?', 'error');
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Validate Token';
+    btn.disabled = false; btn.textContent = 'Validate Token';
   }
 
-  // Package card toggle
+  // --- Package card toggle ---
   document.querySelectorAll('.pkg-card').forEach(card => {
     card.addEventListener('click', () => {
       const cb = card.querySelector('input[type=checkbox]');
@@ -839,8 +562,10 @@
     });
   });
 
-  // Step 3 — save channels and continue
+  // --- Step 3: save channels ---
   async function saveChannelsAndContinue() {
+    const errorBanner = document.getElementById('ch-save-error');
+    hideBanner(errorBanner);
     state.packages = [...document.querySelectorAll('.pkg-card.selected')].map(c => c.dataset.pkg);
     state.channels = {
       welcome:   document.getElementById('ch-welcome').value.trim(),
@@ -851,70 +576,65 @@
       modrole:   document.getElementById('role-mod').value.trim(),
     };
     try {
-      await fetch('/api/setup/save-config', {
+      const res = await fetch('/api/setup/save-config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packages: state.packages, channels: state.channels }),
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({packages: state.packages, channels: state.channels}),
       });
-    } catch (_) {}
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        showBanner(errorBanner, d.error || 'Failed to save configuration (HTTP ' + res.status + ').', 'error');
+        return;
+      }
+    } catch (err) {
+      showBanner(errorBanner, 'Could not reach the server: ' + err.message, 'error');
+      return;
+    }
+    step3Dirty = false;
     advanceTo(4);
   }
 
-  // Step 4 — deploy commands
+  // --- Step 4: deploy ---
   async function runDeploy() {
-    const secret  = document.getElementById('control-secret-input').value.trim();
-    const log     = document.getElementById('deploy-log');
-    const btn     = document.getElementById('deploy-btn');
-    const banner  = document.getElementById('deploy-banner');
-
-    if (!secret) {
-      banner.classList.add('show');
-      return;
-    }
-    banner.classList.remove('show');
+    const secret = document.getElementById('control-secret-input').value.trim();
+    const log    = document.getElementById('deploy-log');
+    const btn    = document.getElementById('deploy-btn');
+    const banner = document.getElementById('deploy-banner');
+    if (!secret) { showBanner(banner, '⚠️ Enter your CONTROL_SECRET before deploying.', 'warn'); return; }
+    hideBanner(banner);
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Deploying…';
     log.textContent = '';
-    appendLog(log, 'info', '\u25b8 Connecting to deploy endpoint…');
-
+    appendLog(log,'info','\u25b8 Connecting to deploy endpoint…');
     try {
-      const res = await fetch('/api/control/deploy-commands', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-control-secret': secret },
-        body: JSON.stringify({}),
-      });
-
+      const res = await fetch('/api/control/deploy-commands', { method:'POST', headers:{'Content-Type':'application/json','x-control-secret':secret}, body:'{}' });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        appendLog(log, 'err', '\u2717 ' + (d.error || 'HTTP ' + res.status));
-        btn.disabled = false;
-        btn.innerHTML = '\ud83d\ude80 Deploy Commands';
-        return;
+        appendLog(log,'err','\u2717 ' + (d.error || 'HTTP ' + res.status));
+        btn.disabled = false; btn.innerHTML = '\ud83d\ude80 Deploy Commands'; return;
       }
-
-      const reader  = res.body?.getReader();
+      const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       if (reader) {
         while (true) {
-          const { done, value } = await reader.read();
+          const {done,value} = await reader.read();
           if (done) break;
           decoder.decode(value).split('\n').filter(Boolean).forEach(line => {
-            try { const m = JSON.parse(line); appendLog(log, m.level || 'info', m.text); }
-            catch { appendLog(log, 'info', line); }
+            try { const m = JSON.parse(line); appendLog(log, m.level||'info', m.text); }
+            catch { appendLog(log,'info',line); }
           });
         }
       } else {
         const d = await res.json();
-        if (d.ok) appendLog(log, 'ok', '\u2713 Registered ' + d.count + ' commands.');
-        else      appendLog(log, 'err', '\u2717 ' + d.error);
+        if (d.ok) appendLog(log,'ok','\u2713 Registered ' + d.count + ' commands.');
+        else      appendLog(log,'err','\u2717 ' + d.error);
       }
-
-      appendLog(log, 'ok', '\u2713 Done. Commands are live.');
+      appendLog(log,'ok','\u2713 Done. Commands are live.');
+      showBanner(document.getElementById('deploy-banner-success') || createSuccessBanner(), '', 'ok');
       setTimeout(() => advanceTo(5), 1400);
     } catch (e) {
-      appendLog(log, 'err', '\u2717 ' + e.message);
-      btn.disabled = false;
-      btn.innerHTML = '\ud83d\ude80 Deploy Commands';
+      appendLog(log,'err','\u2717 ' + e.message);
+      btn.disabled = false; btn.innerHTML = '\ud83d\ude80 Deploy Commands';
     }
   }
 
@@ -928,8 +648,7 @@
 
   function buildInviteLink(id) {
     const link = document.getElementById('invite-link');
-    if (link && id)
-      link.href = 'https://discord.com/oauth2/authorize?client_id=' + id + '&permissions=8&scope=bot+applications.commands';
+    if (link && id) link.href = 'https://discord.com/oauth2/authorize?client_id=' + id + '&permissions=8&scope=bot+applications.commands';
   }
 
   function showBanner(el, msg, type) {
@@ -939,11 +658,12 @@
   function hideBanner(el) { el.classList.remove('show'); }
 
   // Enter key on step 1 inputs triggers validation
-  ['token-input', 'client-id-input'].forEach(id => {
-    document.getElementById(id)?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') validateCredentials();
-    });
+  ['token-input','client-id-input'].forEach(id => {
+    document.getElementById(id)?.addEventListener('keydown', e => { if (e.key==='Enter') validateCredentials(); });
   });
+
+  // Show deploy-banner initially
+  document.getElementById('deploy-banner').classList.add('show');
 </script>
 </body>
 </html>
