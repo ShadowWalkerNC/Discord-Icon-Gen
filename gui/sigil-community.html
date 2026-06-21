@@ -582,6 +582,12 @@ const SERVER=window.location.origin;
 const $=id=>document.getElementById(id);
 let alive=false;
 
+function esc(str){
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // HEALTH
 async function ping(){
   try{const r=await fetch(`${SERVER}/health`,{signal:AbortSignal.timeout(2500)});alive=r.ok;}catch{alive=false;}
@@ -751,33 +757,60 @@ stub('sb-save','sb-status','✓ Starboard settings saved — use /starboard in D
 stub('sh-save','sh-status','✓ Shift config saved — use /shift setup in Discord to apply.');
 stub('xp-save','xp-status','✓ XP config saved — use /xpadmin set-rate in Discord to apply.');
 
-// REACTION ROLES
+// REACTION ROLES — DOM-based, no innerHTML with user data
 let rrBtns=[];
 function renderRR(){
   const l=$('rr-list');l.innerHTML='';
   rrBtns.forEach((b,i)=>{
-    const row=document.createElement('div');row.style.cssText='display:flex;gap:.5rem;align-items:center;';
-    row.innerHTML=`<input class="inp" value="${b.label}" placeholder="Label" style="flex:2;" data-i="${i}" data-f="label"/>
-      <input class="inp" value="${b.role}" placeholder="@Role" style="flex:2;" data-i="${i}" data-f="role"/>
-      <input class="inp" value="${b.emoji}" placeholder="🎮" style="width:60px;" data-i="${i}" data-f="emoji"/>
-      <button class="btn sm warn-btn" data-del="${i}">✕</button>`;
-    row.querySelectorAll('[data-f]').forEach(inp=>inp.addEventListener('input',e=>{rrBtns[+e.target.dataset.i][e.target.dataset.f]=e.target.value;}));
-    row.querySelector('[data-del]').addEventListener('click',e=>{rrBtns.splice(+e.target.dataset.del,1);renderRR();});l.appendChild(row);
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:.5rem;align-items:center;';
+
+    const labelInp=document.createElement('input');
+    labelInp.className='inp';labelInp.value=b.label;labelInp.placeholder='Label';
+    labelInp.style.flex='2';
+    labelInp.addEventListener('input',e=>{rrBtns[i].label=e.target.value;});
+
+    const roleInp=document.createElement('input');
+    roleInp.className='inp';roleInp.value=b.role;roleInp.placeholder='@Role';
+    roleInp.style.flex='2';
+    roleInp.addEventListener('input',e=>{rrBtns[i].role=e.target.value;});
+
+    const emojiInp=document.createElement('input');
+    emojiInp.className='inp';emojiInp.value=b.emoji;emojiInp.placeholder='🎮';
+    emojiInp.style.width='60px';
+    emojiInp.addEventListener('input',e=>{rrBtns[i].emoji=e.target.value;});
+
+    const del=document.createElement('button');
+    del.className='btn sm warn-btn';del.textContent='✕';
+    del.addEventListener('click',()=>{rrBtns.splice(i,1);renderRR();});
+
+    row.appendChild(labelInp);row.appendChild(roleInp);row.appendChild(emojiInp);row.appendChild(del);
+    l.appendChild(row);
   });
 }
 $('rr-add').addEventListener('click',()=>{if(rrBtns.length<10){rrBtns.push({label:'',role:'',emoji:'🎮'});renderRR();}});
 $('rr-post').addEventListener('click',()=>setStatus('rr-status','✓ Panel ready — use /reactionroles create in Discord to post it.','ok'));
 renderRR();
 
-// POLL OPTIONS
+// POLL OPTIONS — DOM-based, no innerHTML with user data
 let plOpts=['Option A','Option B'];
 function renderPoll(){
   const c=$('pl-opts');c.innerHTML='';
   plOpts.forEach((o,i)=>{
-    const row=document.createElement('div');row.style.cssText='display:flex;gap:.5rem;';
-    row.innerHTML=`<input class="inp" value="${o}" placeholder="Option ${i+1}" style="flex:1;" data-i="${i}"/><button class="btn sm warn-btn" data-del="${i}">✕</button>`;
-    row.querySelector('[data-i]').addEventListener('input',e=>plOpts[+e.target.dataset.i]=e.target.value);
-    row.querySelector('[data-del]').addEventListener('click',e=>{plOpts.splice(+e.target.dataset.del,1);renderPoll();});c.appendChild(row);
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:.5rem;';
+
+    const inp=document.createElement('input');
+    inp.className='inp';inp.value=o;inp.placeholder=`Option ${i+1}`;
+    inp.style.flex='1';
+    inp.addEventListener('input',e=>{plOpts[i]=e.target.value;});
+
+    const del=document.createElement('button');
+    del.className='btn sm warn-btn';del.textContent='✕';
+    del.addEventListener('click',()=>{plOpts.splice(i,1);renderPoll();});
+
+    row.appendChild(inp);row.appendChild(del);
+    c.appendChild(row);
   });
 }
 $('pl-addopt').addEventListener('click',()=>{if(plOpts.length<5){plOpts.push('');renderPoll();}});
@@ -802,8 +835,12 @@ function renderLR(){
   const c=$('lr-list');c.innerHTML='';
   lrRules.forEach((r,i)=>{
     const row=document.createElement('div');row.className='rule-item';
-    row.innerHTML=`<div class="rule-name">Level ${r.level}</div><div class="rule-desc">${r.role}</div><button class="btn sm warn-btn" data-del="${i}">✕</button>`;
-    row.querySelector('[data-del]').addEventListener('click',e=>{lrRules.splice(+e.target.dataset.del,1);renderLR();});c.appendChild(row);
+    const nameEl=document.createElement('div');nameEl.className='rule-name';nameEl.textContent=`Level ${r.level}`;
+    const descEl=document.createElement('div');descEl.className='rule-desc';descEl.textContent=r.role;
+    const del=document.createElement('button');del.className='btn sm warn-btn';del.textContent='✕';
+    del.addEventListener('click',()=>{lrRules.splice(i,1);renderLR();});
+    row.appendChild(nameEl);row.appendChild(descEl);row.appendChild(del);
+    c.appendChild(row);
   });
   if(lrRules.length)setStatus('lr-status',`${lrRules.length} rule(s) — use /levelroles add in Discord to apply.`,'inf');
 }
