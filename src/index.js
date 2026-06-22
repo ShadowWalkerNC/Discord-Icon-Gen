@@ -3,7 +3,7 @@ const { readdirSync } = require('fs');
 const { join } = require('path');
 require('dotenv').config();
 
-// ── DB MUST be required first ─────────────────────────────────────────────────
+// ── DB MUST be required first ─────────────────────────────────────────────────────
 const db = require('./db');
 
 const TOKEN     = process.env.DISCORD_TOKEN || process.env.TOKEN;
@@ -88,13 +88,11 @@ const _insertLog = db.prepare(
     'INSERT INTO log_buffer (ts, level, text) VALUES (?, ?, ?)'
 );
 
-// Trim is batched — only runs every 50 writes to avoid a DELETE on every log line
 let _logWriteCount = 0;
 const _trimLog = db.prepare(
     'DELETE FROM log_buffer WHERE id NOT IN (SELECT id FROM log_buffer ORDER BY id DESC LIMIT 500)'
 );
 
-// Flush serviceRegistry snapshot to SQLite.
 function flushServiceRegistry() {
     try {
         const registry = require('./util/serviceRegistry.js');
@@ -125,7 +123,6 @@ function flushServiceRegistry() {
         try {
             const text = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
             _insertLog.run(Date.now(), level, text.slice(0, 2000));
-            // Batch trim: only run every 50 writes
             _logWriteCount++;
             if (_logWriteCount >= 50) {
                 _trimLog.run();
@@ -159,8 +156,6 @@ function applySetupWizardConfig() {
 
         const data = Object.fromEntries(rows.map(r => [r.key, JSON.parse(r.value)]));
 
-        // Apply enabled packages for every guild currently in cache
-        // (also stores them so future guilds pick them up via packages.js)
         if (Array.isArray(data.packages) && data.packages.length > 0) {
             const guildIds = [...client.guilds.cache.keys()];
             for (const guildId of guildIds) {
@@ -171,7 +166,6 @@ function applySetupWizardConfig() {
             console.log(`[setup] Applied packages [${data.packages.join(', ')}] to ${guildIds.length} guild(s).`);
         }
 
-        // Store channel config in process.env so services can read it without DB access
         if (data.channels && typeof data.channels === 'object') {
             for (const [key, channelId] of Object.entries(data.channels)) {
                 const envKey = `SETUP_CHANNEL_${key.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
@@ -180,7 +174,6 @@ function applySetupWizardConfig() {
             console.log(`[setup] Loaded ${Object.keys(data.channels).length} channel config(s) from setup_wizard.`);
         }
     } catch (err) {
-        // Non-fatal — if setup_wizard hasn't been used the table may not exist
         if (!err.message?.includes('no such table') && !err.message?.includes('ENOENT')) {
             console.warn('[setup] applySetupWizardConfig error:', err.message);
         }
@@ -190,36 +183,40 @@ function applySetupWizardConfig() {
 client.once('clientReady', () => {
     global.sigilClient = client;
 
-    // Apply any config saved via the GUI setup wizard
     applySetupWizardConfig();
 
     const { handleTwitchLive, handleYouTubeUpload, handleGitHubPush } = require('./automation/webhookHandler.js');
     const { processWebhookQueue } = require('./utils/webhookQueue.js');
 
-    // Webhook dispatch handlers keyed by event type
     const webhookHandlers = {
         'twitch.live':    handleTwitchLive,
         'youtube.upload': handleYouTubeUpload,
         'github.push':    handleGitHubPush,
     };
 
-    // Poll webhook_queue every 5 s and dispatch events using the live client
     setInterval(() => processWebhookQueue(client, webhookHandlers), 5_000);
 
-    const { startPollers }                        = require('./services/pollers.js');
-    const { startScheduler }                      = require('./services/scheduler.js');
-    const { startStatsRunner }                    = require('./services/statsRunner.js');
-    const { startScheduler: startDevotional }     = require('./commands/devotional.js');
-    const { startShiftScheduler }                 = require('./commands/shift.js');
-    const { startMyShiftScheduler }               = require('./commands/myshift.js');
+    const { startPollers }      = require('./services/pollers.js');
+    const { startScheduler }    = require('./services/scheduler.js');
+    const { startStatsRunner }  = require('./services/statsRunner.js');
+
+    // These command files expose an optional startScheduler — only call if present.
+    const _devotionalMod  = require('./commands/devotional.js');
+    const _shiftMod       = require('./commands/shift.js');
+    const _myshiftMod     = require('./commands/myshift.js');
+
+    const startDevotional     = typeof _devotionalMod.startScheduler  === 'function' ? _devotionalMod.startScheduler  : null;
+    const startShiftScheduler = typeof _shiftMod.startShiftScheduler  === 'function' ? _shiftMod.startShiftScheduler  : null;
+    const startMyShift        = typeof _myshiftMod.startMyShiftScheduler === 'function' ? _myshiftMod.startMyShiftScheduler : null;
 
     for (const [name, fn] of [
         ['pollers',     () => startPollers(client)],
         ['scheduler',   () => startScheduler(client)],
         ['statsRunner', () => startStatsRunner(client)],
-        ['devotional',  () => startDevotional(client)],
-        ['shift',       () => startShiftScheduler(client)],
-        ['myshift',     () => startMyShiftScheduler(client)],
+        // Optional schedulers — skipped cleanly if the impl file isn't installed
+        ...(startDevotional     ? [['devotional', () => startDevotional(client)]]     : []),
+        ...(startShiftScheduler ? [['shift',      () => startShiftScheduler(client)]] : []),
+        ...(startMyShift        ? [['myshift',    () => startMyShift(client)]]        : []),
     ]) {
         try { fn(); }
         catch (err) { console.error(`[startup] Failed to start service "${name}":`, err.message); }
