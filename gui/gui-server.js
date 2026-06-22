@@ -6,6 +6,7 @@ const path       = require('path');
 const http       = require('http');
 const { spawn }  = require('child_process');
 const crypto     = require('crypto');
+const fs         = require('fs');
 const rateLimit  = require('express-rate-limit');
 const { WebSocketServer } = require('ws');
 const { createCanvas, loadImage } = require('canvas');
@@ -36,17 +37,38 @@ const VERSION   = '2.7.0';
 // ── SQLite IPC bridge (read-only, single shared connection) ───────────────────
 const DB_PATH = path.join(__dirname, '..', 'data', 'sigil.db');
 
-// Single persistent read-only connection — avoids opening/closing per request
+// Single persistent read-only connection — avoids opening/closing per request.
+// Returns null gracefully if the DB file doesn't exist yet (first boot before
+// the bot process has run, or separate Railway service with no shared volume).
 let _ipcDb = null;
+let _ipcDbMissing = false; // true once we've already warned, avoids log spam
+
 function getIpcDb() {
     if (_ipcDb) return _ipcDb;
+    if (!fs.existsSync(DB_PATH)) {
+        if (!_ipcDbMissing) {
+            console.warn('[IPC] sigil.db not found at', DB_PATH,
+                '— bot status will show as disconnected until the bot process creates it.');
+            _ipcDbMissing = true;
+        }
+        return null;
+    }
     try {
         _ipcDb = new Database(DB_PATH, { readonly: true, fileMustExist: true });
+        _ipcDbMissing = false;
+        console.log('[IPC] Connected to sigil.db (read-only).');
         return _ipcDb;
-    } catch {
+    } catch (err) {
+        console.warn('[IPC] Could not open sigil.db:', err.message);
         return null;
     }
 }
+
+// Re-check DB connection every 30 s so the GUI picks up the DB as soon as the
+// bot creates it (relevant on Railway when both services share a volume).
+setInterval(() => {
+    if (!_ipcDb) { _ipcDb = null; /* force re-open attempt next call */ }
+}, 30_000).unref();
 
 function readBotHeartbeat() {
     const ipc = getIpcDb();
@@ -149,6 +171,7 @@ app.post('/auth/token', authLimiter, (req, res) => {
     if (!provided || provided.length < 8)
         return res.status(400).json({ ok: false, error: 'Token is too short.' });
     let valid = false;
+
     try {
         const a = Buffer.from(provided);
         const b = Buffer.from(guiSecret);
@@ -168,7 +191,6 @@ app.get('/auth/discord', (req, res) => {
         url.searchParams.set('state', returnTo);
         return res.redirect(302, url.toString());
     }
-    // No OAuth configured — send to token login page
     res.redirect(302, `/login?return=${encodeURIComponent(returnTo)}`);
 });
 
@@ -188,7 +210,6 @@ app.get('/auth/discord/callback', authLimiter, async (req, res) => {
         return res.redirect(302, `/login?return=${encodeURIComponent(returnTo)}&error=oauth_not_configured`);
 
     try {
-        // Exchange code for Discord access token
         const tokenRes = await fetch('https://discord.com/api/v10/oauth2/token', {
             method:  'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -206,7 +227,6 @@ app.get('/auth/discord/callback', authLimiter, async (req, res) => {
             return res.redirect(302, `/login?return=${encodeURIComponent(returnTo)}&error=oauth_failed`);
         }
 
-        // Verify the Discord user is in the allowed guild (optional — uses DISCORD_GUILD_ID env)
         const { access_token } = await tokenRes.json();
         const userRes = await fetch('https://discord.com/api/v10/users/@me', {
             headers: { Authorization: `Bearer ${access_token}` },
@@ -218,15 +238,11 @@ app.get('/auth/discord/callback', authLimiter, async (req, res) => {
         const user = await userRes.json();
         console.log(`[OAuth] Authenticated: ${user.username} (${user.id})`);
 
-        // Use GUI_AUTH_TOKEN as the session token (passed back to the client via ?token=)
-        // This keeps the auth model simple — all GUI access = same shared token.
         if (!guiSecret) {
             console.warn('[OAuth] GUI_AUTH_TOKEN not set — cannot issue session token.');
             return res.redirect(302, `/login?return=${encodeURIComponent(returnTo)}&error=no_gui_token`);
         }
 
-        // Redirect to the return path with the session token in the URL
-        // auth.js will strip this from the URL and store it in sessionStorage.
         const dest = new URL(returnTo, `http://localhost:${PORT}`);
         dest.searchParams.set('token', guiSecret);
         return res.redirect(302, dest.pathname + dest.search);
@@ -237,14 +253,15 @@ app.get('/auth/discord/callback', authLimiter, async (req, res) => {
     }
 });
 
-app.get('/health',     (req, res) => {
+app.get('/health', (req, res) => {
     // Unauthenticated — used by Railway health checks
-    const botReady = typeof global.sigilClient !== 'undefined' && global.sigilClient?.isReady?.();
-    res.json({ ok: true, version: VERSION, ai_enabled: AI_ENABLED, bot_ready: botReady });
+    const dbReachable = !!getIpcDb();
+    const hb = dbReachable ? readBotHeartbeat() : null;
+    const botReady = hb && (Date.now() - hb.ts) < BOT_STALE_MS;
+    res.json({ ok: true, version: VERSION, db_reachable: dbReachable, bot_ready: !!botReady });
 });
 
 // ── Auth middleware applied to ALL /api/* routes ──────────────────────────────
-// Render endpoints (/preview/*) also require auth since they're resource-heavy.
 app.use('/api',     guiAuthMiddleware);
 app.use('/preview', guiAuthMiddleware);
 
@@ -412,17 +429,17 @@ app.post('/api/media/enqueue', mediaLimiter, async (req, res) => {
     } catch (err) { console.error('[POST /api/media/enqueue]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' }); }
 });
 
-app.post('/api/media/skip', mediaLimiter, async (req, res) => {
+app.post('/api/media/skip',   mediaLimiter, async (req, res) => {
     try { const r = await proxyToStream('/api/skip', {}); res.status(r.status).json(r.body); }
     catch (err) { console.error('[POST /api/media/skip]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
-app.post('/api/media/stop', mediaLimiter, async (req, res) => {
+app.post('/api/media/stop',   mediaLimiter, async (req, res) => {
     try { const r = await proxyToStream('/api/stop', {}); res.status(r.status).json(r.body); }
     catch (err) { console.error('[POST /api/media/stop]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
-app.post('/api/media/seek', mediaLimiter, async (req, res) => {
+app.post('/api/media/seek',   mediaLimiter, async (req, res) => {
     try {
         const time = Number(req.body?.time ?? -1);
         if (time < 0) return res.status(400).json({ ok: false, error: '"time" must be >= 0.' });
@@ -438,7 +455,7 @@ app.post('/api/media/volume', mediaLimiter, async (req, res) => {
     } catch (err) { console.error('[POST /api/media/volume]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
-app.post('/api/media/loop', mediaLimiter, async (req, res) => {
+app.post('/api/media/loop',   mediaLimiter, async (req, res) => {
     try {
         const enabled = req.body?.enabled;
         if (typeof enabled !== 'boolean') return res.status(400).json({ ok: false, error: '"enabled" must be a boolean.' });
@@ -446,7 +463,7 @@ app.post('/api/media/loop', mediaLimiter, async (req, res) => {
     } catch (err) { console.error('[POST /api/media/loop]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
-app.post('/api/media/mode', mediaLimiter, async (req, res) => {
+app.post('/api/media/mode',   mediaLimiter, async (req, res) => {
     try {
         const mode = Number(req.body?.mode ?? 0);
         if (!mode || mode < 1 || mode > 5) return res.status(400).json({ ok: false, error: '"mode" must be 1-5.' });
@@ -454,7 +471,7 @@ app.post('/api/media/mode', mediaLimiter, async (req, res) => {
     } catch (err) { console.error('[POST /api/media/mode]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
-app.post('/api/media/cols', mediaLimiter, async (req, res) => {
+app.post('/api/media/cols',   mediaLimiter, async (req, res) => {
     try {
         const cols = Number(req.body?.cols ?? 0);
         if (!cols || cols < 40 || cols > 500) return res.status(400).json({ ok: false, error: '"cols" must be 40-500.' });
@@ -462,12 +479,12 @@ app.post('/api/media/cols', mediaLimiter, async (req, res) => {
     } catch (err) { console.error('[POST /api/media/cols]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
 
-app.get('/api/media/status', mediaLimiter, async (req, res) => {
+app.get('/api/media/status',  mediaLimiter, async (req, res) => {
     try { const r = await proxyGetToStream('/api/status'); res.status(r.status).json(r.body); }
     catch (err) { console.error('[GET /api/media/status]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable. Is ASCILINE running?' }); }
 });
 
-app.get('/api/media/queue', mediaLimiter, async (req, res) => {
+app.get('/api/media/queue',   mediaLimiter, async (req, res) => {
     try { const r = await proxyGetToStream('/api/queue'); res.status(r.status).json(r.body); }
     catch (err) { console.error('[GET /api/media/queue]', err); res.status(503).json({ ok: false, error: 'Stream server unreachable.' }); }
 });
@@ -537,22 +554,79 @@ server.on('upgrade', (req, socket, head) => {
 
 app.get('/api/status/full', apiLimiter, async (req, res) => {
     const result = { ok: true };
+
+    // GUI server is always reachable if we're here
     result.gui = { ok: true, reachable: true, version: VERSION, uptime_ms: Date.now() - START_TS };
-    const hb = readBotHeartbeat();
-    if (hb && (Date.now() - hb.ts) < BOT_STALE_MS) {
-        result.bot = { ok: true, reachable: true, guilds: hb.guilds, latency: hb.latency, tag: hb.tag };
+
+    // ── Bot status via SQLite heartbeat ──────────────────────────────────────
+    const dbReachable = !!getIpcDb();
+    const hb = dbReachable ? readBotHeartbeat() : null;
+
+    if (!dbReachable) {
+        // DB doesn't exist yet — bot hasn't run or is on a separate service
+        result.bot = {
+            ok: false,
+            reachable: false,
+            reason: 'db_unavailable',
+            hint: 'The bot process has not created sigil.db yet. Start the bot service.',
+        };
+    } else if (!hb) {
+        // DB exists but no heartbeat row written yet
+        result.bot = {
+            ok: false,
+            reachable: false,
+            reason: 'no_heartbeat',
+            hint: 'Bot has not sent a heartbeat yet. It may still be starting up.',
+        };
+    } else if ((Date.now() - hb.ts) >= BOT_STALE_MS) {
+        // Heartbeat exists but is stale
+        result.bot = {
+            ok: false,
+            reachable: false,
+            reason: 'stale_heartbeat',
+            last_seen_ms: Date.now() - hb.ts,
+            guilds: hb.guilds,
+            tag: hb.tag,
+            hint: `Last heartbeat was ${Math.round((Date.now() - hb.ts) / 1000)}s ago (threshold: ${BOT_STALE_MS / 1000}s).`,
+        };
     } else {
-        result.bot = { ok: false, reachable: false, last_seen_ms: hb ? Date.now() - hb.ts : null };
+        // Fresh heartbeat — bot is alive
+        result.bot = {
+            ok: true,
+            reachable: true,
+            guilds:  hb.guilds,
+            latency: hb.latency,
+            tag:     hb.tag,
+        };
     }
+
+    // ── ASCILINE stream server ────────────────────────────────────────────────
     try {
         const { body } = await proxyGetToStream('/api/status');
-        result.asciline = { ok: true, reachable: true, playing: !!(body.current || body.playing), mode: body.mode ?? null, cols: body.cols ?? null, queue_len: body.queue_length ?? body.queue?.length ?? 0 };
-    } catch { result.asciline = { ok: false, reachable: false }; }
+        result.asciline = {
+            ok: true, reachable: true,
+            playing:   !!(body.current || body.playing),
+            mode:      body.mode      ?? null,
+            cols:      body.cols      ?? null,
+            queue_len: body.queue_length ?? body.queue?.length ?? 0,
+        };
+    } catch {
+        result.asciline = { ok: false, reachable: false };
+    }
+
+    // ── Background services ───────────────────────────────────────────────────
     result.services    = readServiceRegistry();
-    result.services_ok = result.services.filter(s => s.status !== 'ok' && s.status !== 'starting').length === 0;
+    result.services_ok = result.services.filter(
+        s => s.status !== 'ok' && s.status !== 'starting'
+    ).length === 0;
+
+    // ── Last error from log buffer ────────────────────────────────────────────
     const lastErrors   = readLogBuffer(1, 'error');
     result.last_error  = lastErrors.length ? lastErrors[0] : null;
-    result.ok          = result.bot.ok && result.services_ok;
+
+    // Overall ok: only true when bot is alive and all services are healthy
+    result.ok = result.bot.ok && result.services_ok;
+
     res.json(result);
 });
 
@@ -629,11 +703,8 @@ app.post('/api/control/deploy-commands', controlLimiter, (req, res) => {
     });
 
     child.on('close', (code) => {
-        if (code === 0) {
-            sendLine('ok', '✓ deploy-commands.js exited successfully.');
-        } else {
-            sendLine('err', `✗ deploy-commands.js exited with code ${code}.`);
-        }
+        if (code === 0) sendLine('ok',  '✓ deploy-commands.js exited successfully.');
+        else            sendLine('err', `✗ deploy-commands.js exited with code ${code}.`);
         res.end();
     });
 
