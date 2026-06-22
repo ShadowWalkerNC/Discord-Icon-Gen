@@ -170,17 +170,43 @@ npm run gui             # web dashboard (separate process or combined via PM2)
 
 All variables are documented in [`.env.example`](.env.example). Required ones are needed to start. Everything else unlocks an optional feature.
 
-| Variable | Required | Unlocks |
-|---|---|---|
-| `DISCORD_TOKEN` | ✅ | Bot login |
-| `CLIENT_ID` | ✅ | Slash command registration |
-| `GUI_URL` | ✅ | Your public dashboard URL |
-| `GEMINI_API_KEY` | Optional | `/brand ai` — AI brand generation |
-| `YOUTUBE_API_KEY` | Optional | YouTube upload alerts |
-| `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` | Optional | Twitch live alerts |
-| `BIBLE_API_KEY` | Optional | Daily devotionals via API.Bible |
-| `CONTROL_SECRET` | Optional | `/api/control/restart` endpoint |
-| `CULINARYOS_API_URL` + `CULINARYOS_API_KEY` | Optional | CulinaryOS bridge |
+### Core (required)
+
+| Variable | Description |
+|---|---|
+| `DISCORD_TOKEN` | Bot login token from Discord Developer Portal |
+| `CLIENT_ID` | Your Discord application's client ID |
+| `GUI_AUTH_TOKEN` | Shared secret for all GUI API access. Generate: `openssl rand -hex 32` |
+
+### GUI Dashboard
+
+| Variable | Description |
+|---|---|
+| `GUI_URL` | Your public dashboard URL (shown in Discord `/gui open`) |
+| `CONTROL_SECRET` | Enables `/api/control/restart` and deploy-commands endpoints |
+| `PORT` | HTTP port (default `8080`). Railway sets this automatically. |
+
+### Discord OAuth login (recommended for production)
+
+| Variable | Description |
+|---|---|
+| `DISCORD_CLIENT_ID` | Your Discord application's client ID (same as `CLIENT_ID`) |
+| `DISCORD_CLIENT_SECRET` | OAuth2 secret — Discord Dev Portal → OAuth2 tab |
+| `DISCORD_REDIRECT_URI` | Must match exactly: `https://YOUR-DOMAIN/auth/discord/callback` |
+| `DISCORD_OAUTH_URL` | Full authorization URL — Discord Dev Portal → OAuth2 → URL Generator (scope: `identify`) |
+
+Without these, `/login` token-entry page is used as a fallback.
+
+### Optional features
+
+| Variable | Unlocks |
+|---|---|
+| `GEMINI_API_KEY` | `/brand ai` — AI brand generation |
+| `YOUTUBE_API_KEY` | YouTube upload alerts |
+| `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` | Twitch live alerts |
+| `BIBLE_API_KEY` | Daily devotionals via API.Bible |
+| `STREAM_SERVER_URL` | ASCILINE media queue integration |
+| `CULINARYOS_API_URL` + `CULINARYOS_API_KEY` | CulinaryOS bridge |
 
 ---
 
@@ -191,6 +217,8 @@ All variables are documented in [`.env.example`](.env.example). Required ones ar
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app)
 
 Push to GitHub and Railway auto-deploys via Nixpacks. Set your env vars in the Railway dashboard. No build step needed.
+
+See [`gui/README.md`](gui/README.md) for the full Railway + Discord OAuth setup walkthrough.
 
 ### PM2 (self-hosted VPS)
 
@@ -241,14 +269,16 @@ Sigil/
 │       └── logBuffer.js        # In-process log ring buffer
 ├── gui/
 │   ├── gui-server.js        # Express server — API + WebSocket + static pages
+│   ├── auth.js              # Client-side auth helper — token bootstrap, authFetch()
+│   ├── login.html           # Token-entry fallback login page
 │   ├── index.html           # Home / marketing landing page
 │   ├── sigil-gui-builder.html  # Brand builder live canvas GUI
 │   ├── sigil-community.html    # Community tools GUI
 │   ├── status.html          # Real-time status dashboard
 │   ├── packages.html        # Feature package toggle panel
 │   ├── developers.html      # Developer API reference
+│   ├── setup.html           # First-time setup wizard
 │   └── 404.html
-├── setup.html               # Setup wizard (first-time installer)
 ├── data/
 │   └── sigil.db             # SQLite database (auto-created, WAL mode)
 ├── .env.example
@@ -318,7 +348,7 @@ The service will automatically appear on the `/status` dashboard and in the SQLi
 | `/health` | GET | Simple uptime + version check |
 | `/ws/logs` | WebSocket | Live log stream (`?level=error`) |
 
-All endpoints are rate-limited. See `gui/gui-server.js` for full request/response shapes.
+All endpoints are rate-limited. See [`gui/README.md`](gui/README.md) for the full API reference and rate limit table.
 
 ### Packages System
 
