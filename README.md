@@ -4,7 +4,7 @@
 
 **The all-in-one Discord bot platform — built to be forked, owned, and made yours.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-sigil--production--f8d3.up.railway.app-7c3aed?style=for-the-badge&logo=railway)](https://sigil-production-f8d3.up.railway.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-sigil.up.railway.app-7c3aed?style=for-the-badge&logo=railway)](https://sigil.up.railway.app)
 [![Discord](https://img.shields.io/badge/Demo%20Server-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/7c89HKrVe)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 [![Node](https://img.shields.io/badge/Node.js-20%2B-339933?style=for-the-badge&logo=nodedotjs)]()
@@ -376,6 +376,6 @@ MIT — see [LICENSE](LICENSE). Fork it, own it, ship it.
 
 <div align="center">
 
-🌐 [sigil-production-f8d3.up.railway.app](https://sigil-production-f8d3.up.railway.app) &nbsp;·&nbsp; 💬 [Discord](https://discord.gg/7c89HKrVe) &nbsp;·&nbsp; ⭐ Star the repo if it saves you time
+🌐 [sigil.up.railway.app](https://sigil.up.railway.app) &nbsp;·&nbsp; 💬 [Discord](https://discord.gg/7c89HKrVe) &nbsp;·&nbsp; ⭐ Star the repo if it saves you time
 
 </div>
