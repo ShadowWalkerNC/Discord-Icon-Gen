@@ -22,3 +22,11 @@ npm-debug.log*
 # Build output
 dist/
 build/
+
+# Font binaries (except tracked font.otf)
+src/fonts/*.ttf
+src/fonts/BebasNeue-Regular.ttf
+src/fonts/DancingScript-Bold.ttf
+src/fonts/Oswald-Bold.ttf
+src/fonts/PlayfairDisplay-Bold.ttf
+src/fonts/SourceCodePro-Bold.ttf

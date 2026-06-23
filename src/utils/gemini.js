@@ -57,7 +57,7 @@ async function geminiRequest(prompt, opts = {}) {
 async function geminiImageRequest(prompt, opts = {}) {
     try {
         const model = getAI().getGenerativeModel({
-            model: 'gemini-2.0-flash-exp',
+            model: 'gemini-2.0-flash',
         });
         const result = await model.generateContent({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
