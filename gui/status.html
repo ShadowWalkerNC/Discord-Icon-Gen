@@ -26,6 +26,7 @@
     html{scroll-behavior:smooth;}
     body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh;}
     button{cursor:pointer;border:none;background:none;font:inherit;color:inherit;}
+    /* navbar */
     .navbar{position:sticky;top:0;z-index:100;background:rgba(8,8,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;padding:.6rem 1.5rem;}
     .nav-logo{font-family:var(--fontd);font-weight:900;font-size:1.1rem;background:linear-gradient(135deg,#ff4444,#8b0000,#4b0082);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;white-space:nowrap;}
     .nav-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
@@ -43,48 +44,42 @@
     .nav-drawer.open{display:flex;}
     .nav-drawer .nav-btn{justify-content:flex-start;}
     @media(max-width:700px){.nav-subtitle,.nav-sep{display:none;}.nav-actions{display:none;}.nav-hamburger{display:flex;}}
-    .page-header{padding:3rem 1.5rem 2rem;max-width:1200px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;}
+    /* layout */
+    .page-header{padding:2.5rem 1.5rem 1.5rem;max-width:1200px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;}
     .page-header h1{font-family:var(--fontd);font-size:clamp(1.4rem,3.5vw,2rem);font-weight:900;background:linear-gradient(135deg,#ff6666,#8b0000,#4b0082);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
     .page-header p{color:var(--muted);font-size:.9rem;margin-top:.3rem;}
     .refresh-info{font-size:.78rem;color:var(--faint);display:flex;align-items:center;gap:.5rem;white-space:nowrap;}
     .refresh-dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 2s infinite;flex-shrink:0;}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-    .page-body{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
-    @media(max-width:860px){.page-body{grid-template-columns:1fr;}}
-    .full-col{grid-column:1/-1;}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiuslg);overflow:hidden;transition:border-color 200ms;}
-    .card:hover{border-color:rgba(255,255,255,.16);}
-    .card-head{padding:1.1rem 1.4rem .8rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;border-bottom:1px solid var(--border);}
+    .page-body{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem;display:flex;flex-direction:column;gap:1.25rem;}
+    /* cards */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiuslg);overflow:hidden;}
+    .card-head{padding:1rem 1.4rem .8rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;border-bottom:1px solid var(--border);}
     .card-title{font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;align-items:center;gap:.5rem;}
     .card-body{padding:1.2rem 1.4rem;}
+    /* pills */
     .pill{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;padding:.22rem .65rem;border-radius:999px;text-transform:uppercase;letter-spacing:.06em;}
     .pill-ok{background:rgba(57,255,20,.12);border:1px solid rgba(57,255,20,.3);color:var(--success);}
     .pill-warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn);}
     .pill-err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--err);}
     .pill-loading{background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.2);color:var(--faint);}
     .pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
-    .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.85rem;}
-    .kpi{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;}
-    .kpi-val{font-family:var(--fontd);font-size:1.35rem;font-weight:900;color:var(--text);line-height:1;margin-bottom:.25rem;font-variant-numeric:tabular-nums;}
-    .kpi-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);}
-    .svc-list{display:flex;flex-direction:column;gap:.5rem;}
-    .svc-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.65rem .85rem;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);}
-    .svc-name{font-size:.85rem;font-weight:600;color:var(--text);font-family:var(--fontm);}
-    .svc-meta{font-size:.72rem;color:var(--faint);margin-top:.08rem;}
-    .asciline-meta{display:flex;flex-wrap:wrap;gap:.65rem;margin-bottom:1.1rem;}
-    .meta-chip{font-size:.75rem;font-weight:600;padding:.2rem .65rem;border-radius:999px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--fontm);display:flex;align-items:center;gap:.35rem;}
-    .ctrl-row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
-    .ctrl-btn{padding:.42rem 1rem;border-radius:.5rem;font-size:.8rem;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:all 150ms var(--ease);display:inline-flex;align-items:center;gap:.4rem;}
-    .ctrl-btn:hover{background:var(--surface3);border-color:rgba(255,255,255,.2);}
-    .ctrl-btn:disabled{opacity:.35;cursor:not-allowed;}
-    .ctrl-btn.danger{border-color:rgba(239,68,68,.35);color:var(--err);}
-    .ctrl-btn.danger:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.6);}
-    .vol-row{display:flex;align-items:center;gap:.65rem;margin-top:.85rem;}
-    .vol-row label{font-size:.75rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;}
-    input[type=range]{flex:1;accent-color:var(--info);cursor:pointer;}
-    .vol-val{font-size:.78rem;font-family:var(--fontm);color:var(--muted);width:2.5rem;text-align:right;}
-    .log-toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
-    .log-filter-btn{padding:.28rem .7rem;border-radius:.4rem;font-size:.73rem;font-weight:700;border:1px solid var(--border);background:transparent;color:var(--faint);cursor:pointer;transition:all 130ms;}
+    /* health row */
+    .health-row{display:flex;flex-wrap:wrap;gap:.75rem;}
+    .health-chip{display:flex;align-items:center;gap:.6rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.65rem 1rem;flex:1;min-width:130px;}
+    .health-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--faint);transition:background .3s;}
+    .health-dot.ok{background:var(--success);box-shadow:0 0 7px var(--success);}
+    .health-dot.warn{background:var(--warn);box-shadow:0 0 7px var(--warn);}
+    .health-dot.err{background:var(--err);box-shadow:0 0 7px var(--err);}
+    .health-info{display:flex;flex-direction:column;}
+    .health-name{font-size:.82rem;font-weight:700;color:var(--text);line-height:1.2;}
+    .health-meta{font-size:.7rem;color:var(--faint);margin-top:.1rem;font-family:var(--fontm);}
+    /* two col */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+    @media(max-width:780px){.two-col{grid-template-columns:1fr;}}
+    /* log */
+    .log-toolbar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+    .log-filter-btn{padding:.25rem .65rem;border-radius:.4rem;font-size:.72rem;font-weight:700;border:1px solid var(--border);background:transparent;color:var(--faint);cursor:pointer;transition:all 130ms;}
     .log-filter-btn.active,.log-filter-btn:hover{background:var(--surface3);color:var(--text);border-color:rgba(255,255,255,.2);}
     .log-filter-btn.active.lf-warn{color:var(--warn);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08);}
     .log-filter-btn.active.lf-error{color:var(--err);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);}
@@ -93,19 +88,31 @@
     .ws-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex-shrink:0;transition:background .3s;}
     .ws-dot.connected{background:var(--success);box-shadow:0 0 7px var(--success);}
     .ws-dot.error{background:var(--err);}
-    .log-box{margin-top:.85rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);height:320px;overflow-y:auto;padding:.75rem;font-family:var(--fontm);font-size:.73rem;line-height:1.65;scroll-behavior:smooth;}
-    .log-line{white-space:pre-wrap;word-break:break-all;padding:.05rem 0;}
+    .log-box{margin-top:.75rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);height:300px;overflow-y:auto;padding:.75rem;font-family:var(--fontm);font-size:.72rem;line-height:1.6;}
+    .log-line{white-space:pre-wrap;word-break:break-all;padding:.04rem 0;}
     .log-line.info{color:var(--muted);}
     .log-line.warn{color:var(--warn);}
     .log-line.error{color:var(--err);}
-    .log-ts{color:var(--faint);margin-right:.5rem;}
-    .log-lvl{font-weight:700;margin-right:.5rem;}
-    .log-empty{color:var(--faint);font-style:italic;padding:.5rem 0;}
+    .log-ts{color:var(--faint);margin-right:.45rem;}
+    .log-lvl{font-weight:700;margin-right:.45rem;}
+    .log-empty{color:var(--faint);font-style:italic;padding:.4rem 0;}
+    /* bash terminal */
+    .term-box{background:#000;border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;font-family:var(--fontm);font-size:.73rem;line-height:1.65;}
+    .term-output{min-height:120px;max-height:260px;overflow-y:auto;margin-bottom:.5rem;white-space:pre-wrap;word-break:break-all;color:#c8c8c8;}
+    .term-output .t-out{color:#d4d4d4;}
+    .term-output .t-err{color:var(--err);}
+    .term-output .t-sys{color:var(--faint);font-style:italic;}
+    .term-input-row{display:flex;align-items:center;gap:.5rem;border-top:1px solid rgba(255,255,255,.07);padding-top:.5rem;}
+    .term-prompt{color:var(--success);flex-shrink:0;font-weight:700;}
+    .term-input{flex:1;background:transparent;border:none;outline:none;color:#f0f0f0;font-family:var(--fontm);font-size:.73rem;caret-color:var(--success);}
+    .term-run{padding:.25rem .7rem;border-radius:.35rem;font-size:.72rem;font-weight:700;border:1px solid rgba(57,255,20,.3);background:rgba(57,255,20,.07);color:var(--success);cursor:pointer;flex-shrink:0;transition:all 120ms;}
+    .term-run:hover{background:rgba(57,255,20,.15);}
+    .term-run:disabled{opacity:.35;cursor:not-allowed;}
+    /* last error */
     .last-err-box{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:var(--radius);padding:.85rem 1rem;font-size:.8rem;color:var(--err);font-family:var(--fontm);word-break:break-all;line-height:1.6;}
     .last-err-ts{font-size:.68rem;color:rgba(239,68,68,.5);margin-top:.35rem;}
     .no-err{color:var(--faint);font-size:.82rem;font-style:italic;}
-    .uptime-bar-wrap{background:var(--surface2);border-radius:999px;height:6px;overflow:hidden;margin-top:.45rem;}
-    .uptime-bar{height:100%;background:linear-gradient(90deg,var(--success),#00cc88);border-radius:999px;transition:width .5s var(--ease);}
+    /* footer */
     .site-footer{border-top:1px solid var(--border);background:var(--surface);padding:1.25rem 1.5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;font-size:.78rem;color:var(--faint);}
     .footer-links{display:flex;flex-wrap:wrap;gap:.5rem .9rem;}
     .footer-links a{color:var(--muted);text-decoration:none;font-weight:600;transition:color 150ms;}
@@ -148,78 +155,57 @@
 
 <div class="page-header">
   <div>
-    <h1>🟢 System Status</h1>
-    <p>Live health snapshot &mdash; bot, GUI server, ASCILINE, and background services.</p>
+    <h1 id="status-heading">⚪ System Status</h1>
+    <p>Live health — bot, GUI server, and background services.</p>
   </div>
   <div class="refresh-info">
     <span class="refresh-dot"></span>
-    <span id="next-refresh">Refreshing&hellip;</span>
+    <span id="next-refresh">Refreshing…</span>
   </div>
 </div>
 
 <div class="page-body">
-  <div class="card full-col" id="overall-card">
-    <div class="card-head"><span class="card-title">⚡ Overall Health</span><span class="pill pill-loading" id="overall-pill"><span class="pill-dot"></span>Loading</span></div>
+
+  <!-- Health chips -->
+  <div class="card">
+    <div class="card-head"><span class="card-title">⚡ Services</span><span class="pill pill-loading" id="overall-pill"><span class="pill-dot"></span>Loading</span></div>
     <div class="card-body">
-      <div class="kpi-row">
-        <div class="kpi"><div class="kpi-val" id="kpi-guilds">&mdash;</div><div class="kpi-lbl">Guilds</div></div>
-        <div class="kpi"><div class="kpi-val" id="kpi-latency">&mdash;</div><div class="kpi-lbl">Bot Latency</div></div>
-        <div class="kpi"><div class="kpi-val" id="kpi-uptime">&mdash;</div><div class="kpi-lbl">GUI Uptime</div></div>
-        <div class="kpi"><div class="kpi-val" id="kpi-version">&mdash;</div><div class="kpi-lbl">GUI Version</div></div>
-        <div class="kpi"><div class="kpi-val" id="kpi-services">&mdash;</div><div class="kpi-lbl">Services</div></div>
+      <div class="health-row" id="health-row">
+        <div class="health-chip"><div class="health-dot" id="dot-bot"></div><div class="health-info"><div class="health-name">Discord Bot</div><div class="health-meta" id="meta-bot">—</div></div></div>
+        <div class="health-chip"><div class="health-dot" id="dot-gui"></div><div class="health-info"><div class="health-name">GUI Server</div><div class="health-meta" id="meta-gui">—</div></div></div>
+        <div class="health-chip"><div class="health-dot" id="dot-asc"></div><div class="health-info"><div class="health-name">ASCILINE</div><div class="health-meta" id="meta-asc">—</div></div></div>
+        <div class="health-chip" id="health-chip-db" style="display:none"><div class="health-dot" id="dot-db"></div><div class="health-info"><div class="health-name">Database</div><div class="health-meta" id="meta-db">—</div></div></div>
+      </div>
+      <div id="svc-extra" style="margin-top:.85rem;display:none">
+        <div class="health-row" id="svc-row"></div>
       </div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">🤖 Discord Bot</span><span class="pill pill-loading" id="bot-pill"><span class="pill-dot"></span>Loading</span></div>
-    <div class="card-body">
-      <div class="svc-list">
-        <div class="svc-row"><span class="svc-name">Guilds</span><span class="svc-meta" id="bot-guilds">&mdash;</span></div>
-        <div class="svc-row"><span class="svc-name">WebSocket Ping</span><span class="svc-meta" id="bot-latency">&mdash;</span></div>
-        <div class="svc-row"><span class="svc-name">Client State</span><span class="svc-meta" id="bot-state">&mdash;</span></div>
+
+  <!-- Two-col: last error + ASCILINE controls -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><span class="card-title">⚠ Last Error</span></div>
+      <div class="card-body" id="last-err-body"><span class="no-err">No errors logged.</span></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">🎠 ASCILINE Controls</span><span class="pill pill-loading" id="asc-pill"><span class="pill-dot"></span>Loading</span></div>
+      <div class="card-body">
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;">
+          <button class="nav-btn" id="btn-skip" disabled>⏭ Skip</button>
+          <button class="nav-btn" id="btn-stop" disabled style="color:var(--err)">⏹ Stop</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:.65rem;">
+          <span style="font-size:.72rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;">Vol</span>
+          <input type="range" id="vol-slider" min="0" max="5" step="0.1" value="1" disabled style="flex:1;accent-color:var(--info);" />
+          <span id="vol-label" style="font-size:.78rem;font-family:var(--fontm);color:var(--muted);width:2.2rem;text-align:right;">1.0</span>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Live Logs -->
   <div class="card">
-    <div class="card-head"><span class="card-title">🌐 GUI Server</span><span class="pill pill-loading" id="gui-pill"><span class="pill-dot"></span>Loading</span></div>
-    <div class="card-body">
-      <div class="svc-list">
-        <div class="svc-row"><span class="svc-name">Version</span><span class="svc-meta" id="gui-version">&mdash;</span></div>
-        <div class="svc-row"><span class="svc-name">Uptime</span><span class="svc-meta" id="gui-uptime">&mdash;</span></div>
-        <div class="svc-row"><span class="svc-name">Host</span><span class="svc-meta">This instance</span></div>
-      </div>
-      <div class="uptime-bar-wrap"><div class="uptime-bar" id="uptime-bar" style="width:0%"></div></div>
-    </div>
-  </div>
-  <div class="card full-col">
-    <div class="card-head"><span class="card-title">🎠 ASCILINE Stream Server</span><span class="pill pill-loading" id="asc-pill"><span class="pill-dot"></span>Loading</span></div>
-    <div class="card-body">
-      <div class="asciline-meta">
-        <span class="meta-chip">🎧 Mode: <span id="asc-mode">&mdash;</span></span>
-        <span class="meta-chip">📺 Cols: <span id="asc-cols">&mdash;</span></span>
-        <span class="meta-chip">🎵 Playing: <span id="asc-playing">&mdash;</span></span>
-        <span class="meta-chip">📏 Queue: <span id="asc-queue">&mdash;</span></span>
-      </div>
-      <div class="ctrl-row">
-        <button class="ctrl-btn" id="btn-skip" disabled>⏭ Skip</button>
-        <button class="ctrl-btn danger" id="btn-stop" disabled>⏹ Stop</button>
-      </div>
-      <div class="vol-row">
-        <label>Volume</label>
-        <input type="range" id="vol-slider" min="0" max="5" step="0.1" value="1" disabled />
-        <span class="vol-val" id="vol-label">1.0</span>
-      </div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">⛽ Background Services</span><span class="pill pill-loading" id="svc-pill"><span class="pill-dot"></span>Loading</span></div>
-    <div class="card-body"><div class="svc-list" id="svc-list"><div class="svc-row"><span class="svc-name" style="color:var(--faint)">Loading&hellip;</span></div></div></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">⚠ Last Error</span></div>
-    <div class="card-body" id="last-err-body"><span class="no-err">No errors logged.</span></div>
-  </div>
-  <div class="card full-col">
     <div class="card-head">
       <span class="card-title">📄 Live Logs</span>
       <div class="log-toolbar">
@@ -227,11 +213,31 @@
         <button class="log-filter-btn lf-info" data-level="info">Info</button>
         <button class="log-filter-btn lf-warn" data-level="warn">Warn</button>
         <button class="log-filter-btn lf-error" data-level="error">Error</button>
-        <div class="log-ws-state"><span class="ws-dot" id="ws-dot"></span><span id="ws-label">Connecting&hellip;</span></div>
+        <button class="log-filter-btn" id="log-clear-btn" style="margin-left:.25rem;">🗑 Clear</button>
+        <div class="log-ws-state"><span class="ws-dot" id="ws-dot"></span><span id="ws-label">Connecting…</span></div>
       </div>
     </div>
-    <div class="card-body" style="padding-top:.65rem;"><div class="log-box" id="log-box"><div class="log-empty">Waiting for log entries&hellip;</div></div></div>
+    <div class="card-body" style="padding-top:.65rem;">
+      <div class="log-box" id="log-box"><div class="log-empty">Waiting for log entries…</div></div>
+    </div>
   </div>
+
+  <!-- Bash Terminal -->
+  <div class="card">
+    <div class="card-head"><span class="card-title">💻 Terminal</span><span style="font-size:.72rem;color:var(--faint);">Runs on the Railway container</span></div>
+    <div class="card-body">
+      <div class="term-box">
+        <div class="term-output" id="term-output"><span class="t-sys">Type a command and press Enter or Run ↵</span>
+</div>
+        <div class="term-input-row">
+          <span class="term-prompt">$</span>
+          <input class="term-input" id="term-input" type="text" placeholder="e.g. node -e \"console.log(process.version)\"" autocomplete="off" spellcheck="false" />
+          <button class="term-run" id="term-run">Run ↵</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <footer class="site-footer">
@@ -244,96 +250,96 @@
     <a href="/community">Community</a>
     <a href="/developers">Developers</a>
   </nav>
-  <span class="footer-ver">Sigil GUI v2.7.0</span>
+  <span class="footer-ver">Sigil GUI v2.8.0</span>
 </footer>
 
 <script>
-document.getElementById('hamburgerBtn').addEventListener('click', () => {
+document.getElementById('hamburgerBtn').addEventListener('click',()=>{
   document.getElementById('hamburgerBtn').classList.toggle('open');
   document.getElementById('navDrawer').classList.toggle('open');
 });
-function toggleTheme() {
-  const r = document.documentElement;
-  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+function toggleTheme(){
+  const r=document.documentElement;
+  r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');
 }
-document.getElementById('themeBtn').addEventListener('click', toggleTheme);
-document.getElementById('themeBtnMobile').addEventListener('click', toggleTheme);
+document.getElementById('themeBtn').addEventListener('click',toggleTheme);
+document.getElementById('themeBtnMobile').addEventListener('click',toggleTheme);
 
-document.getElementById('btn-skip').addEventListener('click', () => mediaAction('skip'));
-document.getElementById('btn-stop').addEventListener('click', () => mediaAction('stop'));
-document.getElementById('vol-slider').addEventListener('input', e => document.getElementById('vol-label').textContent = parseFloat(e.target.value).toFixed(1));
-document.getElementById('vol-slider').addEventListener('change', e => setVolume(e.target.value));
-document.querySelectorAll('.log-filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => setLogLevel(btn.dataset.level));
+document.getElementById('btn-skip').addEventListener('click',()=>mediaAction('skip'));
+document.getElementById('btn-stop').addEventListener('click',()=>mediaAction('stop'));
+document.getElementById('vol-slider').addEventListener('input',e=>document.getElementById('vol-label').textContent=parseFloat(e.target.value).toFixed(1));
+document.getElementById('vol-slider').addEventListener('change',e=>setVolume(e.target.value));
+document.querySelectorAll('.log-filter-btn[data-level]').forEach(btn=>{
+  btn.addEventListener('click',()=>setLogLevel(btn.dataset.level));
+});
+document.getElementById('log-clear-btn').addEventListener('click',()=>{
+  const b=document.getElementById('log-box');
+  b.innerHTML='<div class="log-empty">Log cleared.</div>';
 });
 
+function setDot(id,state){const d=document.getElementById(id);if(d)d.className='health-dot '+state;}
 function pill(el,state,label){el.className='pill pill-'+state;el.innerHTML='<span class="pill-dot"></span>'+label;}
 function fmtUptime(ms){if(!ms&&ms!==0)return'—';const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;if(h>0)return h+'h '+m+'m';if(m>0)return m+'m '+sec+'s';return sec+'s';}
 function fmtTs(iso){if(!iso)return'';try{return new Date(iso).toLocaleTimeString();}catch{return iso;}}
-function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 const POLL_MS=10000;
 let countdown=POLL_MS/1000;
 
 async function fetchStatus(){
   try{
-    // authFetch adds Authorization: Bearer <token>
     const r=await SigilAuth.authFetch('/api/status/full');
     const d=await r.json();
     renderStatus(d);
   }catch(e){
+    document.getElementById('status-heading').textContent='🔴 System Status';
     pill(document.getElementById('overall-pill'),'err','Unreachable');
   }
 }
 
 function renderStatus(d){
-  pill(document.getElementById('overall-pill'),d.ok?'ok':'err',d.ok?'All Systems Operational':'Degraded');
-  document.getElementById('kpi-guilds').textContent=d.bot?.guilds??'—';
-  document.getElementById('kpi-latency').textContent=d.bot?.latency!=null?d.bot.latency+'ms':'—';
-  document.getElementById('kpi-uptime').textContent=fmtUptime(d.gui?.uptime_ms);
-  document.getElementById('kpi-version').textContent=d.gui?.version??'—';
-  const sc=Array.isArray(d.services)?d.services.filter(s=>s.status==='ok'||s.status==='starting').length:0;
-  const st=Array.isArray(d.services)?d.services.length:0;
-  document.getElementById('kpi-services').textContent=st>0?sc+'/'+st:'—';
+  const ok=d.ok;
+  document.getElementById('status-heading').textContent=(ok?'🟢':'🟡')+' System Status';
+  pill(document.getElementById('overall-pill'),ok?'ok':'warn',ok?'All Systems Operational':'Degraded');
+
+  // Bot
   const br=d.bot?.reachable;
-  pill(document.getElementById('bot-pill'),br?'ok':'err',br?'Online':'Offline');
-  document.getElementById('bot-guilds').textContent=(d.bot?.guilds??'—')+(d.bot?.guilds!=null?' guilds':'');
-  document.getElementById('bot-latency').textContent=d.bot?.latency!=null?d.bot.latency+' ms':'—';
-  document.getElementById('bot-state').textContent=br?'Ready':'Not connected';
-  pill(document.getElementById('gui-pill'),d.gui?.ok?'ok':'err',d.gui?.ok?'Running':'Error');
-  document.getElementById('gui-version').textContent=d.gui?.version??'—';
-  document.getElementById('gui-uptime').textContent=fmtUptime(d.gui?.uptime_ms);
-  document.getElementById('uptime-bar').style.width=d.gui?.uptime_ms!=null?Math.min(100,(d.gui.uptime_ms/86400000)*100)+'%':'0%';
+  setDot('dot-bot',br?'ok':'err');
+  document.getElementById('meta-bot').textContent=br?(d.bot.latency+'ms · '+(d.bot.guilds||0)+' guilds'):'Offline';
+
+  // GUI
+  const gr=d.gui?.ok;
+  setDot('dot-gui',gr?'ok':'err');
+  document.getElementById('meta-gui').textContent=gr?(fmtUptime(d.gui.uptime_ms)+' · v'+(d.gui.version||'?')):'Error';
+
+  // ASCILINE
   const ao=d.asciline?.reachable;
+  setDot('dot-asc',ao?'ok':'err');
+  document.getElementById('meta-asc').textContent=ao?(d.asciline.playing?'Playing':'Idle'):'Offline';
   pill(document.getElementById('asc-pill'),ao?'ok':'err',ao?(d.asciline.playing?'Playing':'Idle'):'Offline');
-  document.getElementById('asc-mode').textContent=d.asciline?.mode??'—';
-  document.getElementById('asc-cols').textContent=d.asciline?.cols??'—';
-  document.getElementById('asc-playing').textContent=d.asciline?.playing?'Yes':(ao?'No':'—');
-  document.getElementById('asc-queue').textContent=d.asciline?.queue_len??'—';
   ['btn-skip','btn-stop'].forEach(id=>document.getElementById(id).disabled=!ao);
   document.getElementById('vol-slider').disabled=!ao;
-  const el=document.getElementById('svc-list');
-  if(!Array.isArray(d.services)||d.services.length===0){
-    el.innerHTML='<div class="svc-row"><span class="svc-name" style="color:var(--faint)">No services registered.</span></div>';
-  } else {
-    el.innerHTML='';
+
+  // DB
+  if(d.db){
+    document.getElementById('health-chip-db').style.display='';
+    setDot('dot-db',d.db.ok?'ok':'err');
+    document.getElementById('meta-db').textContent=d.db.ok?'Connected':'Error';
+  }
+
+  // Extra services
+  const svcRow=document.getElementById('svc-row');
+  svcRow.innerHTML='';
+  if(Array.isArray(d.services)&&d.services.length>0){
+    document.getElementById('svc-extra').style.display='';
     d.services.forEach(s=>{
-      const st2=s.status==='ok'?'ok':s.status==='starting'?'warn':'err';
-      const lb=s.status==='ok'?'Running':s.status==='starting'?'Starting':'Error';
-      const mt=s.last_run?'Last run: '+fmtTs(s.last_run):(s.message||'');
-      const row=document.createElement('div');row.className='svc-row';
-      const nameDiv=document.createElement('div');
-      const nameEl=document.createElement('div');nameEl.className='svc-name';nameEl.textContent=s.name||'';
-      nameDiv.appendChild(nameEl);
-      if(mt){const metaEl=document.createElement('div');metaEl.className='svc-meta';metaEl.textContent=mt;nameDiv.appendChild(metaEl);}
-      const pillEl=document.createElement('span');pillEl.className='pill pill-'+st2;
-      const dot=document.createElement('span');dot.className='pill-dot';pillEl.appendChild(dot);
-      pillEl.appendChild(document.createTextNode(lb));
-      row.appendChild(nameDiv);row.appendChild(pillEl);
-      el.appendChild(row);
+      const state=s.status==='ok'?'ok':s.status==='starting'?'warn':'err';
+      const chip=document.createElement('div');chip.className='health-chip';
+      chip.innerHTML='<div class="health-dot '+state+'"></div><div class="health-info"><div class="health-name">'+s.name+'</div><div class="health-meta">'+((s.last_run?'Last: '+fmtTs(s.last_run):(s.message||s.status||'')))+' </div></div>';
+      svcRow.appendChild(chip);
     });
   }
-  pill(document.getElementById('svc-pill'),d.services_ok!==false?'ok':'warn',d.services_ok!==false?'All Running':'Degraded');
+
+  // Last error
   const ee=document.getElementById('last-err-body');
   ee.innerHTML='';
   if(!d.last_error){
@@ -346,59 +352,122 @@ function renderStatus(d){
   }
 }
 
-function tick(){const el=document.getElementById('next-refresh');countdown--;if(countdown<=0){countdown=POLL_MS/1000;fetchStatus();el.textContent='Refreshing…';}else{el.textContent='Next refresh in '+countdown+'s';}}
+function tick(){
+  const el=document.getElementById('next-refresh');
+  countdown--;
+  if(countdown<=0){countdown=POLL_MS/1000;fetchStatus();el.textContent='Refreshing…';}
+  else{el.textContent='Next refresh in '+countdown+'s';}
+}
 fetchStatus();
 setInterval(tick,1000);
 
 async function mediaAction(action){
-  try{
-    await SigilAuth.authFetch('/api/media/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-    setTimeout(fetchStatus,800);
-  }catch(e){}
+  try{await SigilAuth.authFetch('/api/media/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});setTimeout(fetchStatus,800);}catch(e){}
 }
 async function setVolume(v){
-  try{
-    await SigilAuth.authFetch('/api/media/volume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vol:parseFloat(v)})});
-  }catch(e){}
+  try{await SigilAuth.authFetch('/api/media/volume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vol:parseFloat(v)})});}catch(e){}
 }
 
+// ---- Live Logs WebSocket ----
 let ws=null,currentLevel='';
 const MAX_LOG_LINES=500;
+let wsRetryTimer=null;
 
 function setLogLevel(level){
   currentLevel=level;
-  document.querySelectorAll('.log-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.level===level));
+  document.querySelectorAll('.log-filter-btn[data-level]').forEach(b=>b.classList.toggle('active',b.dataset.level===level));
   connectWS();
 }
 
 function connectWS(){
-  if(ws){try{ws.close();}catch(_){}}
-  // Auth token passed as ?token= query param (Authorization header not available in WS upgrade)
+  if(wsRetryTimer){clearTimeout(wsRetryTimer);wsRetryTimer=null;}
+  if(ws){try{ws.onclose=null;ws.close();}catch(_){}ws=null;}
   const token=SigilAuth.getToken();
-  const levelParam=currentLevel?'&level='+currentLevel:'';
+  const levelParam=currentLevel?'&level='+encodeURIComponent(currentLevel):'';
   const scheme=(location.protocol==='https:'?'wss':'ws');
   const url=scheme+'://'+location.host+'/ws/logs?token='+encodeURIComponent(token)+levelParam;
-  ws=new WebSocket(url);
   const dot=document.getElementById('ws-dot'),lbl=document.getElementById('ws-label');
   dot.className='ws-dot';lbl.textContent='Connecting…';
-  ws.onopen=()=>{dot.className='ws-dot connected';lbl.textContent='Connected';const b=document.getElementById('log-box');if(b.querySelector('.log-empty'))b.innerHTML='';};
-  ws.onmessage=(ev)=>{try{appendLogLine(JSON.parse(ev.data));}catch(_){}};
-  ws.onclose=()=>{dot.className='ws-dot';lbl.textContent='Disconnected — retrying…';setTimeout(connectWS,3000);};
-  ws.onerror=()=>{dot.className='ws-dot error';lbl.textContent='Connection error';};
+  try{
+    ws=new WebSocket(url);
+    ws.onopen=()=>{
+      dot.className='ws-dot connected';lbl.textContent='Connected';
+      const b=document.getElementById('log-box');
+      if(b.querySelector('.log-empty'))b.innerHTML='';
+    };
+    ws.onmessage=(ev)=>{try{appendLogLine(JSON.parse(ev.data));}catch(_){}};
+    ws.onclose=(e)=>{
+      dot.className='ws-dot';lbl.textContent='Reconnecting…';
+      wsRetryTimer=setTimeout(connectWS,3000);
+    };
+    ws.onerror=()=>{dot.className='ws-dot error';lbl.textContent='Error';};
+  }catch(e){
+    lbl.textContent='WS unavailable';
+  }
 }
 
 function appendLogLine(entry){
-  const box=document.getElementById('log-box'),level=(entry.level||'info').toLowerCase(),ts=entry.ts?new Date(entry.ts).toLocaleTimeString():'',msg=entry.msg||entry.message||entry.text||JSON.stringify(entry);
+  const box=document.getElementById('log-box');
+  const level=(entry.level||'info').toLowerCase();
+  const ts=entry.ts?new Date(entry.ts).toLocaleTimeString():'';
+  const msg=entry.msg||entry.message||entry.text||JSON.stringify(entry);
+  if(box.querySelector('.log-empty'))box.innerHTML='';
   const line=document.createElement('div');line.className='log-line '+level;
   if(ts){const tsEl=document.createElement('span');tsEl.className='log-ts';tsEl.textContent=ts;line.appendChild(tsEl);}
   const lvlEl=document.createElement('span');lvlEl.className='log-lvl';lvlEl.textContent='['+level.toUpperCase()+'] ';line.appendChild(lvlEl);
   line.appendChild(document.createTextNode(msg));
   box.appendChild(line);
   while(box.children.length>MAX_LOG_LINES)box.removeChild(box.firstChild);
-  if(box.scrollHeight-box.scrollTop-box.clientHeight<60)box.scrollTop=box.scrollHeight;
+  if(box.scrollHeight-box.scrollTop-box.clientHeight<80)box.scrollTop=box.scrollHeight;
 }
 
 connectWS();
+
+// ---- Bash Terminal ----
+const termOutput=document.getElementById('term-output');
+const termInput=document.getElementById('term-input');
+const termRun=document.getElementById('term-run');
+let cmdHistory=[],histIdx=-1;
+
+function appendTerm(text,cls){
+  const span=document.createElement('span');
+  span.className=cls;
+  span.textContent=text;
+  termOutput.appendChild(span);
+  termOutput.scrollTop=termOutput.scrollHeight;
+}
+
+async function runCmd(){
+  const cmd=termInput.value.trim();
+  if(!cmd)return;
+  cmdHistory.unshift(cmd);if(cmdHistory.length>50)cmdHistory.pop();histIdx=-1;
+  termInput.value='';
+  appendTerm('$ '+cmd+'\n','t-sys');
+  termRun.disabled=true;
+  try{
+    const res=await SigilAuth.authFetch('/api/control/bash',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({cmd})
+    });
+    const d=await res.json();
+    if(d.stdout)appendTerm(d.stdout+(d.stdout.endsWith('\n')?'':'\n'),'t-out');
+    if(d.stderr)appendTerm(d.stderr+(d.stderr.endsWith('\n')?'':'\n'),'t-err');
+    if(!d.stdout&&!d.stderr)appendTerm('(no output)\n','t-sys');
+    if(d.code!==0&&d.code!=null)appendTerm('Exit code: '+d.code+'\n','t-err');
+  }catch(e){
+    appendTerm('Error: '+e.message+'\n','t-err');
+  }
+  termRun.disabled=false;
+  termInput.focus();
+}
+
+termRun.addEventListener('click',runCmd);
+termInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();runCmd();}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;termInput.value=cmdHistory[histIdx];}}
+  else if(e.key==='ArrowDown'){e.preventDefault();if(histIdx>0){histIdx--;termInput.value=cmdHistory[histIdx];}else{histIdx=-1;termInput.value='';} }
+});
 </script>
 </body>
 </html>
