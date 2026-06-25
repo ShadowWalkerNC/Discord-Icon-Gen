@@ -3,14 +3,16 @@ nixPkgs = [
   "nodejs_20",
   "python3",
   "pkg-config",
-  "cairo",
-  "pango",
-  "libjpeg",
+  "cairo.dev",
+  "pango.dev",
+  "libjpeg.dev",
   "giflib",
-  "librsvg",
-  "pixman",
-  "glib",
-  "fontconfig",
+  "librsvg.dev",
+  "pixman.dev",
+  "glib.dev",
+  "fontconfig.dev",
+  "freetype.dev",
+  "harfbuzz.dev",
 ]
 
 [phases.build]
