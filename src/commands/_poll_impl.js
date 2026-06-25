@@ -138,4 +138,53 @@ async function execute(interaction) {
     }
 }
 
-module.exports = { data, execute };
+// Button handler — called by interactionCreate.js catch-all for any cmd with handleButton
+async function handleButton(interaction) {
+    const id = interaction.customId;
+    if (!id.startsWith('poll:')) return false;
+
+    const parts  = id.split(':');
+    const pollId = parseInt(parts[1], 10);
+    const optIdx = parseInt(parts[2], 10);
+
+    const { getPoll } = require('../utils/db.js');
+    const poll = getPoll(pollId);
+    if (!poll) {
+        await interaction.reply({ content: 'This poll no longer exists.', ephemeral: true });
+        return true;
+    }
+    if (poll.closed) {
+        await interaction.reply({ content: 'This poll has already ended.', ephemeral: true });
+        return true;
+    }
+    if (optIdx < 0 || optIdx >= poll.options.length) {
+        await interaction.reply({ content: 'Invalid poll option.', ephemeral: true });
+        return true;
+    }
+
+    const votes  = poll.votes;
+    const userId = interaction.user.id;
+
+    // Remove previous vote if any
+    for (const key of Object.keys(votes)) {
+        votes[key] = (votes[key] ?? []).filter(u => u !== userId);
+    }
+
+    // Record new vote
+    if (!votes[String(optIdx)]) votes[String(optIdx)] = [];
+    votes[String(optIdx)].push(userId);
+    updatePollVotes(pollId, votes);
+
+    // Refresh embed on the message
+    try {
+        await interaction.update({
+            embeds:     [buildPollEmbed(poll.question, poll.options, votes, false)],
+            components: buildPollButtons(poll.options, pollId, false),
+        });
+    } catch {
+        await interaction.reply({ content: `Voted for **${poll.options[optIdx]}**!`, ephemeral: true });
+    }
+    return true;
+}
+
+module.exports = { data, execute, handleButton };

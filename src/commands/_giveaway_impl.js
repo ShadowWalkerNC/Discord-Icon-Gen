@@ -57,18 +57,29 @@ function buildEmbed(giveaway, ended = false) {
         .setTitle(ended ? `🎁 ENDED — ${giveaway.prize}` : `🎁 GIVEAWAY — ${giveaway.prize}`)
         .setColor(ended ? '#888888' : '#39FF14')
         .addFields(
-            { name: 'Winners',  value: String(giveaway.winner_count),             inline: true },
-            { name: 'Entries',  value: String(giveaway.entries.length),           inline: true },
-            { name: 'Hosted by', value: `<@${giveaway.host_id}>`,                 inline: true },
-            { name: ended ? 'Ended' : 'Ends', value: `<t:${endsTs}:R>`,          inline: true },
+            { name: 'Winners',   value: String(giveaway.winner_count),          inline: true },
+            { name: 'Entries',   value: String(giveaway.entries.length),        inline: true },
+            { name: 'Hosted by', value: `<@${giveaway.host_id}>`,               inline: true },
+            { name: ended ? 'Ended' : 'Ends', value: `<t:${endsTs}:R>`,        inline: true },
         )
         .setFooter({ text: `Giveaway ID: ${giveaway.id}` })
         .setTimestamp();
 
     if (ended && giveaway.winners.length) {
-        embed.addFields({ name: 'Winners', value: giveaway.winners.map(id => `<@${id}>`).join(', ') });
+        embed.addFields({ name: 'Winners 🎉', value: giveaway.winners.map(id => `<@${id}>`).join(', ') });
     }
     return embed;
+}
+
+function buildEnterButton(gid, disabled = false) {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(`giveaway:enter:${gid}`)
+            .setLabel('Enter Giveaway')
+            .setStyle(ButtonStyle.Success)
+            .setEmoji('🎁')
+            .setDisabled(disabled)
+    );
 }
 
 async function execute(interaction) {
@@ -76,25 +87,17 @@ async function execute(interaction) {
 
     if (sub === 'start') {
         await interaction.deferReply({ ephemeral: true });
-        const prize      = interaction.options.getString('prize').trim();
-        const dur        = parseDuration(interaction.options.getString('duration') ?? '');
-        const winCount   = interaction.options.getInteger('winners') ?? 1;
-        const channel    = interaction.options.getChannel('channel') ?? interaction.channel;
-        const endsAt     = new Date(Date.now() + dur).toISOString();
+        const prize    = interaction.options.getString('prize').trim();
+        const dur      = parseDuration(interaction.options.getString('duration') ?? '');
+        const winCount = interaction.options.getInteger('winners') ?? 1;
+        const channel  = interaction.options.getChannel('channel') ?? interaction.channel;
+        const endsAt   = new Date(Date.now() + dur).toISOString();
 
         const result = createGiveaway(interaction.guildId, channel.id, prize, winCount, endsAt, interaction.user.id);
         const gid    = result.lastInsertRowid;
         const ga     = getGiveaway(gid);
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(`giveaway:enter:${gid}`)
-                .setLabel('Enter Giveaway')
-                .setStyle(ButtonStyle.Success)
-                .setEmoji('🎁')
-        );
-
-        const msg = await channel.send({ embeds: [buildEmbed(ga)], components: [row] });
+        const msg = await channel.send({ embeds: [buildEmbed(ga)], components: [buildEnterButton(gid)] });
         setGiveawayMessageId(gid, msg.id);
 
         await interaction.editReply({ content: `Giveaway #${gid} started in ${channel}!` });
@@ -120,15 +123,15 @@ async function execute(interaction) {
         try {
             const ch  = await interaction.guild.channels.fetch(ga.channel_id);
             const msg = await ch.messages.fetch(ga.message_id);
-            await msg.edit({ embeds: [buildEmbed(updated, true)], components: [] });
+            await msg.edit({ embeds: [buildEmbed(updated, true)], components: [buildEnterButton(id, true)] });
             if (winners.length) {
-                await ch.send({ content: `🎉 Congratulations ${winners.map(id => `<@${id}>`).join(', ')}! You won **${ga.prize}**!` });
+                await ch.send({ content: `🎉 Congratulations ${winners.map(w => `<@${w}>`).join(', ')}! You won **${ga.prize}**!` });
             } else {
                 await ch.send({ content: `😔 No valid entries for **${ga.prize}**.` });
             }
         } catch { /* message may be deleted */ }
 
-        return interaction.editReply({ content: `Giveaway #${id} ended. Winners: ${winners.length ? winners.map(id => `<@${id}>`).join(', ') : 'None'}` });
+        return interaction.editReply({ content: `Giveaway #${id} ended. Winners: ${winners.length ? winners.map(w => `<@${w}>`).join(', ') : 'None'}` });
     }
 
     if (sub === 'reroll') {
@@ -149,11 +152,11 @@ async function execute(interaction) {
         try {
             const ch = await interaction.guild.channels.fetch(ga.channel_id);
             if (winners.length) {
-                await ch.send({ content: `🎉 Reroll! New winners: ${winners.map(id => `<@${id}>`).join(', ')} — **${ga.prize}**` });
+                await ch.send({ content: `🎉 Reroll! New winners: ${winners.map(w => `<@${w}>`).join(', ')} — **${ga.prize}**` });
             }
         } catch { /* ignore */ }
 
-        return interaction.editReply({ content: `Rerolled. New winners: ${winners.length ? winners.map(id => `<@${id}>`).join(', ') : 'None'}` });
+        return interaction.editReply({ content: `Rerolled. New winners: ${winners.length ? winners.map(w => `<@${w}>`).join(', ') : 'None'}` });
     }
 
     if (sub === 'list') {
@@ -169,4 +172,40 @@ async function execute(interaction) {
     }
 }
 
-module.exports = { data, execute };
+// Button handler — called by interactionCreate.js catch-all for any cmd with handleButton.
+// Handles: giveaway:enter:<id>
+async function handleButton(interaction) {
+    const id = interaction.customId;
+    if (!id.startsWith('giveaway:enter:')) return false;
+
+    const gid = parseInt(id.split(':')[2], 10);
+    const ga  = getGiveaway(gid);
+
+    if (!ga) {
+        await interaction.reply({ content: 'This giveaway no longer exists.', ephemeral: true });
+        return true;
+    }
+    if (ga.ended) {
+        await interaction.reply({ content: 'This giveaway has already ended.', ephemeral: true });
+        return true;
+    }
+
+    const entered = toggleGiveawayEntry(gid, interaction.user.id);
+    const updated = getGiveaway(gid);
+
+    // Refresh the entry count on the embed
+    try {
+        await interaction.update({
+            embeds:     [buildEmbed(updated)],
+            components: [buildEnterButton(gid)],
+        });
+    } catch {
+        await interaction.reply({
+            content: entered ? '✅ You have entered the giveaway!' : '❌ You have left the giveaway.',
+            ephemeral: true,
+        });
+    }
+    return true;
+}
+
+module.exports = { data, execute, handleButton };
