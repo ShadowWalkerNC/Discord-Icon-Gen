@@ -1,25 +1,2 @@
-[phases.setup]
-nixPkgs = [
-  "nodejs_20",
-  "python3",
-  "pkg-config",
-  "cairo",
-  "pango",
-  "libjpeg",
-  "giflib",
-  "librsvg",
-  "pixman",
-  "glib",
-  "fontconfig",
-  "freetype",
-  "harfbuzz",
-]
-
-[phases.build]
-cmds = [
-  "npm install --omit=dev",
-  "bash scripts/rebuild-canvas.sh"
-]
-
-[start]
-cmd = "node start.js"
+# Nixpacks config kept for reference but Dockerfile takes precedence on Railway
+# when a Dockerfile is present in the repo root.
