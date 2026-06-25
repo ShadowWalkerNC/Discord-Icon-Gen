@@ -1,7 +1,7 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { searchPlayer, getAchievements, getPresence, isEnabled } from '../services/xbox.js';
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { searchPlayer, getAchievements, getPresence, isEnabled } = require('../services/xbox.js');
 
-export const data = new SlashCommandBuilder()
+const data = new SlashCommandBuilder()
   .setName('xbox')
   .setDescription('Xbox Live player lookup powered by OpenXBL')
   .addSubcommand(sub =>
@@ -29,10 +29,10 @@ export const data = new SlashCommandBuilder()
       )
   );
 
-export async function execute(interaction) {
+async function execute(interaction) {
   if (!isEnabled()) {
     return interaction.reply({
-      content: '❌ Xbox integration is not configured. Set `OPENXBL_API_KEY` in your environment variables.',
+      content: '\u274c Xbox integration is not configured. Set `OPENXBL_API_KEY` in your environment variables.',
       ephemeral: true,
     });
   }
@@ -43,12 +43,11 @@ export async function execute(interaction) {
   await interaction.deferReply();
 
   try {
-    // Always search by gamertag first to get XUID
     const searchResult = await searchPlayer(gamertag);
     const people = searchResult?.people;
 
     if (!people || people.length === 0) {
-      return interaction.editReply(`❌ No Xbox Live player found for gamertag **${gamertag}**.`);
+      return interaction.editReply(`\u274c No Xbox Live player found for gamertag **${gamertag}**.`);
     }
 
     const player = people[0];
@@ -60,39 +59,39 @@ export async function execute(interaction) {
 
     if (sub === 'player') {
       const embed = new EmbedBuilder()
-        .setTitle(`🎮 ${displayName}`)
-        .setColor(0x107c10) // Xbox green
+        .setTitle(`\ud83c\udfae ${displayName}`)
+        .setColor(0x107c10)
         .setThumbnail(gamerpic)
         .addFields(
           { name: 'Gamertag', value: displayName, inline: true },
-          { name: 'Gamerscore', value: `🏆 ${gamerscore}`, inline: true },
+          { name: 'Gamerscore', value: `\ud83c\udfc6 ${gamerscore}`, inline: true },
           { name: 'Account Tier', value: accountTier, inline: true },
           { name: 'XUID', value: xuid, inline: false },
         )
-        .setFooter({ text: 'Powered by OpenXBL • xbl.io' })
+        .setFooter({ text: 'Powered by OpenXBL \u2022 xbl.io' })
         .setTimestamp();
 
       return interaction.editReply({ embeds: [embed] });
     }
 
     if (sub === 'achievements') {
-      const data = await getAchievements(xuid);
-      const achievements = data?.titles?.slice(0, 5) || [];
+      const achData = await getAchievements(xuid);
+      const achievements = achData?.titles?.slice(0, 5) || [];
 
       if (achievements.length === 0) {
         return interaction.editReply(`No recent achievements found for **${displayName}**.`);
       }
 
       const embed = new EmbedBuilder()
-        .setTitle(`🏅 Recent Achievements — ${displayName}`)
+        .setTitle(`\ud83c\udfc5 Recent Achievements \u2014 ${displayName}`)
         .setColor(0x107c10)
         .setThumbnail(gamerpic)
         .setDescription(
           achievements
-            .map(t => `**${t.name}** — ${t.currentAchievements ?? 0}/${t.totalAchievements ?? '?'} (${t.currentGamerscore ?? 0} G)`)
+            .map(t => `**${t.name}** \u2014 ${t.currentAchievements ?? 0}/${t.totalAchievements ?? '?'} (${t.currentGamerscore ?? 0} G)`)
             .join('\n')
         )
-        .setFooter({ text: 'Powered by OpenXBL • xbl.io' })
+        .setFooter({ text: 'Powered by OpenXBL \u2022 xbl.io' })
         .setTimestamp();
 
       return interaction.editReply({ embeds: [embed] });
@@ -108,21 +107,23 @@ export async function execute(interaction) {
       const titleName = presence?.presenceDetails?.[0]?.titleName || null;
 
       const statusLine = state === 'Online'
-        ? titleName ? `🟢 Online — Playing **${titleName}** on ${device}` : `🟢 Online on ${device}`
-        : `⚫ ${state}`;
+        ? titleName ? `\ud83d\udfe2 Online \u2014 Playing **${titleName}** on ${device}` : `\ud83d\udfe2 Online on ${device}`
+        : `\u26ab ${state}`;
 
       const embed = new EmbedBuilder()
-        .setTitle(`📡 Status — ${displayName}`)
+        .setTitle(`\ud83d\udce1 Status \u2014 ${displayName}`)
         .setColor(state === 'Online' ? 0x107c10 : 0x555555)
         .setThumbnail(gamerpic)
         .setDescription(statusLine)
-        .setFooter({ text: 'Powered by OpenXBL • xbl.io' })
+        .setFooter({ text: 'Powered by OpenXBL \u2022 xbl.io' })
         .setTimestamp();
 
       return interaction.editReply({ embeds: [embed] });
     }
   } catch (err) {
     console.error('[Xbox] Error:', err);
-    return interaction.editReply(`❌ Failed to fetch Xbox data: ${err.message}`);
+    return interaction.editReply(`\u274c Failed to fetch Xbox data: ${err.message}`);
   }
 }
+
+module.exports = { data, execute };

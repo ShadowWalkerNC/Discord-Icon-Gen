@@ -11,11 +11,7 @@ function headers() {
   };
 }
 
-/**
- * Search for a player by gamertag.
- * Returns profile people array or throws.
- */
-export async function searchPlayer(gamertag) {
+async function searchPlayer(gamertag) {
   const res = await fetch(
     `${BASE_URL}/friends/search?gt=${encodeURIComponent(gamertag)}`,
     { headers: headers() }
@@ -24,10 +20,7 @@ export async function searchPlayer(gamertag) {
   return res.json();
 }
 
-/**
- * Get profile for a specific XUID.
- */
-export async function getProfile(xuid) {
+async function getProfile(xuid) {
   const res = await fetch(
     `${BASE_URL}/account/${xuid}`,
     { headers: headers() }
@@ -36,10 +29,7 @@ export async function getProfile(xuid) {
   return res.json();
 }
 
-/**
- * Get recent achievements for a specific XUID.
- */
-export async function getAchievements(xuid) {
+async function getAchievements(xuid) {
   const res = await fetch(
     `${BASE_URL}/achievements/player/${xuid}`,
     { headers: headers() }
@@ -48,10 +38,7 @@ export async function getAchievements(xuid) {
   return res.json();
 }
 
-/**
- * Get presence (online/in-game status) for a specific XUID.
- */
-export async function getPresence(xuid) {
+async function getPresence(xuid) {
   const res = await fetch(
     `${BASE_URL}/presence/${xuid}`,
     { headers: headers() }
@@ -60,6 +47,8 @@ export async function getPresence(xuid) {
   return res.json();
 }
 
-export function isEnabled() {
+function isEnabled() {
   return !!process.env.OPENXBL_API_KEY;
 }
+
+module.exports = { searchPlayer, getProfile, getAchievements, getPresence, isEnabled };
