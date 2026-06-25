@@ -11,8 +11,7 @@ nixPkgs = [
   "pixman",
   "glib",
   "fontconfig",
-  "util-linux",
-  "libuuid",
+  "e2fsprogs",
 ]
 
 [phases.build]
