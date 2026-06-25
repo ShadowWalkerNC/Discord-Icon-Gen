@@ -7,7 +7,7 @@ nixPkgs = [
   "pango.dev",
   "libjpeg.dev",
   "giflib",
-  "librsvg.dev",
+  "librsvg",
   "pixman.dev",
   "glib.dev",
   "fontconfig.dev",
