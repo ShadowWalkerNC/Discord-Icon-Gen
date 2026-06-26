@@ -257,31 +257,36 @@ client.on('interactionCreate', async (interaction) => {
         return;
     }
 
-    const { cooldowns } = client;
-    if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Collection());
+    // Only apply a cooldown if the command explicitly declares one (in seconds).
+    // Default is 0 — no throttle — to avoid silently blocking single-user testing.
+    const cooldownMs = (command.cooldown ?? 0) * 1000;
 
-    const now        = Date.now();
-    const timestamps = cooldowns.get(command.data.name);
-    const cooldownMs = (command.cooldown ?? 3) * 1000;
+    if (cooldownMs > 0) {
+        const { cooldowns } = client;
+        if (!cooldowns.has(command.data.name)) cooldowns.set(command.data.name, new Collection());
 
-    if (timestamps.has(interaction.user.id)) {
-        const expiresAt = timestamps.get(interaction.user.id) + cooldownMs;
-        if (now < expiresAt) {
-            const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            try {
-                await interaction.reply({
-                    content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
-                    flags: 64,
-                });
-            } catch (cdErr) {
-                if (cdErr?.code !== 10062) console.warn('[cooldown] reply failed:', cdErr?.message);
+        const now        = Date.now();
+        const timestamps = cooldowns.get(command.data.name);
+
+        if (timestamps.has(interaction.user.id)) {
+            const expiresAt = timestamps.get(interaction.user.id) + cooldownMs;
+            if (now < expiresAt) {
+                const remaining = ((expiresAt - now) / 1000).toFixed(1);
+                try {
+                    await interaction.reply({
+                        content: `Please wait **${remaining}s** before using \`/${command.data.name}\` again.`,
+                        flags: 64,
+                    });
+                } catch (cdErr) {
+                    if (cdErr?.code !== 10062) console.warn('[cooldown] reply failed:', cdErr?.message);
+                }
+                return;
             }
-            return;
         }
-    }
 
-    timestamps.set(interaction.user.id, now);
-    setTimeout(() => timestamps.delete(interaction.user.id), cooldownMs);
+        timestamps.set(interaction.user.id, now);
+        setTimeout(() => timestamps.delete(interaction.user.id), cooldownMs);
+    }
 
     try {
         await command.execute(interaction);
