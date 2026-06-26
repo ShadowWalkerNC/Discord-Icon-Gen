@@ -19,7 +19,7 @@ Sigil is a production-ready Discord bot platform that pairs a full-featured bot 
 
 The live URL is both a **marketing site** and a **working demo**. Anyone can browse the GUI, preview features, and use the brand builder live. When you fork the project, that same URL becomes yours — preconfigured, styled, and ready to deploy.
 
-> **Who it's for:** Community managers, developers, content creators, faith communities, gaming servers, nonprofits, small teams, and any server that deserves more than a generic bot.
+> **Who it’s for:** Community managers, developers, content creators, faith communities, gaming servers, nonprofits, small teams, and any server that deserves more than a generic bot.
 
 ---
 
@@ -38,36 +38,55 @@ The live URL is both a **marketing site** and a **working demo**. Anyone can bro
 
 ---
 
-## Feature Groups
+## Feature Packages
 
-### 🎨 Brand & Identity
+All commands are grouped into **packages** that can be toggled per guild from the `/packages` dashboard page or via `POST /api/packages`. Disabling a package silently blocks its commands with a friendly ephemeral message — no re-registration with Discord required.
 
-Professional server icons, banners, palette cards, event graphics, and name cards — all rendered server-side with node-canvas and returned in seconds. Use the live GUI at `/brand` to preview before running a command.
+> **Default:** All packages are **enabled** for every guild until explicitly disabled.
 
-`/brand` `/icon` `/banner` `/logo` `/palette` `/splash` `/sticker` `/namecard` `/profilecard` `/rolebadge` `/invitecard` `/rankcard` `/servercard` `/welcomecard` `/themepreview` `/texteffect` `/emote` `/resize` `/template` `/announcebanner` `/eventbanner` `/eventrecap`
+---
 
-### 🛡️ Moderation
+### 🎨 Branding (`branding`)
 
-A complete automod suite with configurable rules, persistent case logging, and mod-log channels. Every threshold is adjustable from the dashboard — no commands needed once it's set up.
+Professional server icons, banners, logos, palette cards, and templated graphics — all rendered server-side with node-canvas.
 
-`/automod` `/ban` `/kick` `/unban` `/timeout` `/warn` `/history` `/purge` `/slowmode` `/logging` `/modlog` `/ticket` `/compare`
+`/brand` `/icon` `/banner` `/logo` `/avatar` `/compare` `/template`
 
-- Anti-spam, anti-links, anti-mentions, anti-caps, bad-words filter
-- Per-rule thresholds, bypass roles, allowed domain whitelist
-- Persistent case numbers and ticket thread system
+### ✨ Nitro-Free (`nitrofree`)
 
-### 🎉 Community
+Canvas tools that replicate Nitro perks for free: custom stickers, emotes, profile cards, name cards, and image effects.
 
-The tools that make members feel welcome and keep them engaged.
+`/sticker` `/emote` `/reactionpack` `/rolebadge` `/resize` `/splash` `/namecard` `/servercard` `/profilecard` `/texteffect` `/themepreview`
 
-`/welcome` `/reactionroles` `/giveaway` `/poll` `/bumpreminder` `/autorole` `/starboard` `/rsvp` `/volunteer` `/lfg` `/mood`
+### 🏨 Community (`community`)
 
-- Custom welcome embeds with DM support and live canvas preview
-- Reaction role panels with custom button labels and colors
-- Timed giveaways, multi-option polls with auto-close, RSVP events
-- LFG (looking for group) board and volunteer signup system
+Welcome cards, event graphics, certificates, rank cards, and invite cards for member engagement.
 
-### ⭐ XP & Levels
+`/welcomecard` `/rankcard` `/announcebanner` `/eventbanner` `/eventrecap` `/certificate` `/invitecard`
+
+### ⛪ Faith & Devotional (`faith`)
+
+Built-in tools for churches, ministries, and faith-based communities.
+
+`/bible` `/devotional` `/sermon` `/prayer`
+
+- Daily Bible verse posts via API.Bible (400+ translations)
+- Morning devotional scheduler — posts automatically every day
+- Sermon notes and event recaps with branded embeds
+
+### 🗳️ Polls (`polls`)
+
+Multi-option polls with auto-close and timed giveaways.
+
+`/poll` `/giveaway`
+
+### 📊 Analytics (`analytics`)
+
+Live server health and member metrics.
+
+`/serverstats`
+
+### ⭐ XP & Levels (`xp`)
 
 A full XP economy with rank cards, weekly leaderboards, and level-based role rewards.
 
@@ -76,45 +95,52 @@ A full XP economy with rank cards, weekly leaderboards, and level-based role rew
 - Configurable XP rate and cooldown per server
 - Weekly XP tracking with automatic Sunday reset
 - Level-based auto-role assignment
-- Loyalty card generator with member milestone tracking
 
-### 📅 Scheduler & Staff
+### 🎟️ Tickets (`tickets`)
 
-Shift management, devotionals, sermon posts, and a scheduled content engine.
+Structured support thread system.
 
-`/shift` `/myshift` `/callout` `/schedule` `/devotional` `/sermon` `/remind` `/announce` `/embed`
+`/ticket`
 
-- Staff shift board with automated daily roster posts
-- Callout system integrated with Sylvia Ross scheduling API
-- API.Bible integration for daily devotional posts
-- Scheduled post engine — queue any message, embed, or banner to any channel
+### 🧠 AI Tools (`aitools`)
 
-### 🔗 Integrations
+AI-powered utilities backed by Google Gemini.
 
-YouTube upload alerts, Twitch live notifications, webhook triggers, and custom server-specific slash commands.
+`/mood` `/palette` `/saveme` `/history`
+
+---
+
+### 🛡️ Moderation *(always on)*
+
+A complete automod suite with configurable rules, persistent case logging, and mod-log channels.
+
+`/automod` `/ban` `/kick` `/unban` `/timeout` `/warn` `/history` `/purge` `/slowmode` `/logging` `/modlog` `/ticket` `/compare`
+
+- Anti-spam, anti-links, anti-mentions, anti-caps, bad-words filter
+- Per-rule thresholds, bypass roles, allowed domain whitelist
+- Persistent case numbers and ticket thread system
+
+### 🎉 Community Engagement *(always on)*
+
+Core engagement tools that run regardless of package state.
+
+`/welcome` `/reactionroles` `/bumpreminder` `/autorole` `/starboard` `/rsvp` `/volunteer` `/lfg`
+
+### 📅 Scheduler & Staff *(always on)*
+
+Shift management, scheduled posts, and announcement engine.
+
+`/shift` `/myshift` `/callout` `/schedule` `/remind` `/announce` `/embed`
+
+### 🔗 Integrations *(always on)*
+
+YouTube alerts, Twitch live notifications, custom server commands, and webhook triggers.
 
 `/youtube` `/twitch` `/customcmd` `/integrations` `/nowplaying` `/play` `/queue`
 
-- YouTube upload alerts via Data API v3 (polls every 60s)
-- Twitch live alerts with rich embeds and viewer counts (polls every 15s)
-- Custom slash commands per server — text or embed responses
-- Webhook trigger endpoint for external automation (GitHub, Zapier, n8n)
-- ASCILINE media queue integration for audio/video streaming
-
-### ⛪ Faith & Devotional
-
-Built-in tools for churches, ministries, and faith-based communities.
-
-`/bible` `/devotional` `/sermon` `/prayer` `/certificate`
-
-- Daily Bible verse posts via API.Bible (400+ translations)
-- Morning devotional scheduler — posts automatically every day
-- Sermon notes and event recaps with branded embeds
-- Member certificate generator for milestones and awards
-
 ### 🍳 CulinaryOS Bridge *(in development)*
 
-A first-party Discord integration for **CulinaryOS** — a restaurant management platform currently in development. The bridge connects live menu, recipe, and inventory data directly into your Discord server.
+A first-party Discord integration for **CulinaryOS** — a restaurant management platform in development. Connects live menu, recipe, and inventory data into Discord.
 
 `/menu` `/recipe` `/inventory`
 
@@ -140,8 +166,6 @@ No terminal required for basic setup.
 ```bash
 npx sigil setup
 ```
-
-The interactive CLI detects your environment (Railway, PM2, local) and guides you through setup step by step.
 
 ```bash
 # Available CLI commands
@@ -177,7 +201,7 @@ All variables are documented in [`.env.example`](.env.example). Required ones ar
 | Variable | Description |
 |---|---|
 | `DISCORD_TOKEN` | Bot login token from Discord Developer Portal |
-| `CLIENT_ID` | Your Discord application's client ID |
+| `CLIENT_ID` | Your Discord application’s client ID |
 | `GUI_AUTH_TOKEN` | Shared secret for all GUI API access. Generate: `openssl rand -hex 32` |
 
 ### GUI Dashboard
@@ -192,7 +216,7 @@ All variables are documented in [`.env.example`](.env.example). Required ones ar
 
 | Variable | Description |
 |---|---|
-| `DISCORD_CLIENT_ID` | Your Discord application's client ID (same as `CLIENT_ID`) |
+| `DISCORD_CLIENT_ID` | Your Discord application’s client ID (same as `CLIENT_ID`) |
 | `DISCORD_CLIENT_SECRET` | OAuth2 secret — Discord Dev Portal → OAuth2 tab |
 | `DISCORD_REDIRECT_URI` | Must match exactly: `https://YOUR-DOMAIN/auth/discord/callback` |
 | `DISCORD_OAUTH_URL` | Full authorization URL — Discord Dev Portal → OAuth2 → URL Generator (scope: `identify`) |
@@ -203,7 +227,7 @@ Without these, `/login` token-entry page is used as a fallback.
 
 | Variable | Unlocks |
 |---|---|
-| `GEMINI_API_KEY` | `/brand ai` — AI brand generation |
+| `GEMINI_API_KEY` | `/brand ai`, `/mood`, `/palette`, `/saveme` — AI features |
 | `YOUTUBE_API_KEY` | YouTube upload alerts |
 | `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET` | Twitch live alerts |
 | `BIBLE_API_KEY` | Daily devotionals via API.Bible |
@@ -214,13 +238,15 @@ Without these, `/login` token-entry page is used as a fallback.
 
 ## Deployment
 
-### Railway (one-click, recommended)
+### Railway (recommended)
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app)
 
-Push to GitHub and Railway auto-deploys via Nixpacks. Set your env vars in the Railway dashboard. No build step needed.
+Sigil uses a **Dockerfile** for Railway deployments. Railway detects it automatically and builds the container, which includes all canvas native dependencies (`libcairo2`, `libuuid`, etc.). Set your env vars in the Railway dashboard and push to deploy.
 
-See [`gui/README.md`](gui/README.md) for the full Railway + Discord OAuth setup walkthrough.
+> ⚠️ If Railway falls back to Nixpacks (canvas commands skip with `libuuid.so.1` errors), verify `railway.toml` has `dockerfilePath = "Dockerfile"`.
+
+See [`DEPLOY.md`](DEPLOY.md) for the full Railway + Discord OAuth setup walkthrough.
 
 ### PM2 (self-hosted VPS)
 
@@ -233,9 +259,14 @@ npx pm2 startup
 
 The `ecosystem.config.js` starts both the bot process and the GUI server, keeps them alive, and restarts on crash.
 
-### Docker (coming soon)
+### Docker
 
-A `Dockerfile` and `docker-compose.yml` are planned for the next release. Watch the [releases page](https://github.com/ShadowWalkerNC/Sigil/releases) for updates.
+```bash
+docker build -t sigil .
+docker run -d --env-file .env -p 8080:8080 sigil
+```
+
+The included `Dockerfile` uses `node:20-slim` with all canvas native deps pre-installed.
 
 ---
 
@@ -259,13 +290,19 @@ Sigil/
 ├── src/
 │   ├── index.js             # Bot entry — loads commands, events, IPC bridge
 │   ├── db.js                # SQLite schema + migrations (runs at boot)
-│   ├── commands/            # 71 slash command files
+│   ├── commands/            # 71+ slash command files
+│   │   ├── _*_impl.js       # Heavy impl logic (canvas, DB, API calls)
+│   │   └── *.js             # Thin entry points: package gate → impl.execute()
 │   ├── events/              # Discord.js event handlers
 │   ├── services/            # Background pollers and scheduled runners
 │   │   ├── pollers.js       # Twitch (15s) + YouTube (60s) live pollers
 │   │   ├── scheduler.js     # Scheduled posts, polls, giveaways, bump reminders
 │   │   └── statsRunner.js   # Weekly stats poster (Mon 09:00 UTC)
 │   ├── automation/          # Webhook handler (Twitch, YouTube, GitHub triggers)
+│   ├── utils/
+│   │   ├── packages.js      # isEnabled / enablePackage / disablePackage helpers
+│   │   ├── ssrfGuard.js     # SSRF protection for user-supplied URLs
+│   │   └── webhookQueue.js  # Debounced webhook event dispatcher
 │   └── util/
 │       ├── serviceRegistry.js  # In-process service health tracker
 │       └── logBuffer.js        # In-process log ring buffer
@@ -283,6 +320,8 @@ Sigil/
 │   └── 404.html
 ├── data/
 │   └── sigil.db             # SQLite database (auto-created, WAL mode)
+├── Dockerfile               # node:20-slim + canvas native deps (libuuid, cairo, etc.)
+├── railway.toml             # Pins dockerfilePath so Railway never falls back to Nixpacks
 ├── .env.example             # Template — copy to .env and fill in values
 ├── ecosystem.config.js      # PM2 process config
 ├── CHANGELOG.md
@@ -300,10 +339,47 @@ Sigil/
 | Web server | Express 4 + native WebSocket (ws) |
 | Canvas rendering | node-canvas 2 |
 | AI | Google Gemini (`@google/generative-ai`) |
-| Hosting | Railway (Nixpacks) / PM2 |
+| Hosting | Railway (Docker) / PM2 / Docker |
 | IPC | SQLite cross-process bridge (bot → GUI server) |
 
 The bot and GUI server run as **separate processes**. They share one SQLite database file. The bot writes heartbeat, service registry, and log rows every 30–60 seconds. The GUI server reads them via a lightweight read-only connection — no in-memory globals, no sockets, no restarts required when either process recycles.
+
+---
+
+## Packages System
+
+Features are grouped into **packages** that can be toggled per guild from the `/packages` dashboard page or via `POST /api/packages`.
+
+### How it works
+
+Every gated command entry point checks `isEnabled(guildId, packageName)` before delegating to its impl:
+
+```js
+// Example: src/commands/bible.js
+if (!isEnabled(interaction.guild.id, 'faith')) {
+    return interaction.reply({
+        content: '📦 The **Faith** package is not enabled...',
+        ephemeral: true,
+    });
+}
+return impl.execute(interaction);
+```
+
+Disabling a package does **not** remove commands from Discord’s command list — users see the commands in autocomplete but get a friendly “package not enabled” message if they try to use one. No re-registration needed.
+
+### Package reference
+
+| Package key | Commands | Default |
+|---|---|---|
+| `branding` | `/brand` `/icon` `/banner` `/logo` `/avatar` `/compare` `/template` | ✅ Enabled |
+| `nitrofree` | `/sticker` `/emote` `/reactionpack` `/rolebadge` `/resize` `/splash` `/namecard` `/servercard` `/profilecard` `/texteffect` `/themepreview` | ✅ Enabled |
+| `community` | `/welcomecard` `/rankcard` `/announcebanner` `/eventbanner` `/eventrecap` `/certificate` `/invitecard` | ✅ Enabled |
+| `faith` | `/bible` `/devotional` `/sermon` `/prayer` | ✅ Enabled |
+| `polls` | `/poll` `/giveaway` | ✅ Enabled |
+| `analytics` | `/serverstats` | ✅ Enabled |
+| `xp` | `/xprank` `/xpleaderboard` `/weeklyleaderboard` `/loyalty` `/levelroles` `/xpadmin` | ✅ Enabled |
+| `tickets` | `/ticket` | ✅ Enabled |
+| `aitools` | `/mood` `/palette` `/saveme` `/history` | ✅ Enabled |
 
 ---
 
@@ -319,38 +395,7 @@ The bot and GUI server run as **separate processes**. They share one SQLite data
 
 ---
 
-## Who Uses This
-
-**Gaming communities** — XP systems, LFG boards, reaction roles, Twitch/YouTube alerts. Everything to keep an active community engaged.
-
-**Faith-based servers** — Daily devotionals, Bible verses (400+ translations), sermon posts, prayer channels, volunteer signups, and member certificates.
-
-**Content creators** — YouTube upload alerts, Twitch live notifications, branded announcement embeds, and scheduled posts.
-
-**Small teams and organizations** — Staff shift boards, callout tracking, scheduled content, internal tooling via custom slash commands.
-
-**Developers forking the project** — A production-quality Discord bot starter with a full GUI, CLI, setup wizard, SQLite IPC, service health monitoring, webhook API, and PM2 config. Skip the boilerplate and build what matters.
-
----
-
-## Developer Guide
-
-### Adding a Command
-
-1. Create `src/commands/yourcommand.js` following the pattern in any existing file.
-2. Export `{ data, execute }` where `data` is a `SlashCommandBuilder`.
-3. Run `npm run deploy-commands` to register it with Discord.
-
-### Adding a Background Service
-
-1. Create your service file and call `registry.register('your-service', { interval, description })`.
-2. Call `registry.heartbeat('your-service')` after each successful tick.
-3. Call `registry.setError('your-service', err)` on failure.
-4. Import and start it from `src/index.js` inside the `clientReady` handler.
-
-The service will automatically appear on the `/status` dashboard and in the SQLite `service_registry` table within 60 seconds.
-
-### REST & WebSocket API
+## REST & WebSocket API
 
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
@@ -364,11 +409,49 @@ The service will automatically appear on the `/status` dashboard and in the SQLi
 | `/health` | GET | None | Simple uptime + version check |
 | `/ws/logs` | WebSocket | token param | Live log stream (`?token=&level=error`) |
 
-All endpoints are rate-limited. See [`gui/README.md`](gui/README.md) for the full API reference and rate limit table.
+All endpoints are rate-limited. See [`DEPLOY.md`](DEPLOY.md) for the full API reference and rate limit table.
 
-### Packages System
+---
 
-Features are grouped into packages that can be toggled per guild from the `/packages` page or via `POST /api/packages`. Disabling a package prevents its commands from executing without removing them from Discord's command list — no re-registration needed.
+## Developer Guide
+
+### Adding a Command
+
+1. Create `src/commands/yourcommand.js` — thin entry point with package gate + `impl.execute()`.
+2. Create `src/commands/_yourcommand_impl.js` — all heavy logic lives here.
+3. Export `{ data, execute }` where `data` is a `SlashCommandBuilder`.
+4. Run `npm run deploy-commands` to register it with Discord.
+5. To add a cooldown, export `cooldown: N` (seconds) from the entry point. Default is `0` (no throttle).
+
+```js
+// src/commands/mycommand.js
+'use strict';
+const { SlashCommandBuilder } = require('discord.js');
+const impl = require('./_mycommand_impl.js');
+const { isEnabled } = require('../utils/packages.js');
+
+module.exports = {
+    cooldown: 5, // optional — omit for no throttle
+    data: new SlashCommandBuilder()
+        .setName('mycommand')
+        .setDescription('Does something cool.'),
+    async execute(interaction) {
+        if (!isEnabled(interaction.guild.id, 'mypackage')) {
+            return interaction.reply({ content: '📦 Package not enabled.', ephemeral: true });
+        }
+        return impl.execute(interaction);
+    },
+};
+```
+
+### Adding a Background Service
+
+1. Create your service file and call `registry.register('your-service', { interval, description })`.
+2. Call `registry.heartbeat('your-service')` after each successful tick.
+3. Call `registry.setError('your-service', err)` on failure.
+4. Import and start it from `src/index.js` inside the `clientReady` handler.
+
+The service will automatically appear on the `/status` dashboard within 60 seconds.
 
 ---
 
@@ -377,10 +460,10 @@ Features are grouped into packages that can be toggled per guild from the `/pack
 PRs are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on new commands, GUI panels, and integration connectors.
 
 Key areas for contribution:
-- Docker + docker-compose setup
 - Additional webhook integrations (Patreon, Ko-fi, GitHub Actions)
 - Dashboard theming and mobile responsiveness improvements
 - Unit and integration tests
+- CulinaryOS bridge completion
 
 ---
 

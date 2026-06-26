@@ -5,6 +5,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [2.9.0] — 2026-06-25
+
+### Added
+- **Package gate system** — 40 command entry-point files now check `isEnabled(guildId, packageKey)` before executing; unrecognized or disabled packages return a friendly ephemeral message with no re-registration needed
+- Package gates cover 9 packages: `branding`, `nitrofree`, `community`, `faith`, `polls`, `analytics`, `xp`, `tickets`, `aitools`
+- `branding` gates: `/icon`, `/banner`, `/logo`, `/avatar`, `/compare`, `/brand`, `/template`
+- `nitrofree` gates: `/sticker`, `/emote`, `/reactionpack`, `/rolebadge`, `/resize`, `/splash`, `/namecard`, `/servercard`, `/profilecard`, `/texteffect`, `/themepreview`
+- `community` gates: `/welcomecard`, `/rankcard`, `/announcebanner`, `/eventbanner`, `/certificate`, `/invitecard`
+- `faith` gates: `/bible`, `/devotional`, `/sermon`, `/prayer`
+- `polls` gates: `/poll`, `/giveaway`
+- `analytics` gates: `/serverstats`
+- `xp` gates: `/xprank`, `/xpleaderboard`, `/xpadmin`, `/levelroles`
+- `tickets` gates: `/ticket`
+- `aitools` gates: `/mood`, `/palette`, `/saveme`, `/history`
+- Developer guide in README now documents the `cooldown` export and package gate pattern
+- Package reference table added to README
+
+### Fixed
+- **`libuuid.so.1` crash** — added `uuid-dev` to Dockerfile apt layer; canvas native addon now compiles correctly on Railway
+- **Railway using Nixpacks instead of Dockerfile** — `railway.toml` now explicitly sets `dockerfilePath = "Dockerfile"`, preventing Nixpacks fallback that caused all canvas commands to be skipped at deploy time
+- **Default 3s cooldown on every command** — `src/index.js` changed `command.cooldown ?? 3` to `command.cooldown ?? 0`; cooldown block is now skipped entirely when `cooldownMs === 0`. Commands opt in by exporting `cooldown: N`
+- **`xbox.js` ES module warning** — rewrote as strict CJS with lazy `require()` to eliminate `MODULE_TYPELESS_PACKAGE_JSON` parse warning and startup overhead
+- **`/announce` double-reply crash** — resolved as a side-effect of the cooldown fix; the "Something went wrong" error was caused by the cooldown handler replying to an already-replied interaction during rapid re-use
+- README: Docker section updated — removed "coming soon" note, added actual `docker build` / `docker run` instructions
+- README: Deployment section corrected — Railway uses Docker (not Nixpacks), documented the `railway.toml` pin
+
+### Changed
+- All gated command entry-point files rewritten as strict CJS (`'use strict'`) with explicit `SlashCommandBuilder` definitions
+- `devotional.js` entry point preserves optional `startScheduler` export passthrough
+- README reorganized: Feature Groups replaced with Packages System section; package reference table added; always-on commands documented separately
+
+---
+
 ## [2.8.0] — 2026-06-22
 
 ### Security
