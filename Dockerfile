@@ -1,6 +1,6 @@
 FROM node:20-slim
 
-# Install canvas native dependencies via apt
+# canvas native dependencies + libuuid (required by canvas on Debian slim)
 RUN apt-get update && apt-get install -y \
     build-essential \
     libcairo2-dev \
@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libgif-dev \
     librsvg2-dev \
     libpixman-1-dev \
+    uuid-dev \
     pkg-config \
     python3 \
     && rm -rf /var/lib/apt/lists/*
