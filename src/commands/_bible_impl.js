@@ -2,8 +2,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const API_KEY = process.env.BIBLE_API_KEY;
-const BIBLE_ID = process.env.BIBLE_ID || 'de4e12af7f28f599-02'; // ASV free
-const BASE = 'https://api.scripture.api.bible/v1';
+const BIBLE_ID = process.env.BIBLE_ID || 'de4e12af7f28f599-01'; // KJV default
+const BASE = 'https://rest.api.bible/v1';
 
 const data = new SlashCommandBuilder()
     .setName('bible')
@@ -25,7 +25,6 @@ async function execute(interaction) {
     const ref = interaction.options.getString('reference').trim();
 
     try {
-        // Step 1: search to resolve passage ID
         const searchRes = await fetch(
             `${BASE}/bibles/${BIBLE_ID}/search?query=${encodeURIComponent(ref)}&limit=1`,
             { headers: { 'api-key': API_KEY } }
@@ -36,7 +35,6 @@ async function execute(interaction) {
             return interaction.editReply({ content: `\u274c No results found for **${ref}**.` });
         }
 
-        // Step 2: fetch full passage text
         const passageRes = await fetch(
             `${BASE}/bibles/${BIBLE_ID}/passages/${encodeURIComponent(verses[0].id)}?content-type=text&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=true`,
             { headers: { 'api-key': API_KEY } }
@@ -55,7 +53,7 @@ async function execute(interaction) {
             .setTitle(`\ud83d\udcd6 ${passage.reference}`)
             .setDescription(text)
             .setColor('#1e3a5f')
-            .setFooter({ text: 'American Standard Version \u2022 api.bible' })
+            .setFooter({ text: 'King James Version \u2022 api.bible' })
             .setTimestamp();
 
         return interaction.editReply({ embeds: [embed] });

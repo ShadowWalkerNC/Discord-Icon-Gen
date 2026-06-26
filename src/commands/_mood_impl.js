@@ -2,8 +2,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const API_KEY = process.env.BIBLE_API_KEY;
-const BIBLE_ID = process.env.BIBLE_ID || 'de4e12af7f28f599-02';
-const BASE = 'https://api.scripture.api.bible/v1';
+const BIBLE_ID = process.env.BIBLE_ID || 'de4e12af7f28f599-01'; // KJV default
+const BASE = 'https://rest.api.bible/v1';
 
 const MOOD_MAP = {
     joyful:    { emoji: '\ud83d\ude04', color: '#FFD700', verse: 'NEH.8.10',  label: 'Nehemiah 8:10' },
@@ -70,7 +70,7 @@ async function execute(interaction) {
             .setTitle(`${entry.emoji} Feeling ${mood.charAt(0).toUpperCase() + mood.slice(1)}, ${interaction.user.displayName}?`)
             .setDescription(`*${text}*\n\n\u2014 **${verse?.reference ?? entry.label}**`)
             .setColor(entry.color)
-            .setFooter({ text: 'American Standard Version \u2022 api.bible' })
+            .setFooter({ text: 'King James Version \u2022 api.bible' })
             .setTimestamp();
 
         return interaction.editReply({ embeds: [embed] });

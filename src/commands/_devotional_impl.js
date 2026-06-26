@@ -2,8 +2,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const API_KEY = process.env.BIBLE_API_KEY;
-const BIBLE_ID = process.env.BIBLE_ID || 'de4e12af7f28f599-02';
-const BASE = 'https://api.scripture.api.bible/v1';
+const BIBLE_ID = process.env.BIBLE_ID || 'de4e12af7f28f599-01'; // KJV default
+const BASE = 'https://rest.api.bible/v1';
 
 const DEVOTIONAL_VERSES = [
     'JHN.3.16', 'PSA.23.1', 'ROM.8.28', 'PHP.4.13', 'ISA.40.31',
@@ -51,7 +51,7 @@ async function execute(interaction) {
             .setTitle(`\ud83d\ude4f Daily Devotional \u2014 ${dateStr}`)
             .setDescription(`**${verse.reference}**\n\n${text}`)
             .setColor('#d4a017')
-            .setFooter({ text: 'American Standard Version \u2022 api.bible' })
+            .setFooter({ text: 'King James Version \u2022 api.bible' })
             .setTimestamp();
 
         return interaction.editReply({ embeds: [embed] });
