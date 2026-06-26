@@ -12,6 +12,9 @@
     "scripts": {
         "start": "node src/index.js",
         "dev": "node --watch src/index.js",
+        "server": "node src/server.js",
+        "server:dev": "node --watch src/server.js",
+        "start:all": "node src/server.js & node src/index.js",
         "gui": "node gui/gui-server.js",
         "gui:dev": "node --watch gui/gui-server.js",
         "lint": "eslint src/ gui/",
