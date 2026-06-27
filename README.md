@@ -15,11 +15,11 @@
 
 ## What is Sigil?
 
-Sigil is a production-ready Discord bot platform that pairs a full-featured bot with a live web dashboard. It ships with 71+ slash commands, a visual brand builder, a setup wizard, and a developer-friendly CLI — all self-hosted, all open source.
+Sigil is a production-ready Discord bot platform that pairs a full-featured bot with a live web dashboard. It ships with 71+ slash commands, a visual brand builder, and a developer-friendly architecture — all self-hosted, all open source.
 
 The live URL is both a **marketing site** and a **working demo**. Anyone can browse the GUI, preview features, and use the brand builder live. When you fork the project, that same URL becomes yours — preconfigured, styled, and ready to deploy.
 
-Sigil is a node in the [ShadowRealm Network](docs/SHADOWREALM_NETWORK.md) — a personal microservices ecosystem. It follows the shared `/v1/health`, `/v1/manifest`, and auth envelope contracts across all connected apps.
+Sigil is a node in the [ShadowRealm Network](SHADOWREALM_NETWORK.md) — a personal microservices ecosystem. It follows the shared `/v1/health`, `/v1/manifest`, and auth envelope contracts across all connected apps.
 
 > **Who it's for:** Community managers, developers, content creators, faith communities, gaming servers, nonprofits, small teams, and any server that deserves more than a generic bot.
 
@@ -34,15 +34,16 @@ Sigil is a node in the [ShadowRealm Network](docs/SHADOWREALM_NETWORK.md) — a 
 | **Community Tools** | `/community` | Welcome card previews, reaction roles, giveaway controls |
 | **Status Dashboard** | `/status` | Real-time bot health, service heartbeats, live log tail |
 | **Packages** | `/packages` | Toggle feature packages per guild from the browser |
-| **Setup Wizard** | `/setup` | Step-by-step guided setup for new deployments |
 | **Developer Docs** | `/developers` | API reference, webhook config, integration guide |
 | **Health Check** | `/health` | JSON endpoint — uptime, version, service status |
+
+> ⚠️ The `/setup` wizard has been deprecated. Use `/sigilconfig` in Discord instead — it covers all setup from inside your server with no web UI required.
 
 ---
 
 ## Feature Packages
 
-All commands are grouped into **packages** that can be toggled per guild from the `/packages` dashboard page or via `POST /api/packages`. Disabling a package silently blocks its commands with a friendly ephemeral message — no re-registration with Discord required.
+All commands are grouped into **packages** that can be toggled per guild via `/sigilconfig packages` in Discord or via `POST /api/packages`. Disabling a package silently blocks its commands with a friendly ephemeral message — no re-registration with Discord required.
 
 > **Default:** All packages are **enabled** for every guild until explicitly disabled.
 
@@ -84,7 +85,8 @@ Built-in tools for churches, ministries, and faith-based communities.
 - Daily Bible verse posts via API.Bible (400+ translations)
 - Morning devotional scheduler — posts automatically every day
 - Sermon notes and event recaps with branded embeds
-- Requires `BIBLE_API_KEY`. Package is gracefully disabled if the key is absent — commands return a friendly message, no crash.
+- `/sermon` supports Discord Stage channels — bot joins as a speaker
+- Requires `BIBLE_API_KEY`. Package is gracefully disabled if the key is absent.
 
 ### 🗳️ Polls (`polls`) — ✅ Production
 
@@ -120,7 +122,7 @@ AI-powered utilities backed by Anthropic Claude.
 
 `/mood` `/palette` `/saveme` `/history`
 
-> AI calls are made directly to Anthropic (`ANTHROPIC_API_KEY`). Planned: route through ShadowRealm Network's `/v1/generate` endpoint so the AI key lives centrally. See [docs/SHADOWREALM_NETWORK.md](docs/SHADOWREALM_NETWORK.md).
+> AI calls are made directly to Anthropic (`ANTHROPIC_API_KEY`). Planned: route through ShadowRealm Network's `/v1/generate` endpoint so the AI key lives centrally.
 
 ---
 
@@ -152,47 +154,35 @@ YouTube alerts, Twitch live notifications, and custom server commands.
 
 `/youtube` `/twitch` `/customcmd` `/integrations`
 
-> **Music commands** (`/nowplaying`, `/play`, `/queue`) — ⚠️ Stub. No audio library is wired in the current `package.json`. These commands exist in the codebase but call an external service stub. Do not rely on them for production music playback until a library (e.g. `discord-player`, Lavalink) is integrated.
+> **Music commands** (`/nowplaying`, `/play`, `/queue`) — ⚠️ Stub. No audio library is wired in the current `package.json`. These commands exist but call an external service stub. Do not rely on them for production music until a library (e.g. `discord-player`, Lavalink) is integrated.
 
 ### 🍳 CulinaryOS Bridge *(in development — hidden until live)*
 
-A first-party Discord integration for **CulinaryOS**. Connects live menu, recipe, and inventory data into Discord. Commands are registered but gated behind a config check — they do **not** appear in Discord autocomplete until `CULINARYOS_API_URL` and `CULINARYOS_API_KEY` are both set and CulinaryOS is live.
+A first-party Discord integration for **CulinaryOS**. Commands are registered but gated — they do **not** appear in Discord autocomplete until `CULINARYOS_API_URL` and `CULINARYOS_API_KEY` are both set.
 
 `/menu` `/recipe` `/inventory`
 
-> See [docs/CULINARYOS_BRIDGE.md](docs/CULINARYOS_BRIDGE.md) for architecture details.
+> See [CULINARYOS_BRIDGE.md](CULINARYOS_BRIDGE.md) for architecture details.
 
 ---
 
 ## Getting Started
 
-### Option 1 — Setup Wizard (Recommended for most users)
+### Option 1 — Discord-native setup (Recommended)
 
-Fork the repo, deploy to Railway, then open your live URL and go to `/setup`. The wizard walks you through:
+Fork the repo, deploy to Railway, then use `/sigilconfig` in Discord:
 
-1. Connecting your bot token and client ID
-2. Selecting which feature packages to enable
-3. Registering slash commands with one click
-4. Configuring channels, roles, and API keys per feature
-
-No terminal required for basic setup.
-
-### Option 2 — CLI (Recommended for developers)
-
-```bash
-npx sigil setup
+```
+/sigilconfig status          — see current automation status
+/sigilconfig welcome         — configure welcome cards + channel
+/sigilconfig xp              — enable XP leveling
+/sigilconfig packages        — enable/disable feature bundles
+/sigilconfig webhook         — set up external webhook triggers
 ```
 
-```bash
-# Available CLI commands
-sigil setup          # Interactive setup wizard
-sigil deploy         # Register/update slash commands
-sigil status         # Check bot and service health
-sigil logs           # Tail live bot logs
-sigil restart        # Trigger a graceful restart (requires CONTROL_SECRET)
-```
+No web UI required for setup.
 
-### Option 3 — Manual
+### Option 2 — Manual
 
 ```bash
 git clone https://github.com/ShadowWalkerNC/Sigil
@@ -203,6 +193,14 @@ npm run deploy-commands # register slash commands with Discord
 npm start               # bot process
 npm run gui             # web dashboard (separate process or combined via PM2)
 ```
+
+> ⚠️ **After any push that adds or changes command options**, you must re-register with Discord:
+> ```bash
+> node scripts/deploy-commands-standalone.js
+> # or via the API:
+> POST /api/control/deploy-commands  (requires CONTROL_SECRET header)
+> ```
+> Discord caches command definitions — stale definitions cause silent timeouts and missing options.
 
 ---
 
@@ -237,8 +235,6 @@ All variables are documented in [`.env.example`](.env.example). Required ones ar
 | `DISCORD_REDIRECT_URI` | Must match exactly: `https://YOUR-DOMAIN/auth/discord/callback` |
 | `DISCORD_OAUTH_URL` | Full authorization URL — Discord Dev Portal → OAuth2 → URL Generator (scope: `identify`) |
 
-Without these, `/login` token-entry page is used as a fallback.
-
 ### Optional features
 
 | Variable | Unlocks |
@@ -262,7 +258,7 @@ Sigil uses a **Dockerfile** for Railway deployments. Railway detects it automati
 
 > ⚠️ If Railway falls back to Nixpacks (canvas commands skip with `libuuid.so.1` errors), verify `railway.toml` has `dockerfilePath = "Dockerfile"`.
 
-See [`docs/DEPLOY.md`](docs/DEPLOY.md) for the full Railway + Discord OAuth setup walkthrough.
+See [DEPLOY.md](DEPLOY.md) for the full Railway + Discord OAuth setup walkthrough.
 
 ### PM2 (self-hosted VPS)
 
@@ -273,16 +269,12 @@ npx pm2 save
 npx pm2 startup
 ```
 
-The `ecosystem.config.js` starts both the bot process and the GUI server, keeps them alive, and restarts on crash.
-
 ### Docker
 
 ```bash
 docker build -t sigil .
 docker run -d --env-file .env -p 8080:8080 sigil
 ```
-
-The included `Dockerfile` uses `node:20-slim` with all canvas native deps pre-installed.
 
 ---
 
@@ -310,56 +302,38 @@ Sigil/
 │   ├── server.js            # Lightweight API server for GUI reads/writes
 │   ├── commands/            # 71+ slash command files
 │   │   ├── _*_impl.js       # Heavy impl logic (canvas, DB, API calls)
-│   │   └── *.js             # Thin entry points: package gate → impl.execute()
+│   │   └── *.js             # Thin entry points: package gate → impl.data + impl.execute()
 │   ├── events/              # Discord.js event handlers
+│   │   └── interactionCreate.js  # Global error handler — all interactions routed here
 │   ├── services/            # Background pollers and scheduled runners
 │   │   ├── pollers.js       # Twitch (15s) + YouTube (60s) live pollers
 │   │   ├── scheduler.js     # Scheduled posts, polls, giveaways, bump reminders
 │   │   └── statsRunner.js   # Weekly stats poster (Mon 09:00 UTC)
 │   ├── automation/          # Webhook handler (Twitch, YouTube, GitHub triggers)
-│   ├── utils/
-│   │   ├── packages.js      # isEnabled / enablePackage / disablePackage helpers
-│   │   ├── ssrfGuard.js     # SSRF protection for user-supplied URLs
-│   │   └── webhookQueue.js  # Debounced webhook event dispatcher
-│   └── util/
-│       ├── serviceRegistry.js  # In-process service health tracker
-│       └── logBuffer.js        # In-process log ring buffer
+│   └── utils/
+│       ├── packages.js      # isEnabled / enablePackage / disablePackage helpers
+│       ├── ssrfGuard.js     # SSRF protection for user-supplied URLs
+│       └── webhookQueue.js  # Debounced webhook event dispatcher
 ├── gui/
 │   ├── gui-server.js        # Express server — API + WebSocket + static pages
-│   ├── auth.js              # Client-side auth helper — token bootstrap, authFetch()
-│   ├── login.html           # Token-entry fallback login page
 │   ├── index.html           # Home / marketing landing page
 │   ├── sigil-gui-builder.html  # Brand builder live canvas GUI
-│   ├── sigil-community.html    # Community tools GUI
 │   ├── status.html          # Real-time status dashboard
 │   ├── packages.html        # Feature package toggle panel
-│   ├── developers.html      # Developer API reference
-│   ├── setup.html           # First-time setup wizard
-│   └── 404.html
+│   └── developers.html      # Developer API reference
 ├── data/
-│   └── sigil.db             # SQLite database (auto-created, WAL mode, git-ignored)
+│   └── sigil.db             # SQLite database (WAL mode, git-ignored, mount Railway volume)
+├── scripts/
+│   └── deploy-commands-standalone.js  # Re-register slash commands with Discord
 ├── docs/
-│   ├── DEPLOY.md            # Full Railway + Discord OAuth setup walkthrough
-│   ├── CULINARYOS_BRIDGE.md # CulinaryOS integration contract
-│   ├── SHADOWREALM_NETWORK.md # ShadowRealm Network node contract
-│   ├── SCHEDULER_INTEGRATION.md # Scheduler integration details
-│   └── ARCHITECTURE.md      # SQLite ceiling, two-process model, IPC (see below)
-├── tests/
-│   ├── unit/
-│   │   ├── packages.test.js # isEnabled / enablePackage / disablePackage
-│   │   ├── db.test.js       # Schema creates correctly, migrations idempotent
-│   │   └── ssrfGuard.test.js
-│   ├── integration/
-│   │   ├── commands.test.js # All command files load without throwing
-│   │   └── gui-api.test.js  # /health, /api/status respond correctly
-│   └── setup.js             # In-memory SQLite, no Railway/Discord required
+│   ├── DEPLOY.md
+│   ├── CULINARYOS_BRIDGE.md
+│   ├── SHADOWREALM_NETWORK.md
+│   └── SCHEDULER_INTEGRATION.md
+├── TASKS.md                 # Daily work tracker — start here each session
 ├── Dockerfile
 ├── railway.toml
-├── .env.example
-├── ecosystem.config.js
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-└── LICENSE
+└── .env.example
 ```
 
 **Stack at a glance:**
@@ -374,52 +348,91 @@ Sigil/
 | Hosting | Railway (Docker) / PM2 / Docker |
 | IPC | SQLite cross-process bridge (bot → GUI server) |
 
-The bot and GUI server run as **separate processes**. They share one SQLite database file. The bot writes heartbeat, service registry, and log rows every 30–60 seconds. The GUI server reads them via a lightweight read-only connection — no in-memory globals, no sockets, no restarts required when either process recycles.
-
 ---
 
 ## Scale & Architecture Limits
 
-Sigil uses SQLite (WAL mode) as its database. This is an intentional choice for the current scale — honest, simple, and zero-dependency.
+Sigil uses SQLite (WAL mode) as its database. This is an intentional choice for the current scale.
 
 **Works well for:**
 - Single-server deployments (Railway, VPS, Docker)
 - Up to ~100 active guilds with normal usage patterns
-- XP writes from typical community activity levels
 
 **Does NOT support:**
-- Multiple concurrent Railway replicas — SQLite is a single-file database; horizontal scaling breaks the IPC bridge and causes write contention
+- Multiple concurrent Railway replicas
 - High-frequency XP write loads at >500 concurrent active members sustained
 
-**Migration path if you hit the ceiling:**  
-Replace the DB layer with PostgreSQL. [Supabase](https://supabase.com) is the recommended target — `better-sqlite3` calls map cleanly to `pg` with minimal changes to `src/db.js`. The rest of the codebase stays the same.
+**Migration path:** Replace the DB layer with PostgreSQL. [Supabase](https://supabase.com) is the recommended target.
 
-> If you are deploying Sigil for a large server (5,000+ active members), open an issue — we can advise on the migration path.
+---
+
+## Developer Guide
+
+### Adding a Command
+
+**Critical convention:** The wrapper file MUST export `data: impl.data`. Never re-declare a new `SlashCommandBuilder` in the wrapper — it will strip all options from the command definition, causing silent timeouts.
+
+```js
+// src/commands/mycommand.js — CORRECT pattern
+'use strict';
+const impl = require('./_mycommand_impl.js');
+const { isEnabled } = require('../utils/packages.js');
+
+module.exports = {
+    cooldown: 5, // optional
+    data: impl.data, // ← ALWAYS use impl.data, never re-declare
+    async execute(interaction) {
+        if (!isEnabled(interaction.guild.id, 'mypackage')) {
+            return interaction.reply({ content: '📦 Package not enabled.', ephemeral: true });
+        }
+        return impl.execute(interaction);
+    },
+};
+```
+
+```js
+// src/commands/_mycommand_impl.js
+'use strict';
+const { SlashCommandBuilder } = require('discord.js');
+
+const data = new SlashCommandBuilder()
+    .setName('mycommand')
+    .setDescription('Does something cool.')
+    .addStringOption(opt => opt.setName('input').setDescription('Your input').setRequired(true));
+
+async function execute(interaction) {
+    await interaction.deferReply(); // ← required for any async work >1s
+    const input = interaction.options.getString('input');
+    return interaction.editReply({ content: `You said: ${input}` });
+}
+
+module.exports = { data, execute };
+```
+
+> After adding or changing a command, run `npm run deploy-commands` to register it with Discord.
+
+### Button & Modal Handlers
+
+Register handlers on `client.buttonHandlers` and `client.modalHandlers` (both are `Map` instances) using a prefix string that matches the start of your `customId`:
+
+```js
+// In your command's _impl.js or a dedicated handler file:
+client.buttonHandlers.set('ticket', async (interaction) => {
+    const [, action, ticketId] = interaction.customId.split(':');
+    // handle ticket:claim:123, ticket:close:123, etc.
+});
+```
+
+### Adding a Background Service
+
+1. Create your service file and call `registry.register('your-service', { interval, description })`.
+2. Call `registry.heartbeat('your-service')` after each successful tick.
+3. Call `registry.setError('your-service', err)` on failure.
+4. Import and start it from `src/index.js` inside the `clientReady` handler.
 
 ---
 
 ## Packages System
-
-Features are grouped into **packages** that can be toggled per guild from the `/packages` dashboard page or via `POST /api/packages`.
-
-### How it works
-
-Every gated command entry point checks `isEnabled(guildId, packageName)` before delegating to its impl:
-
-```js
-// Example: src/commands/bible.js
-if (!isEnabled(interaction.guild.id, 'faith')) {
-    return interaction.reply({
-        content: '📦 The **Faith** package is not enabled...',
-        ephemeral: true,
-    });
-}
-return impl.execute(interaction);
-```
-
-Disabling a package does **not** remove commands from Discord's command list — users see the commands in autocomplete but get a friendly "package not enabled" message if they try to use one. No re-registration needed.
-
-### Package reference
 
 | Package key | Commands | Status | Default |
 |---|---|---|---|
@@ -437,13 +450,12 @@ Disabling a package does **not** remove commands from Discord's command list —
 
 ## Security
 
-- All `/api/*` and `/preview/*` routes require a valid `GUI_AUTH_TOKEN` (Bearer header or `?token=` query param) enforced by `guiAuthMiddleware`
-- `/api/setup/validate-token` and `/api/status/full` are intentionally exempt (pre-auth setup flow and public health reads)
-- `/api/control/restart` and `/api/control/deploy-commands` require a separate `CONTROL_SECRET` header in addition to GUI auth. No arbitrary shell execution is exposed over HTTP.
+- All `/api/*` routes require a valid `GUI_AUTH_TOKEN` (Bearer header or `?token=` query param)
+- `/api/control/restart` and `/api/control/deploy-commands` require a separate `CONTROL_SECRET` header
 - Webhook HMAC verification on `/webhook/trigger` via `x-sigil-signature`
 - SSRF guard on all user-supplied URLs via `src/utils/ssrfGuard.js`
-- Rate limiting on every endpoint group (auth: 10/min, render: 20/min, control: 5/min)
-- `.env` is git-ignored — **never commit real secrets**; use `.env.example` as the template
+- Rate limiting on every endpoint group
+- `.env` is git-ignored — never commit real secrets
 
 ---
 
@@ -454,67 +466,22 @@ Disabling a package does **not** remove commands from Discord's command list —
 | `/api/status/full` | GET | None | Aggregated health — bot, GUI, services, last error |
 | `/api/logs` | GET | ✅ | Merged bot + GUI log tail (`?tail=50&level=error`) |
 | `/api/packages` | GET / POST | ✅ | Read or toggle feature packages per guild |
-| `/api/media/*` | GET / POST | ✅ | ASCILINE media queue proxy |
 | `/api/control/restart` | POST | ✅ + control secret | Graceful process restart |
 | `/api/control/deploy-commands` | POST | ✅ + control secret | Re-register slash commands with Discord |
 | `/webhook/trigger` | POST | HMAC | External event trigger (Twitch, YouTube, GitHub) |
 | `/health` | GET | None | Simple uptime + version check |
 | `/ws/logs` | WebSocket | token param | Live log stream (`?token=&level=error`) |
 
-All endpoints are rate-limited. See [`docs/DEPLOY.md`](docs/DEPLOY.md) for the full API reference and rate limit table.
-
----
-
-## Developer Guide
-
-### Adding a Command
-
-1. Create `src/commands/yourcommand.js` — thin entry point with package gate + `impl.execute()`.
-2. Create `src/commands/_yourcommand_impl.js` — all heavy logic lives here.
-3. Export `{ data, execute }` where `data` is a `SlashCommandBuilder`.
-4. Run `npm run deploy-commands` to register it with Discord.
-5. To add a cooldown, export `cooldown: N` (seconds) from the entry point. Default is `0` (no throttle).
-
-```js
-// src/commands/mycommand.js
-'use strict';
-const { SlashCommandBuilder } = require('discord.js');
-const impl = require('./_mycommand_impl.js');
-const { isEnabled } = require('../utils/packages.js');
-
-module.exports = {
-    cooldown: 5, // optional — omit for no throttle
-    data: new SlashCommandBuilder()
-        .setName('mycommand')
-        .setDescription('Does something cool.'),
-    async execute(interaction) {
-        if (!isEnabled(interaction.guild.id, 'mypackage')) {
-            return interaction.reply({ content: '📦 Package not enabled.', ephemeral: true });
-        }
-        return impl.execute(interaction);
-    },
-};
-```
-
-### Adding a Background Service
-
-1. Create your service file and call `registry.register('your-service', { interval, description })`.
-2. Call `registry.heartbeat('your-service')` after each successful tick.
-3. Call `registry.setError('your-service', err)` on failure.
-4. Import and start it from `src/index.js` inside the `clientReady` handler.
-
-The service will automatically appear on the `/status` dashboard within 60 seconds.
-
 ---
 
 ## Contributing
 
-PRs are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on new commands, GUI panels, and integration connectors.
+PRs are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Key areas for contribution:
-- Unit and integration tests (`tests/` — `node:test`, see test scaffolding)
+- Unit and integration tests (`tests/` — `node:test`)
 - Additional webhook integrations (Patreon, Ko-fi, GitHub Actions)
-- Dashboard component system (shared nav/auth header — before the GUI grows further)
+- Dashboard component system
 - CulinaryOS bridge completion
 
 ---
