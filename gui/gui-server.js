@@ -1,10 +1,10 @@
-// gui-server.js — Sigil GUI bridge server v2.8
+// gui-server.js — Sigil GUI bridge server v2.9
 // Run with: node gui/gui-server.js
 
 const express    = require('express');
 const path       = require('path');
 const http       = require('http');
-const { spawn, exec }  = require('child_process');
+const { spawn }  = require('child_process');
 const crypto     = require('crypto');
 const fs         = require('fs');
 const rateLimit  = require('express-rate-limit');
@@ -30,7 +30,7 @@ const app       = express();
 const server    = http.createServer(app);
 const PORT      = Number(process.env.PORT) || 8080;
 const START_TS  = Date.now();
-const VERSION   = '2.8.0';
+const VERSION   = '2.9.0';
 
 const DB_PATH = path.join(__dirname, '..', 'data', 'sigil.db');
 
@@ -132,7 +132,7 @@ const mediaLimiter   = rateLimit({ windowMs: 60_000, max: 30,  standardHeaders: 
 const controlLimiter = rateLimit({ windowMs: 60_000, max: 5,   standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Rate limit exceeded.' } });
 const setupLimiter   = rateLimit({ windowMs: 60_000, max: 10,  standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Too many setup requests.' } });
 const authLimiter    = rateLimit({ windowMs: 60_000, max: 10,  standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Too many auth attempts.' } });
-const bashLimiter    = rateLimit({ windowMs: 60_000, max: 30,  standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Bash rate limit exceeded.' } });
+const bashLimiter    = rateLimit({ windowMs: 60_000, max: 10,  standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Diagnostic rate limit exceeded.' } });
 
 // ── Static pages (no auth required) ──────────────────────────────────────────
 app.get('/',           (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
@@ -462,11 +462,9 @@ app.post('/api/setup/verify/elevenlabs', setupLimiter, async (req, res) => {
 app.post('/api/setup/verify/mongo', setupLimiter, async (req, res) => {
     const uri = String(req.body?.MONGO_URI || '').trim();
     if (!uri) return res.json({ ok: false, error: 'No URI provided.' });
-    // Basic format check before attempting a real connection
     if (!/^mongodb(\+srv)?:\/\/.+/.test(uri))
         return res.json({ ok: false, error: 'URI does not look like a valid MongoDB connection string.' });
     try {
-        // Dynamically require mongoose — won't fail if not installed, just reports
         let mongoose;
         try { mongoose = require('mongoose'); } catch { return res.json({ ok: false, error: 'mongoose is not installed. Run npm install mongoose.' }); }
         const conn = await mongoose.createConnection(uri, { serverSelectionTimeoutMS: 6000 }).asPromise();
@@ -608,20 +606,70 @@ app.post('/api/control/deploy-commands', controlLimiter, (req, res) => {
     req.on('close', () => { if (child && !child.killed) child.kill('SIGTERM'); });
 });
 
-// ── Bash terminal  POST /api/control/bash ─────────────────────────────────────
-// Auth-gated (guiAuthMiddleware already applied above). Rate-limited separately.
-// Runs an arbitrary shell command in the Railway container and returns
-// { stdout, stderr, code } as JSON. Timeout: 15 s. Max output buffer: 512 KB.
+// ── Diagnostic terminal  POST /api/control/bash ──────────────────────────────
+// Security:
+//   1. guiAuthMiddleware — requires valid GUI_AUTH_TOKEN (applied above to all /api/*)
+//   2. requireControlSecret — requires separate CONTROL_SECRET header
+//   3. Allowlist — only named diagnostic commands accepted; no arbitrary shell input
+//   4. No exec() / shell:true — each command is a fixed argv array via spawn()
+//   5. All invocations logged: key, exit code, caller IP, timestamp
+//
+// Add new diagnostics to DIAG_COMMANDS only. Never accept raw shell input.
+//
+// GET /api/control/bash — returns available command keys (auth-gated).
+// Dashboard uses this to populate its selector UI.
+
+const DIAG_COMMANDS = {
+    'status':   { argv: ['node', ['-e', "const {execSync}=require('child_process');try{console.log(execSync('pm2 jlist',{encoding:'utf8'}));}catch{console.log(JSON.stringify([{name:'sigil',status:'N/A (pm2 not available)'}]))}"]], label: 'PM2 status' },
+    'logs':     { argv: ['node', ['-e', "const {execSync}=require('child_process');try{console.log(execSync('pm2 logs sigil --lines 50 --nostream --no-color',{encoding:'utf8'}));}catch(e){console.error(e.message)}"]], label: 'PM2 last 50 log lines' },
+    'disk':     { argv: ['df',   ['-h', '/']], label: 'Disk usage (/)' },
+    'mem':      { argv: ['free', ['-m']],      label: 'Memory usage (MB)' },
+    'node-ver': { argv: ['node', ['--version']], label: 'Node.js version' },
+    'npm-ver':  { argv: ['npm',  ['--version']], label: 'npm version' },
+    'uptime':   { argv: ['uptime', []], label: 'System uptime' },
+    'env-keys': { argv: ['node', ['-e', "console.log(Object.keys(process.env).sort().join('\\n'))"]], label: 'Env variable names (no values)' },
+    'db-size':  { argv: ['node', ['-e', `const fs=require('fs'),p=${JSON.stringify(DB_PATH)};try{const s=fs.statSync(p);console.log('sigil.db: '+Math.round(s.size/1024)+'KB');}catch(e){console.error(e.message)}`]], label: 'SQLite DB file size' },
+    'pkg-ver':  { argv: ['node', ['-e', "const p=require('./package.json');console.log(p.name+'@'+p.version)"]], label: 'Sigil package version' },
+};
+
+app.get('/api/control/bash', bashLimiter, (req, res) => {
+    res.json({ ok: true, commands: Object.entries(DIAG_COMMANDS).map(([key, { label }]) => ({ key, label })) });
+});
+
 app.post('/api/control/bash', bashLimiter, (req, res) => {
-    const cmd = String(req.body?.cmd || '').trim();
-    if (!cmd) return res.status(400).json({ ok: false, error: 'Missing "cmd".' });
-    exec(cmd, { timeout: 15_000, maxBuffer: 1024 * 512, shell: true }, (err, stdout, stderr) => {
-        res.json({
-            ok:     !err || err.code === 0,
-            stdout: stdout || '',
-            stderr: stderr || '',
-            code:   err?.code ?? 0,
+    const fail = requireControlSecret(req, res);
+    if (fail !== null) return;
+
+    const key  = String(req.body?.key || '').trim();
+    const diag = DIAG_COMMANDS[key];
+    if (!diag)
+        return res.status(400).json({
+            ok: false,
+            error: `Unknown diagnostic key: "${key}". Valid keys: ${Object.keys(DIAG_COMMANDS).join(', ')}`,
         });
+
+    const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+    console.log(`[DIAG] key="${key}" ip=${ip} ts=${Date.now()}`);
+
+    const [bin, args] = diag.argv;
+    const child = spawn(bin, args, {
+        env:     { ...process.env, NO_COLOR: '1' },
+        timeout: 15_000,
+        // shell: false (default) — no shell injection possible
+    });
+
+    let stdout = '', stderr = '';
+    child.stdout.on('data', c => { stdout += c; if (stdout.length > 512 * 1024) child.kill('SIGTERM'); });
+    child.stderr.on('data', c => { stderr += c; if (stderr.length > 512 * 1024) child.kill('SIGTERM'); });
+
+    child.on('close', (code) => {
+        console.log(`[DIAG] key="${key}" exit=${code}`);
+        res.json({ ok: code === 0, key, label: diag.label, stdout, stderr, code: code ?? -1 });
+    });
+
+    child.on('error', (err) => {
+        console.error(`[DIAG] key="${key}" spawn error:`, err.message);
+        res.status(500).json({ ok: false, key, error: err.message, stdout: '', stderr: '', code: -1 });
     });
 });
 
